@@ -1,5 +1,11 @@
 #!/bin/bash
 
+print_message() {
+  echo "--------------------------------------------------"
+  echo "$1"
+  echo "--------------------------------------------------"
+}
+
 print_message "Updating package list and installing CMake"
 sudo apt update
 sudo apt install -y cmake
@@ -56,4 +62,4 @@ print_message "Verifying the proof"
 cargo nexus verify
 
 print_message "Nexus zkVM setup and execution complete!"
-print_message "Subscribe: https://t.me/HappyCuanAirdrop"
+print_message "Subscribe: https://t.me/layerairdrop"
