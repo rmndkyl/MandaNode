@@ -1,11 +1,5 @@
 #!/bin/bash
 
-function print_message() {
-    echo "===================================================================="
-    echo "$1"
-    echo "===================================================================="
-}
-
 print_message "Updating package list and installing CMake"
 sudo apt update
 sudo apt install -y cmake
