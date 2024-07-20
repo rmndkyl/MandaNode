@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "Starting the setup process..."
-
+rm -rf Rivalz.sh
 # Step 1: Download and install NVM
 echo "Downloading and installing NVM..."
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
@@ -24,13 +24,22 @@ npm install -g npm@10.8.2
 
 # Optional: Fund the npm package maintainers (only if needed, can be removed)
 npm fund
+sudo apt update
 
 # Step 3: Install rClient CLI
 echo "Installing rivalz-node-cli..."
 npm install -g rivalz-node-cli
 
-# Step 4: Run rClient
+# Step 4: Install rClient CLI
+echo "Installing rivalz-node-cli..."
+rivalz update-version
+
+# Step 5: Run rClient
 echo "Running rivalz-node-cli..."
 rivalz run
 
 echo "Setup completed successfully."
+
+rm -rf Rivalz.sh
+
+echo "Setup completed."
