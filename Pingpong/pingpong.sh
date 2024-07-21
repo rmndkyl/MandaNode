@@ -90,11 +90,10 @@ function start_grass() {
 # Main menu
 function main_menu() {
     clear
-    echo "Script and tutorial written by Twitter user @y95277777, free and open source, do not believe in paid versions"
+    echo "Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions"
     echo "================================================================"
-    echo "Node community Telegram group: https://t.me/niuwuriji"
-    echo "Node community Telegram channel: https://t.me/niuwuriji"
-    echo "Node community Discord group: https://discord.gg/GbMV5EcNWF"
+    echo "Node community Telegram channel: https://t.me/layerairdrop"
+    echo "Node community Telegram group: https://t.me/layerairdropdiskusi"
     echo "Please choose the operation you want to perform:"
     echo "1. Install node"
     echo "2. View node logs"
