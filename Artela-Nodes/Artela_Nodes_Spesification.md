@@ -5,5 +5,5 @@
 
 # One-click Installation
 ```shell
-wget -O Artela.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Artela-Nodes/Artela.sh && chmod +x Artela.sh && ./Artela.sh
+wget https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Artela-Nodes/Artela.sh && chmod +x Artela.sh && sed -i 's/\r$//' Artela.sh && ./Artela.sh
 ```
