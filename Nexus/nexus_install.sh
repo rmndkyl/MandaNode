@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "Showing Animation.."
-wget -O loader.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/loader.sh && chmod +x loader.sh && ./loader.sh
+wget -O loader.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/loader.sh && chmod +x loader.sh && sed -i 's/\r$//' loader.sh && ./loader.sh
 curl -s https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/logo.sh | bash
 sleep 2
 
