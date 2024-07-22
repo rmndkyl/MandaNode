@@ -66,11 +66,7 @@ cargo nexus prove
 print_message "Verifying the proof"
 cargo nexus verify
 
-print_message "██╗░░░░░░█████╗░██╗░░░██╗███████╗██████╗░  ░█████╗░██╗██████╗░██████╗░██████╗░░█████╗░██████╗░"
-print_message "██║░░░░░██╔══██╗╚██╗░██╔╝██╔════╝██╔══██╗  ██╔══██╗██║██╔══██╗██╔══██╗██╔══██╗██╔══██╗██╔══██╗"
-print_message "██║░░░░░███████║░╚████╔╝░█████╗░░██████╔╝  ███████║██║██████╔╝██║░░██║██████╔╝██║░░██║██████╔╝"
-print_message "██║░░░░░██╔══██║░░╚██╔╝░░██╔══╝░░██╔══██╗  ██╔══██║██║██╔══██╗██║░░██║██╔══██╗██║░░██║██╔═══╝░"
-print_message "███████╗██║░░██║░░░██║░░░███████╗██║░░██║  ██║░░██║██║██║░░██║██████╔╝██║░░██║╚█████╔╝██║░░░░░"
-print_message "╚══════╝╚═╝░░╚═╝░░░╚═╝░░░╚══════╝╚═╝░░╚═╝  ╚═╝░░╚═╝╚═╝╚═╝░░╚═╝╚═════╝░╚═╝░░╚═╝░╚════╝░╚═╝░░░░░"
-print_message "Nexus zkVM setup and execution complete!"
-print_message "Subscribe: https://t.me/layerairdrop"
+print_message "The script and tutorial were written by Telegram user @rmndkyl, free and open source, please do not believe in the paid version"
+print_message "==============================Nexus zkVM setup and execution complete!===================================="
+print_message "Node community Telegram channel: https://t.me/layerairdrop"
+print_message "Node community Telegram group: https://t.me/layerairdropdiskusi"
