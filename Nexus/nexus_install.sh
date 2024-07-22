@@ -1,5 +1,10 @@
 #!/bin/bash
 
+echo "Showing Animation.."
+wget -O loader.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/loader.sh && chmod +x loader.sh && ./loader.sh
+curl -s https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/logo.sh | bash
+sleep 2
+
 print_message() {
   echo "--------------------------------------------------"
   echo "$1"
