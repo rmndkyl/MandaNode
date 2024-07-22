@@ -7,8 +7,8 @@ echo -e "\e[1;36m
 ███████╗██║░░██║░░░██║░░░███████╗██║░░██║  ██║░░██║██║██║░░██║██████╔╝██║░░██║╚█████╔╝██║░░░░░
 ╚══════╝╚═╝░░╚═╝░░░╚═╝░░░╚══════╝╚═╝░░╚═╝  ╚═╝░░╚═╝╚═╝╚═╝░░╚═╝╚═════╝░╚═╝░░╚═╝░╚════╝░╚═╝░░░░░
 ";
-echo -e "The script and tutorial were written by Telegram user \e[1;36m@rmndkyl\e[0m, \e[1;36mfree and open source, please do not believe in the paid version";
-echo -e "\e[1;36mNode community Telegram channel: \e[1;36mhttps://t.me/layerairdrop\e[0m";
+echo -e "The script and tutorial were written by Telegram user \e[1;36m@rmndkyl, \e[1;36mfree and open source, please do not believe in the paid version";
+echo -e "\e[1;36mNode community Telegram channel: \e[1;36smhttps://t.me/layerairdrop";
 echo -e "\e[1;36mNode community Telegram group: \e[1;36mhttps://t.me/layerairdropdiskusi";
 echo -e "\e[0m"
 echo -e ""
