@@ -1,5 +1,10 @@
 #!/bin/bash
 
+echo "Showing Animation.."
+wget -O loader.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/loader.sh && chmod +x loader.sh && ./loader.sh
+curl -s https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/logo.sh | bash
+sleep 2
+
 sudo apt update && sudo apt upgrade -y
 sudo apt install -y ca-certificates zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev curl git wget make jq build-essential pkg-config lsb-release libssl-dev libreadline-dev libffi-dev gcc screen unzip lz4
 
