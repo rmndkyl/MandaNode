@@ -6,11 +6,11 @@ echo -e "\e[1;36m
 ██║░░░░░██╔══██║░░╚██╔╝░░██╔══╝░░██╔══██╗  ██╔══██║██║██╔══██╗██║░░██║██╔══██╗██║░░██║██╔═══╝░
 ███████╗██║░░██║░░░██║░░░███████╗██║░░██║  ██║░░██║██║██║░░██║██████╔╝██║░░██║╚█████╔╝██║░░░░░
 ╚══════╝╚═╝░░╚═╝░░░╚═╝░░░╚══════╝╚═╝░░╚═╝  ╚═╝░░╚═╝╚═╝╚═╝░░╚═╝╚═════╝░╚═╝░░╚═╝░╚════╝░╚═╝░░░░░
-
+$'\r'
 ";
-echo -e "The script and tutorial were written by Telegram user @rmndkyl, free and open source, please do not believe in the paid version"
-echo -e "Node community Telegram channel: https://t.me/layerairdrop"
-echo -e "Node community Telegram group: https://t.me/layerairdropdiskusi"
+echo -e "The script and tutorial were written by Telegram user @rmndkyl, free and open source, please do not believe in the paid version";
+echo -e "Node community Telegram channel: https://t.me/layerairdrop";
+echo -e "Node community Telegram group: https://t.me/layerairdropdiskusi";
 echo -e "\e[0m"
 echo -e ""
 echo -e ""
