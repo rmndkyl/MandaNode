@@ -16,5 +16,5 @@ Requirements:
 
 # One-Click Installation
 ```shell
-wget https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Nubit-Nodes/nubit.sh && chmod +x nubit.sh && sed -i 's/\r$//' nubit.sh && ./nubit.sh
+wget -O nubit.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Nubit-Nodes/nubit.sh && chmod +x nubit.sh && sed -i 's/\r$//' nubit.sh && ./nubit.sh
 ```
