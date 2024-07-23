@@ -1,3 +1,5 @@
+![image](https://github.com/user-attachments/assets/f3f5d467-4bdf-4e5a-bffe-aaf580baa2de)
+
 # SETUP
 Looking to set up a Light Node with Nubit? We've simplified the process with an automation script. Here's what you'll need:
 
