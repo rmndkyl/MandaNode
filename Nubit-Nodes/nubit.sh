@@ -218,6 +218,11 @@ function export_mnemonic() {
     cat ~/nubit-node/mnemonic.txt
 }
 
+# Export privatekey
+function export_pvkey() {
+    $HOME/nubit-node/bin/nkey export my_nubit_key --unarmored-hex --unsafe --p2p.network nubit-alphatestnet-1 --node.type light
+}
+
 # Main menu
 function main_menu() {
     while true; do
@@ -234,6 +239,7 @@ function main_menu() {
         echo "4. View Wallet Address"
         echo "5. View Public Key"
         echo "6. Display Wallet Mnemonic"
+        echo "7. Export Private key from Mnemonic"
         read -p "Please enter an option (1-6): " OPTION
 
         case $OPTION in
@@ -243,6 +249,7 @@ function main_menu() {
         4) check_address ;;
         5) check_pubkey ;;
         6) export_mnemonic ;;
+        7) export_pvkey ;;
         *) echo "Invalid option." ;;
         esac
         echo "Press any key to return to the main menu..."
