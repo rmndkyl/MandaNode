@@ -222,9 +222,10 @@ function export_mnemonic() {
 function main_menu() {
     while true; do
         clear
-        echo "Script and tutorial by Twitter user @y95277777, free and open-source. Do not believe any paid services."
-        echo "============================ Nubit Node Installation ===================================="
-        echo "Node Community Discord: https://discord.gg/GbMV5EcNWF"
+        echo "Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions"
+        echo "================================================================"
+        echo "Node community Telegram channel: https://t.me/layerairdrop"
+        echo "Node community Telegram group: https://t.me/layerairdropdiskusi"
         echo "To exit the script, press Ctrl+C"
         echo "Please select an operation:"
         echo "1. Install Node"
