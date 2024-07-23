@@ -1,5 +1,10 @@
 #!/bin/bash
 
+echo "Showing Animation.."
+wget -O loader.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/loader.sh && chmod +x loader.sh && sed -i 's/\r$//' loader.sh && ./loader.sh
+wget -O logo.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/logo.sh && chmod +x logo.sh && sed -i 's/\r$//' logo.sh && ./logo.sh
+sleep 2
+
 # Check if the script is run as root
 if [ "$(id -u)" != "0" ]; then
     echo "This script needs to be run with root privileges."
