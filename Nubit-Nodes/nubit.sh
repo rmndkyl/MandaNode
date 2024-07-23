@@ -223,6 +223,11 @@ function export_pvkey() {
     $HOME/nubit-node/bin/nkey export my_nubit_key --unarmored-hex --unsafe --p2p.network nubit-alphatestnet-1 --node.type light
 }
 
+# Check Uptime
+function check_uptime() {
+    $HOME/nubit-node/bin/nubit das sampling-stats --node.store $HOME/.nubit-light-nubit-alphatestnet-1
+}
+
 # Main menu
 function main_menu() {
     while true; do
@@ -246,6 +251,7 @@ function main_menu() {
         echo "5. View Public Key"
         echo "6. Display Wallet Mnemonic"
         echo "7. Export Private key from Mnemonic"
+        echo "8. Check your Uptime, if said 'true' is good."
         read -p "Please enter an option (1-6): " OPTION
 
         case $OPTION in
@@ -256,6 +262,7 @@ function main_menu() {
         5) check_pubkey ;;
         6) export_mnemonic ;;
         7) export_pvkey ;;
+        8) check_uptime ;;
         *) echo "Invalid option." ;;
         esac
         echo "Press any key to return to the main menu..."
