@@ -252,7 +252,7 @@ function main_menu() {
         echo "6. Display Wallet Mnemonic"
         echo "7. Export Private key from Mnemonic"
         echo "8. Check your Uptime, if said 'true' is good."
-        read -p "Please enter an option (1-6): " OPTION
+        read -p "Please enter an option (1-8): " OPTION
 
         case $OPTION in
         1) install_node ;;
