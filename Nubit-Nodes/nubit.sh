@@ -1,10 +1,5 @@
 #!/bin/bash
 
-echo "Showing Animation.."
-wget -O loader.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/loader.sh && chmod +x loader.sh && sed -i 's/\r$//' loader.sh && ./loader.sh
-wget -O logo.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/logo.sh && chmod +x logo.sh && sed -i 's/\r$//' logo.sh && ./logo.sh
-sleep 2
-
 # Check if the script is run as root
 if [ "$(id -u)" != "0" ]; then
     echo "This script needs to be run with root privileges."
@@ -218,7 +213,7 @@ function export_mnemonic() {
     cat ~/nubit-node/mnemonic.txt
 }
 
-# Export privatekey
+# Export pvkey
 function export_pvkey() {
     $HOME/nubit-node/bin/nkey export my_nubit_key --unarmored-hex --unsafe --p2p.network nubit-alphatestnet-1 --node.type light
 }
@@ -228,7 +223,7 @@ function main_menu() {
     while true; do
         clear
         echo "Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions"
-        echo "================================================================"
+        echo "============================ Nubit Node Installation ===================================="
         echo "Node community Telegram channel: https://t.me/layerairdrop"
         echo "Node community Telegram group: https://t.me/layerairdropdiskusi"
         echo "To exit the script, press Ctrl+C"
