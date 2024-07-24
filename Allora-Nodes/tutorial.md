@@ -37,5 +37,5 @@ curl --location 'http://localhost:6000/api/v1/functions/execute' --header 'Conte
     }
 }'
 ```
-8. If the result is `200`, it works. If the result is `408`, the team still fix the bug.
-9. Done ✅
+7. If the result is `200`, it works. If the result is `408`, the team still fix the bug.
+8. Done ✅
