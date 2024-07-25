@@ -26,7 +26,7 @@ Open Termius / Putty
 
 - Copy and paste the following command:
 ```bash
-wget -O nubit.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Analog-Timechain/analog.sh && chmod +x analog.sh && sed -i 's/\r$//' analog.sh && ./analog.sh
+wget -O analog.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Analog-Timechain/analog.sh && chmod +x analog.sh && sed -i 's/\r$//' analog.sh && ./analog.sh
 ```
 - You can check the Analog node logs using this command:
 ```bash
