@@ -41,4 +41,4 @@ docker logs analog
 - You can write 1 to 10 in the reward commission percentage section
 - Then click the Bond & Validate button
 # Whitelist Form Submission
-Submit this Form with the appropriate details and wait for approval from the Analog team
+Submit this [Form](https://l5d87lam6fy.typeform.com/to/kwlADm6U) with the appropriate details and wait for approval from the Analog team
