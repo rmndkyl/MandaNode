@@ -13,7 +13,7 @@ __You can purchase a VPS from__:
 - PQ Hosting (Credit Card/Cryptocurrency Payment Accepted)
 
 # Wallet Setup and Faucet Request
-- Download the Fearless Wallet Extension
+- Download the [Fearless Wallet Extension](https://chromewebstore.google.com/detail/fearless-wallet/nhlnehondigmgckngjomcpcefcdplmgc)
 - Create a new wallet
 - Join the Analog Discord
 - Request faucet in the 🚰| faucet channel using the following command:
