@@ -27,6 +27,10 @@ chmod +x erc721.sh && sed -i 's/\r$//' erc721.sh && ./erc721.sh
 chmod +x perc20.sh && sed -i 's/\r$//' perc20.sh && ./perc20.sh
 ```
 
+# Swisstronik PERC-721
+```shell
+chmod +x perc721.sh && sed -i 's/\r$//' perc721.sh && ./perc721.sh
+```
 # Note
 After everything is complete, push your files with: 
 ```shell
