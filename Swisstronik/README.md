@@ -34,6 +34,11 @@ chmod +x perc20.sh && sed -i 's/\r$//' perc20.sh && ./perc20.sh
 ```shell
 chmod +x perc721.sh && sed -i 's/\r$//' perc721.sh && ./perc721.sh
 ```
+
+# Swisstronik Deploy Proxy
+```shell
+chmod +x proxy.sh && sed -i 's/\r$//' proxy.sh && ./proxy.sh
+```
 # Note
 After everything is complete, push your files with: 
 ```shell
