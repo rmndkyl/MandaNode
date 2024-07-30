@@ -1,3 +1,5 @@
+![image](https://github.com/user-attachments/assets/2faa6f87-2829-4747-98e2-afb730554351)
+
 # Requirements
 Ensure your device meets the following minimal specs for a smooth Cysic verifier program installation:
 
