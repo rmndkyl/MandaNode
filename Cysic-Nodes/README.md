@@ -1,0 +1,21 @@
+# Requirements
+Ensure your device meets the following minimal specs for a smooth Cysic verifier program installation:
+
+ - CPU: `Single Core`
+ - Memory: `512 MB`
+ - Disk: `10 GB`
+ - Bandwidth: `100 KB/s upload/download`
+ - Available OS: `Linux, Windows, Mac`
+
+# Setup
+1. Create your own VPS, you can buy from **[Contabo](https://contabo.com/)** or **[DigitalOcean](https://m.do.co/c/5423032133fa)**.
+
+2. After that, run on Screen:
+```shell
+screen -S Cysic-Verifier
+```
+
+# One-click Installation
+```shell
+wget https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Cysic-Nodes/cysic.sh && chmod +x cysic.sh && sed -i 's/\r$//' cysic.sh && ./cysic.sh
+```
