@@ -1,5 +1,7 @@
 ![image](https://github.com/user-attachments/assets/94e0ba96-7db4-44db-88b3-577651358207)
 
+![image](https://github.com/user-attachments/assets/46faf907-484c-4ade-b507-dbcd4ecaf55a)
+
 ------
 # Hardware Requirements
 | Hardware | Requirement |
@@ -26,7 +28,7 @@ Explorer URL | https://andes.dill.xyz/
 Open your terminal and execute the following command to download and run the script:
 
    ```sh
-   curl -O https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Dhill-Nodes/dhill.sh && chmod +x dhill.sh.sh && sed -i 's/\r$//' dhill.sh && ./dhill.sh.sh
+   curl -O https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Dhill-Nodes/dhill.sh && chmod +x dhill.sh && sed -i 's/\r$//' dhill.sh && ./dhill.sh
    ```
 
 2. **Do the following in order** 
