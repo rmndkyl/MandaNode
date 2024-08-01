@@ -1,9 +1,13 @@
-# Minimum Specs
-• CPU 1 Core => Recommended 2 Core
+![image](https://github.com/user-attachments/assets/80ba93fd-7fdc-4299-bdb5-483bbfa43aa0)
 
-• RAM 2 GB => Recommended 4 GB
+### Server Specifications
 
-• SSD 50 GB => Recommended 100GB
+| Specification   | Minimum            | Suggested         |
+|-----------------|--------------------|-------------------|
+| **vCPU**        | 1                  | 2                 |
+| **RAM**         | 2GB                | 4GB               |
+| **Disk**        | 50GB SSD          | 100GB SSD         |
+| **IP**          | Static IP          | Static IP         |
 
 # Setup
 1. Create a wallet on Keplr Wallet.
