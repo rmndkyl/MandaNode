@@ -1,3 +1,12 @@
+### Server Specifications
+
+| Specification   | Minimum            | Suggested         |
+|-----------------|--------------------|-------------------|
+| **vCPU**        | 6                  | 8                 |
+| **RAM**         | 16GB               | 32GB              |
+| **Disk**        | 1TB Disk           | 1TB SSD           |
+| **IP**          | Static IP          | Static IP         |
+
 # Setup
 1. Create your own VPS, you can buy from **[Contabo](https://contabo.com/)** or **[DigitalOcean](https://m.do.co/c/5423032133fa)**.
 
