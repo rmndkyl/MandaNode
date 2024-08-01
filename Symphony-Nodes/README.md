@@ -21,5 +21,5 @@ screen -S symphony
 Open your terminal and execute the following command to download and run the script:
 
    ```sh
-   curl -O https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Symphony-Nodes/symphony.sh && chmod +x symphony.sh.sh && sed -i 's/\r$//' symphony.sh && ./symphony.sh.sh
+   curl -O https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Symphony-Nodes/symphony.sh && chmod +x symphony.sh && sed -i 's/\r$//' symphony.sh && ./symphony.sh
    ```
