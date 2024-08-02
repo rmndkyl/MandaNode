@@ -12,11 +12,11 @@ screen -S gaianet
 Open your terminal and execute the following command to download and run the script:
 
    ```sh
-   wget -O https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Gaianet-Nodes/gaianet.sh && chmod +x gaianet.sh && sed -i 's/\r$//' gaianet.sh && ./gaianet.sh
+   wget -O gaianet.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Gaianet-Nodes/gaianet.sh && chmod +x gaianet.sh && sed -i 's/\r$//' gaianet.sh && ./gaianet.sh
    ```
    
 For Gaianet Farming Throughputs Use Autochat 
 
    ```sh
-   wget -O https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Gaianet-Nodes/requests.sh && chmod +x requests.sh && sed -i 's/\r$//' requests.sh && ./requests.sh
+   wget -O requests.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Gaianet-Nodes/requests.sh && chmod +x requests.sh && sed -i 's/\r$//' requests.sh && ./requests.sh
    ```
