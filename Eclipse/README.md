@@ -29,9 +29,6 @@ wget -O eclipse.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Ecli
  10. copy your generated Solana address
  11. fill out the form -> Done!
 
-this is how look if everything is completed.
-![image](https://github.com/user-attachments/assets/ea444adf-e0a7-4528-8854-dd9fc09146ee)
-
 # Finally, fill the form below 
 - [Feedback Form](https://docs.google.com/forms/d/e/1FAIpQLSfJQCFBKHpiy2HVw9lTjCj7k0BqNKnP6G1cd0YdKhaPLWD-AA/viewform?pli=1)
 
