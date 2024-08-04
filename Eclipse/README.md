@@ -37,4 +37,4 @@ this is how look if everything is completed.
 
 ## Done!
 
-Enjoy working with Eclipse and be sure to subscribe to [Layer Airdrop](https://t.me/layerairdrop)!
+Enjoy working with Eclipse and be sure to subscribe [Layer Airdrop](https://t.me/layerairdrop)!
