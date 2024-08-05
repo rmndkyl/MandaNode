@@ -100,7 +100,7 @@ console.log('ETHEREUM PRIVATE KEY:', privateKey);
 console.log();
 console.log('SEND ATLEAST 0.05 SEPOLIA ETH TO THIS ADDRESS:', mnemonicWallet.address);
 
-fs.writeFileSync('pvt-key.txt', privateKey, 'utf8');
+fs.writeFileSync('private-key.txt', privateKey, 'utf8');
 EOF
 
 if ! npm list ethers &>/dev/null; then
@@ -124,7 +124,7 @@ echo
 
 echo -e "${YELLOW}Running Bridge Script...${NC}"
 echo
-node bin/cli.js -k pvt-key.txt -d "$solana_address" -a 0.01 --sepolia
+node bin/cli.js -k private-key.txt -d "$solana_address" -a 0.01 --sepolia
 sleep 3
 echo
 echo -e "${RED}It will take 4 mins, Don't do anything, Just Wait${RESET}"
