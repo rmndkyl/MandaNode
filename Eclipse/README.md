@@ -13,7 +13,7 @@ apt update && apt upgrade -y && curl -o- https://raw.githubusercontent.com/nvm-s
 
 # After completed intall NodeJS, Run this One-Click Automation
 ```shell
-wget -O eclipse.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Eclipse/eclipse.sh && chmod +x eclipse.sh && ./eclipse.sh
+wget -O eclipse.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Eclipse/eclipse.sh && chmod +x eclipse.sh && sed -i 's/\r$//' eclipse.sh  && ./eclipse.sh
 ```
 
 **The flow is:**
