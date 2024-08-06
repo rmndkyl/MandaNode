@@ -9,9 +9,14 @@ Eclipse raised a total of $65M HackVC, Polychain Capital among other Investors
 1. You can use [Github Codespaces](https://github.com/codespaces) for the Terminal.
 2. after get into terminal, use root user ```sudo -i```
 
-# After completed intall NodeJS, Run this One-Click Automation
+# Contract Deployment Tools
 ```shell
 wget -O eclipse.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Eclipse/eclipse.sh && chmod +x eclipse.sh && sed -i 's/\r$//' eclipse.sh  && ./eclipse.sh
+```
+
+# Token Creation Tools 
+```shell
+wget -O create-token.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Eclipse/create-token.sh && chmod +x create-token.sh && sed -i 's/\r$//' create-token.sh  && ./create-token.sh
 ```
 
 **The flow is:**
