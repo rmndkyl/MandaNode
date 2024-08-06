@@ -33,7 +33,7 @@ sudo apt update
 
 # Step 3: Install rClient CLI
 echo "Installing rivalz-node-cli..."
-npm install -g rivalz-node-cli
+npm i -g rivalz-node-cli@2.4.0
 
 # Step 4: Install rClient CLI
 echo "Installing rivalz-node-cli..."
@@ -48,3 +48,13 @@ echo "Setup completed successfully."
 rm -rf Rivalz.sh
 
 echo "Setup completed."
+echo "██╗░░░░░░█████╗░██╗░░░██╗███████╗██████╗░  ░█████╗░██╗██████╗░██████╗░██████╗░░█████╗░██████╗░"
+echo "██║░░░░░██╔══██╗╚██╗░██╔╝██╔════╝██╔══██╗  ██╔══██╗██║██╔══██╗██╔══██╗██╔══██╗██╔══██╗██╔══██╗"
+echo "██║░░░░░███████║░╚████╔╝░█████╗░░██████╔╝  ███████║██║██████╔╝██║░░██║██████╔╝██║░░██║██████╔╝"
+echo "██║░░░░░██╔══██║░░╚██╔╝░░██╔══╝░░██╔══██╗  ██╔══██║██║██╔══██╗██║░░██║██╔══██╗██║░░██║██╔═══╝░"
+echo "███████╗██║░░██║░░░██║░░░███████╗██║░░██║  ██║░░██║██║██║░░██║██████╔╝██║░░██║╚█████╔╝██║░░░░░"
+echo "╚══════╝╚═╝░░╚═╝░░░╚═╝░░░╚══════╝╚═╝░░╚═╝  ╚═╝░░╚═╝╚═╝╚═╝░░╚═╝╚═════╝░╚═╝░░╚═╝░╚════╝░╚═╝░░░░░"
+echo "Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions"
+echo "============================ Rivalz Light Node Installation ===================================="
+echo "Node community Telegram channel: https://t.me/layerairdrop"
+echo "Node community Telegram group: https://t.me/layerairdropdiskusi"
