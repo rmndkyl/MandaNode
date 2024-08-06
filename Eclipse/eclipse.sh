@@ -177,7 +177,7 @@ node private-key.js
 echo
 echo -e "${GREEN}Save this Private Key in a safe place. If there is any airdrop in the future, you will be eligible from this wallet, so save it.${NC}"
 echo
-echo -e "${GREEN}==============================Eclipse Contract Deployment====================================${NC}"
+echo -e "${YELLOW}==============================Eclipse Contract Deployment====================================${NC}"
 echo
 echo -e "${YELLOW}The script and tutorial were written by Telegram user @rmndkyl, free and open source, please do not believe in the paid version${NC}"
 echo
