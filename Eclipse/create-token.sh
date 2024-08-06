@@ -45,8 +45,8 @@ echo
 
 echo -e "${YELLOW}Cloning repository and installing npm dependencies...${NC}"
 echo
-git clone https://github.com/Eclipse-Laboratories-Inc/testnet-deposit
-cd testnet-deposit
+git clone https://github.com/Eclipse-Laboratories-Inc/eclipse-deposit
+cd eclipse-deposit
 npm install
 echo
 
