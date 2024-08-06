@@ -181,3 +181,5 @@ echo -e "${GREEN}==============================Eclipse Contract Deployment======
 echo
 echo -e "${YELLOW}The script and tutorial were written by Telegram user @rmndkyl, free and open source, please do not believe in the paid version${NC}"
 echo
+echo -e "${YELLOW}Submit Feedback at${NC}: https://docs.google.com/forms/d/e/1FAIpQLSfJQCFBKHpiy2HVw9lTjCj7k0BqNKnP6G1cd0YdKhaPLWD-AA/viewform?pli=1"
+echo
