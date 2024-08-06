@@ -1,3 +1,6 @@
+![image](https://github.com/user-attachments/assets/0b35a0da-0183-4a8f-9422-3091b00d8006)
+
+
 # Hardware Requirements
 | Hardware | Requirement |
 | ------------- | ---------------- |
