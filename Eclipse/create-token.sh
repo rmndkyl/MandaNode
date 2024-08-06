@@ -107,8 +107,8 @@ echo
 echo -e "${GREEN}Solana Address: $(solana address)${NC}"
 echo
 
-if [ -d "testnet-deposit" ]; then
-    execute_and_prompt "Removing testnet-deposit Folder..." "rm -rf testnet-deposit"
+if [ -d "eclipse-deposit" ]; then
+    execute_and_prompt "Removing eclipse-deposit Folder..." "rm -rf eclipse-deposit"
 fi
 
 read -p "Enter your Solana address: " solana_address
