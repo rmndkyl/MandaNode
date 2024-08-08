@@ -158,59 +158,180 @@ EOF
     echo "Node setup completed."
 }
 
-# Function to add wallet (dummy function for demonstration)
+# Check Artela service status
+function check_service_status() {
+    pm2 list
+}
+
+# View Artela node logs
+function view_logs() {
+    pm2 logs artelad
+}
+
+# Uninstall node function
+function uninstall_node() {
+    echo "Are you sure you want to uninstall the Artela node program? This will delete all related data. [Y/N]"
+    read -r -p "Please confirm: " response
+
+    case "$response" in
+        [yY][eE][sS]|[yY]) 
+            echo "Starting the uninstallation of the node program..."
+            pm2 stop artelad && pm2 delete artelad
+            rm -rf $HOME/.artelad $HOME/artela $(which artelad)
+            echo "Node program uninstalled successfully."
+            ;;
+        *)
+            echo "Uninstallation operation canceled."
+            ;;
+    esac
+}
+
+# Create wallet
 function add_wallet() {
-    echo "Adding wallet..."
+    artelad keys add wallet
 }
 
-# Function to import wallet (dummy function for demonstration)
+# Import wallet
 function import_wallet() {
-    echo "Importing wallet..."
+    artelad keys add wallet --recover
 }
 
-# Function to check balances (dummy function for demonstration)
+# Check balances
 function check_balances() {
-    echo "Checking wallet balance..."
+    read -p "Please enter the wallet address: " wallet_address
+    artelad query bank balances "$wallet_address"
 }
 
-# Function to check sync status (dummy function for demonstration)
+# Check node sync status
 function check_sync_status() {
-    echo "Checking node synchronization status..."
+    artelad status | jq .SyncInfo
 }
+
 
 # Function to check service status (dummy function for demonstration)
 function check_service_status() {
-    echo "Checking current service status..."
+    pm2 list
 }
 
 # Function to view logs (dummy function for demonstration)
 function view_logs() {
-    echo "Viewing logs..."
+    pm2 logs artelad
 }
 
 # Function to uninstall node (dummy function for demonstration)
 function uninstall_node() {
-    echo "Uninstalling node..."
+    echo "Are you sure you want to uninstall the Artela node program? This will delete all related data. [Y/N]"
+    read -r -p "Please confirm: " response
+
+    case "$response" in
+        [yY][eE][sS]|[yY]) 
+            echo "Starting the uninstallation of the node program..."
+            pm2 stop artelad && pm2 delete artelad
+            rm -rf $HOME/.artelad $HOME/artela $(which artelad)
+            echo "Node program uninstalled successfully."
+            ;;
+        *)
+            echo "Uninstallation operation canceled."
+            ;;
+    esac
+}
+
+# Create wallet
+function add_wallet() {
+    artelad keys add wallet
+}
+
+# Import wallet
+function import_wallet() {
+    artelad keys add wallet --recover
+}
+
+# Check balances
+function check_balances() {
+    read -p "Please enter the wallet address: " wallet_address
+    artelad query bank balances "$wallet_address"
+}
+
+# Check node sync status
+function check_sync_status() {
+    artelad status | jq .SyncInfo
 }
 
 # Function to add validator (dummy function for demonstration)
 function add_validator() {
-    echo "Creating a validator..."
+    read -p "Please enter your wallet name: " wallet_name
+    read -p "Please enter the name you want to set for the validator: " validator_name
+    
+    artelad tx staking create-validator \
+    --amount="1art" \
+    --pubkey=$(artelad tendermint show-validator) \
+    --moniker="$validator_name" \
+    --commission-rate="0.10" \
+    --commission-max-rate="0.20" \
+    --commission-max-change-rate="0.01" \
+    --min-self-delegation="1" \
+    --gas="200000" \
+    --chain-id="artela_11822-1" \
+    --from="$wallet_name"
 }
 
 # Function to delegate to self validator (dummy function for demonstration)
 function delegate_self_validator() {
-    echo "Pledging to yourself..."
+    read -p "Please enter the amount of tokens to delegate: " amount
+    read -p "Please enter the wallet name: " wallet_name
+    artelad tx staking delegate $(artelad keys show $wallet_name --bech val -a) ${amount}art --from $wallet_name --chain-id=artela_11822-1 --gas=300000
 }
 
 # Function to export validator private key (dummy function for demonstration)
 function export_priv_validator_key() {
-    echo "Backing up the validator private key..."
+    echo "====================Please backup the following content to your own notepad or Excel spreadsheet==========================================="
+    cat ~/.artelad/config/priv_validator_key.json
 }
 
 # Function to update the script (dummy function for demonstration)
 function update_script() {
-    echo "Updating the script..."
+    SCRIPT_PATH="./Artela.sh"  # Define the script path
+    SCRIPT_URL="https://raw.githubusercontent.com/a3165458/Artela/main/Artela.sh"
+    
+    # Backup the original script
+    cp $SCRIPT_PATH "${SCRIPT_PATH}.bak"
+    
+    # Download the new script and check if successful
+    if curl -o $SCRIPT_PATH $SCRIPT_URL; then
+        chmod +x $SCRIPT_PATH
+        echo "Script has been updated. Please exit the script and run 'bash Artela.sh' to restart this script."
+    else
+        echo "Update failed. Restoring the original script."
+        mv "${SCRIPT_PATH}.bak" $SCRIPT_PATH
+    fi
+}
+
+function update_node() {
+
+    pm2 delete artelad
+
+    mv ~/.artelad ~/artelad_back_up
+    rsync -av --exclude "data" ~/artelad_back_up/* ~/.artelad
+    cd && rm -rf artela
+    git clone https://github.com/artela-network/artela
+    cd artela
+    LATEST_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
+    git checkout $LATEST_TAG
+    make install
+
+    cd $HOME
+    wget https://github.com/artela-network/artela/releases/download/v0.4.7-rc7-fix-execution/artelad_0.4.7_rc7_fix_execution_Linux_amd64.tar.gz
+    tar -xvf artelad_0.4.7_rc7_fix_execution_Linux_amd64.tar.gz
+    mkdir libs
+    mv $HOME/libaspect_wasm_instrument.so $HOME/libs/
+    mv $HOME/artelad /usr/local/bin/
+    echo 'export LD_LIBRARY_PATH=$HOME/libs:$LD_LIBRARY_PATH' >> ~/.bash_profile
+    source ~/.bash_profile
+
+    pm2 start artelad -- start && pm2 save && pm2 startup
+
+    echo "Updated to version $LATEST_TAG on $(date)" >> ~/artela_update_log.txt
+
 }
 
 # Main menu function
