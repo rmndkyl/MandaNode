@@ -43,7 +43,7 @@ else
 fi
 
 # Pull Docker image
-docker pull nezha123/titan-edge:1.7_amd64
+docker pull nezha123/titan-edge:1.7
 
 # Create the specified number of containers
 for ((i=1; i<=container_count; i++))
@@ -63,7 +63,7 @@ do
     mkdir -p "$storage_path"
 
     # Run the container and set the restart policy to always
-    container_id=$(docker run -d --restart always -v "$storage_path:/root/.titanedge/storage" --name "titan$i" --net=host nezha123/titan-edge:1.7_amd64)
+    container_id=$(docker run -d --restart always -v "$storage_path:/root/.titanedge/storage" --name "titan$i" --net=host nezha123/titan-edge:1.7)
 
     echo "Node titan$i has started, Container ID $container_id"
 
