@@ -270,7 +270,7 @@ function update_node() {
 
 }
 
-# Main menu function
+# Main Menu
 function main_menu() {
     while true; do
         clear
@@ -284,22 +284,23 @@ function main_menu() {
         echo "==============================Artela node installation===================================="
         echo "Node community Telegram group: https://t.me/layerairdropdiskusi"
         echo "Node community Telegram channel: https://t.me/layerairdrop"
-        echo "To exit the script, press ctrl c on the keyboard to exit"
-        echo "Please select the action to perform:"
-        echo "1. Install node"
-        echo "2. Create a wallet"
-        echo "3. Import wallet"
-        echo "4. Check the wallet address balance"
-        echo "5. Check the node synchronization status"
-        echo "6. View the current service status"
-        echo "7. Run log query"
-        echo "8. Uninstall node"
-        echo "9. Set shortcut keys"
-        echo "10. Create a validator"
-        echo "11. Pledge to yourself"
-        echo "12. Backup the validator private key"
-        echo "13. Update this script"
-        read -p "Please enter option (1-13): " OPTION
+        echo "To exit the script, press ctrl+c."
+        echo "Please choose an option:"
+        echo "1. Install Node"
+        echo "2. Create Wallet"
+        echo "3. Import Wallet"
+        echo "4. Check Wallet Balance"
+        echo "5. Check Node Sync Status"
+        echo "6. Check Service Status"
+        echo "7. View Logs"
+        echo "8. Uninstall Node"
+        echo "9. Set Alias"
+        echo "10. Create Validator"
+        echo "11. Delegate to Yourself"
+        echo "12. Backup Validator Private Key"
+        echo "13. Update This Script"
+        echo "14. Upgrade Node Software"
+        read -p "Enter option (1-14): " OPTION
 
         case $OPTION in
         1) install_node ;;
@@ -315,6 +316,7 @@ function main_menu() {
         11) delegate_self_validator ;;
         12) export_priv_validator_key ;;
         13) update_script ;;
+        14) update_node ;;
         *) echo "Invalid option." ;;
         esac
         echo "Press any key to return to the main menu..."
@@ -322,5 +324,5 @@ function main_menu() {
     done
 }
 
-# Display the main menu
+# Show Main Menu
 main_menu
