@@ -2,11 +2,6 @@
 
 echo "Starting setup and proof process..."
 
-echo "Showing Animation..."
-wget -O loader.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/loader.sh && chmod +x loader.sh && sed -i 's/\r$//' loader.sh && ./loader.sh
-wget -O logo.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/logo.sh && chmod +x logo.sh && sed -i 's/\r$//' logo.sh && ./logo.sh
-sleep 2
-
 echo "Installing Rust and Cargo..."
 if ! command -v rustc &> /dev/null; then
     echo "Rust is not installed. Installing Rust..."
@@ -15,6 +10,14 @@ if ! command -v rustc &> /dev/null; then
 else
     echo "Rust is already installed."
 fi
+
+echo "Creating directory for Succinct Labs and installing..."
+mkdir -p succinct-labs && cd succinct-labs && curl -L https://sp1.succinct.xyz | bash && source $HOME/.bashrc && sp1up
+
+echo "Showing Animation..."
+wget -O loader.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/loader.sh && chmod +x loader.sh && sed -i 's/\r$//' loader.sh && ./loader.sh
+wget -O logo.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/logo.sh && chmod +x logo.sh && sed -i 's/\r$//' logo.sh && ./logo.sh
+sleep 2
 
 echo "Installing Git..."
 sudo apt update && sudo apt install -y git-all build-essential gcc pkg-config libssl-dev
