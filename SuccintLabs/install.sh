@@ -8,22 +8,24 @@ wget -O logo.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/logo
 sleep 2
 
 echo "Installing Git..."
-sudo apt update && sudo apt install -y git-all build-essential gcc cargo pkg-config libssl-dev
+sudo apt update && sudo apt install -y git-all build-essential gcc pkg-config libssl-dev
 git --version
 
-# Install Rust and Cargo
 echo "Installing Rust and Cargo..."
-curl https://sh.rustup.rs -sSf | sh -s -- -y
-source $HOME/.cargo/env
-
-echo "Checking if Rust is installed..."
 if ! command -v rustc &> /dev/null; then
     echo "Rust is not installed. Installing Rust..."
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-    echo "Rust installed. Reconfiguring PATH..."
-    . "$HOME/.cargo/env"
+    curl https://sh.rustup.rs -sSf | sh -s -- -y
+    source $HOME/.cargo/env
 else
     echo "Rust is already installed."
+fi
+
+echo "Checking if the 'succinct' Rust toolchain is available..."
+if rustup toolchain list | grep -q 'succinct'; then
+    echo "'succinct' toolchain is already installed."
+else
+    echo "'succinct' toolchain not found. Please verify the correct toolchain name or installation steps."
+    exit 1
 fi
 
 echo "Checking if Docker is installed..."
@@ -36,6 +38,8 @@ fi
 docker --version
 
 echo "Creating new project 'fibonacci'..."
+# Ensure that the `cargo-prove` package is installed or replace with the correct command if needed
+cargo install cargo-prove
 cargo prove new fibonacci
 cd fibonacci || { echo "Failed to change directory to 'fibonacci'"; exit 1; }
 
