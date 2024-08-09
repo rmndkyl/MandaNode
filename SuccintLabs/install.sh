@@ -2,9 +2,6 @@
 
 echo "Starting setup and proof process..."
 
-echo "Creating directory for Succinct Labs and installing..."
-mkdir succinct-labs && cd succinct-labs && curl -L https://sp1.succinct.xyz | bash && source $HOME/.bashrc && sp1up
-
 echo "Showing Animation..."
 wget -O loader.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/loader.sh && chmod +x loader.sh && sed -i 's/\r$//' loader.sh && ./loader.sh
 wget -O logo.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/logo.sh && chmod +x logo.sh && sed -i 's/\r$//' logo.sh && ./logo.sh
