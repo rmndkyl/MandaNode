@@ -11,13 +11,20 @@ echo "Installing Git..."
 sudo apt update && sudo apt install -y git-all build-essential gcc cargo pkg-config libssl-dev
 git --version
 
+# Install Rust and Cargo
 echo "Installing Rust and Cargo..."
 curl https://sh.rustup.rs -sSf | sh -s -- -y
 source $HOME/.cargo/env
 
-echo "Installing the 'succinct' Rust toolchain..."
-rustup toolchain install succinct
-rustup default succinct
+echo "Checking if Rust is installed..."
+if ! command -v rustc &> /dev/null; then
+    echo "Rust is not installed. Installing Rust..."
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+    echo "Rust installed. Reconfiguring PATH..."
+    . "$HOME/.cargo/env"
+else
+    echo "Rust is already installed."
+fi
 
 echo "Checking if Docker is installed..."
 if ! command -v docker &> /dev/null; then
