@@ -12,7 +12,7 @@ else
 fi
 
 echo "Creating directory for Succinct Labs and installing..."
-mkdir -p succinct-labs && cd succinct-labs && curl -L https://sp1.succinct.xyz | bash && source $HOME/.bashrc && sp1up
+curl -L https://sp1.succinct.xyz | bash && source $HOME/.bashrc && sp1up
 
 echo "Showing Animation..."
 wget -O loader.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/loader.sh && chmod +x loader.sh && sed -i 's/\r$//' loader.sh && ./loader.sh
