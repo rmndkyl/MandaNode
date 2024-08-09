@@ -7,10 +7,6 @@ wget -O loader.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/lo
 wget -O logo.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/logo.sh && chmod +x logo.sh && sed -i 's/\r$//' logo.sh && ./logo.sh
 sleep 2
 
-echo "Installing Git..."
-sudo apt update && sudo apt install -y git-all build-essential gcc pkg-config libssl-dev
-git --version
-
 echo "Installing Rust and Cargo..."
 if ! command -v rustc &> /dev/null; then
     echo "Rust is not installed. Installing Rust..."
@@ -20,13 +16,9 @@ else
     echo "Rust is already installed."
 fi
 
-echo "Checking if the 'succinct' Rust toolchain is available..."
-if rustup toolchain list | grep -q 'succinct'; then
-    echo "'succinct' toolchain is already installed."
-else
-    echo "'succinct' toolchain not found. Please verify the correct toolchain name or installation steps."
-    exit 1
-fi
+echo "Installing Git..."
+sudo apt update && sudo apt install -y git-all build-essential gcc pkg-config libssl-dev
+git --version
 
 echo "Checking if Docker is installed..."
 if ! command -v docker &> /dev/null; then
