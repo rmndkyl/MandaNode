@@ -1,5 +1,10 @@
 #!/bin/bash
 
+echo "Showing Animation.."
+wget -O loader.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/loader.sh && chmod +x loader.sh && sed -i 's/\r$//' loader.sh && ./loader.sh
+wget -O logo.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/logo.sh && chmod +x logo.sh && sed -i 's/\r$//' logo.sh && ./logo.sh
+sleep 4
+
 echo "Updating and upgrading the system..."
 sudo apt update -y
 sudo apt upgrade -y
@@ -93,3 +98,7 @@ echo "Setup complete. Please follow the instructions to tweet and submit proof i
 echo "Join the Discord from the profile: https://linktr.ee/AlignedLayer"
 
 echo "Script execution finished."
+echo "Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions"
+echo "============================ Aligned Layer Automation ===================================="
+echo "Node community Telegram channel: https://t.me/layerairdrop"
+echo "Node community Telegram group: https://t.me/layerairdropdiskusi"
