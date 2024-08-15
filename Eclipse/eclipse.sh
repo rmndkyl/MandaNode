@@ -23,7 +23,7 @@ execute_and_prompt() {
     eval "$command"
     echo -e "${GREEN}Done.${NC}"
 }
-echo
+
 echo -e "${YELLOW}Installing Rust...${NC}"
 echo
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
@@ -31,23 +31,36 @@ source "$HOME/.cargo/env"
 echo -e "${GREEN}Rust installed: $(rustc --version)${NC}"
 echo
 
-echo -e "${YELLOW}Installing NVM and Node.js LTS...${NC}"
+echo -e "${YELLOW}Removing Node.js...${NC}"
 echo
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash && export NVM_DIR="/usr/local/share/nvm"; [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"; [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"; source ~/.bashrc; nvm install --lts; nvm use --lts
-echo -e "${GREEN}Node.js installed: $(node -v)${NC}"
+sudo apt-get remove -y nodejs
 echo
 
+echo -e "${YELLOW}Installing NVM and Node.js LTS...${NC}"
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+sleep 2
+source ~/.bashrc
+nvm install --lts
+nvm use --lts
+echo -e "${GREEN}Node.js installed: $(node -v)${NC}"
+echo
+if [ -d "testnet-deposit" ]; then
+    execute_and_prompt "Removing existing testnet-deposit folder..." "rm -rf testnet-deposit"
+fi
 echo -e "${YELLOW}Cloning repository and installing npm dependencies...${NC}"
 echo
-git clone https://github.com/Eclipse-Laboratories-Inc/eclipse-deposit
-cd eclipse-deposit
+git clone https://github.com/Eclipse-Laboratories-Inc/testnet-deposit
+cd testnet-deposit
 npm install
 echo
 
 echo -e "${YELLOW}Installing Solana CLI...${NC}"
 echo
 
-curl -sSfL https://release.anza.xyz/install | sh -s -- -v v1.16.0
+sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
 export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
 
 echo -e "${GREEN}Solana CLI installed: $(solana --version)${NC}"
@@ -58,34 +71,34 @@ echo -e "2) Import an existing Solana wallet"
 
 read -p "Enter your choice (1 or 2): " choice
 
+WALLET_FILE=~/my-wallet.json
+
+# Check if the wallet file exists
+if [ -f "$WALLET_FILE" ]; then
+    echo -e "${YELLOW}Existing wallet file found. Removing it...${NC}"
+    rm "$WALLET_FILE"
+fi
+
 if [ "$choice" -eq 1 ]; then
     echo -e "${YELLOW}Generating new Solana keypair...${NC}"
-    solana-keygen new -o ~/my-wallet.json
+    solana-keygen new -o "$WALLET_FILE"
     echo -e "${YELLOW}Save these mnemonic phrases in a safe place. If there is any airdrop in the future, you will be eligible from this wallet, so save it.${NC}"
 elif [ "$choice" -eq 2 ]; then
-    solana-keygen recover -o ~/my-wallet.json
+    echo -e "${YELLOW}Recovering existing Solana keypair...${NC}"
+    solana-keygen recover -o "$WALLET_FILE"
 else
     echo -e "${RED}Invalid choice. Exiting.${NC}"
     exit 1
 fi
 
-
-read -p "Enter your mnemonic phrase: " mnemonic
-
+read -p "Enter your mneomic phrase: " mnemonic
+echo
 
 cat << EOF > secrets.json
 {
   "seedPhrase": "$mnemonic"
 }
 EOF
-
-echo -e "${YELLOW}Configuring Solana CLI...${NC}"
-echo
-solana config set --url https://testnet.dev2.eclipsenetwork.xyz/
-solana config set --keypair ~/my-wallet.json
-echo
-echo -e "${GREEN}Solana Address:${NC} $(solana address)"
-echo
 
 cat << 'EOF' > derive-wallet.cjs
 const { seedPhrase } = require('./secrets.json');
@@ -98,9 +111,9 @@ const privateKey = mnemonicWallet.privateKey;
 console.log();
 console.log('ETHEREUM PRIVATE KEY:', privateKey);
 console.log();
-console.log('SEND ATLEAST 0.05 SEPOLIA ETH TO THIS ADDRESS:', mnemonicWallet.address);
+console.log('SEND MIN 0.05 SEPOLIA ETH TO THIS ADDRESS:', mnemonicWallet.address);
 
-fs.writeFileSync('private-key.txt', privateKey, 'utf8');
+fs.writeFileSync('pvt-key.txt', privateKey, 'utf8');
 EOF
 
 if ! npm list ethers &>/dev/null; then
@@ -113,41 +126,46 @@ fi
 node derive-wallet.cjs
 echo
 
-if [ -d "eclipse-deposit" ]; then
-    execute_and_prompt "Removing eclipse-deposit Folder..." "rm -rf eclipse-deposit"
+echo -e "${YELLOW}Configuring Solana CLI...${NC}"
+echo
+solana config set --url https://testnet.dev2.eclipsenetwork.xyz/
+solana config set --keypair ~/my-wallet.json
+echo
+echo -e "${GREEN}Solana Address: $(solana address)${NC}"
+echo
+
+if [ -d "testnet-deposit" ]; then
+    execute_and_prompt "Removing testnet-deposit Folder..." "rm -rf testnet-deposit"
 fi
 
 read -p "Enter your Solana address: " solana_address
 read -p "Enter your Ethereum Private Key: " ethereum_private_key
+read -p "Enter the number of times to repeat Transaction (4-5 tx Recommended): " repeat_count
 echo
 
+for ((i=1; i<=repeat_count; i++)); do
+    echo -e "${YELLOW}Running Bridge Script (Tx $i)...${NC}"
+    echo
+    node bin/cli.js -k pvt-key.txt -d "$solana_address" -a 0.01 --sepolia
+    echo
+    sleep 3
+done
 
-echo -e "${YELLOW}Running Bridge Script...${NC}"
-echo
-node bin/cli.js -k private-key.txt -d "$solana_address" -a 0.01 --sepolia
-sleep 3
-echo
 echo -e "${RED}It will take 4 mins, Don't do anything, Just Wait${RESET}"
 echo
+
 sleep 240
-echo -e "${YELLOW}Cloning Solana Hello World Repo...${NC}"
+execute_and_prompt "Creating token..." "spl-token create-token --enable-metadata -p TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
 echo
-git clone https://github.com/solana-labs/example-helloworld
-cd example-helloworld
+
+token_address=$(prompt "Enter your Token Address: ")
 echo
-echo -e "${YELLOW}Installing Dependencies...${NC}"
-npm install
+execute_and_prompt "Creating token account..." "spl-token create-account $token_address"
 echo
-echo -e "${YELLOW}Building Smart Contract...${NC}"
-npm run build:program-rust
+
+execute_and_prompt "Minting token..." "spl-token mint $token_address 10000"
 echo
-echo -e "${YELLOW}Deploying Smart Contract on Eclipse Testnet...${NC}"
-echo
-solana program deploy dist/program/helloworld.so
-echo
-echo -e "${YELLOW}Checking whether Contract deployed successfully or not...${NC}"
-echo
-npm run start
+execute_and_prompt "Checking token accounts..." "spl-token accounts"
 echo
 
 cd $HOME
