@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "Showing Animation.."
+echo "Showing Animation..."
 wget -O loader.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/loader.sh && chmod +x loader.sh && sed -i 's/\r$//' loader.sh && ./loader.sh
 wget -O logo.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/logo.sh && chmod +x logo.sh && sed -i 's/\r$//' logo.sh && ./logo.sh
 sleep 4
@@ -57,11 +57,12 @@ cd testnet-deposit
 npm install
 echo
 
-echo -e "${YELLOW}Installing Solana CLI...${NC}"
+echo -e "${YELLOW}Installing Solana CLI from crates.io...${NC}"
 echo
-
-sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
-export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+cargo install solana-cli-config
+cargo install solana-keygen
+cargo install solana
+export PATH="$HOME/.cargo/bin:$PATH"
 
 echo -e "${GREEN}Solana CLI installed: $(solana --version)${NC}"
 echo
@@ -91,7 +92,7 @@ else
     exit 1
 fi
 
-read -p "Enter your mneomic phrase: " mnemonic
+read -p "Enter your mnemonic phrase: " mnemonic
 echo
 
 cat << EOF > secrets.json
