@@ -1,4 +1,4 @@
-# Hardware Requirements
+| Hardware | Requirement |
 | ------------- | ---------------- |
 Cpu | 8 Cores
 Architecture | x86-64 (x64, x86_64, AMD64, ve Intel 64)
