@@ -47,7 +47,7 @@ echo
 echo -e "${YELLOW}Installing Solana CLI...${NC}"
 echo
 
-sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
+curl -sSfL https://release.anza.xyz/install | sh -s -- -v v1.16.0
 export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
 
 echo -e "${GREEN}Solana CLI installed: $(solana --version)${NC}"
