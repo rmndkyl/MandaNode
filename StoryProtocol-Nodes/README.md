@@ -1,3 +1,7 @@
+![image](https://github.com/user-attachments/assets/3ce591d1-38bd-4883-8776-1c1b597f2e68)
+
+![image](https://github.com/user-attachments/assets/ce276ddb-bb75-4f2d-a208-27995c66656d)
+-----------------------------------------------------------------------------
 # Hardware Requirements
 | Hardware | Requirement |
 | ------------- | ---------------- |
@@ -15,6 +19,10 @@ Rpc URL | https://testnet.storyrpc.io/
 Chain ID | 1513
 Currency Symbol | IP
 Explorer URL | https://testnet.storyscan.xyz/
+
+There are two $IP faucets:
+- [Story Faucet](https://faucet.story.foundation/)
+- [Thirdweb Faucet](https://thirdweb.com/story-iliad-testnet)
 
 # Instructions
 
