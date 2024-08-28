@@ -156,8 +156,8 @@ echo "Running setupClient.ts script..."
 npx ts-node setupClient.ts || { echo "Failed to run setupClient.ts"; exit 1; }
 
 # Optional cleanup
-echo "Cleaning up..."
-rm loader.sh logo.sh
+# echo "Cleaning up..."
+# rm loader.sh logo.sh
 
 # Display Watermark and Author
 echo "Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions"
