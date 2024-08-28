@@ -23,5 +23,5 @@ Explorer URL | https://testnet.storyscan.xyz/
 Open your terminal and execute the following command to download and run the script:
 
    ```sh
-   wget -O https://raw.githubusercontent.com/rmndkyl/MandaNode/main/StoryProtocol-Nodes/setup.sh && chmod +x setup.sh && sed -i 's/\r$//' setup.sh && ./setup.sh
+   wget -O setup.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/StoryProtocol-Nodes/setup.sh && chmod +x setup.sh && sed -i 's/\r$//' setup.sh && ./setup.sh
    ```
