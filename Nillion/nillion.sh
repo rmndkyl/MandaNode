@@ -72,10 +72,6 @@ echo "10. Saving PM2 process list and enabling startup..."
 pm2 save || error_exit "Failed to save PM2 process list!"
 pm2 startup || error_exit "Failed to enable PM2 startup on boot!"
 
-# Step 11: Check Docker logs for specific patterns
-echo "11. Checking Docker logs..."
-docker logs -f $(docker ps | grep nillion | awk '{print $NF}') --tail 100 | grep -E "Registered:|Secret" || error_exit "Failed to fetch or filter Docker logs!"
-
 echo "Setup and operations completed successfully!"
 echo "Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions"
 echo "============================ Nillion Verifier Installation ===================================="
