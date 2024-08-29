@@ -139,17 +139,17 @@ function main_menu() {
 	echo "============================ Cysic Verifier Node Installation ===================================="
 	echo "Node community Telegram channel: https://t.me/layerairdrop"
 	echo "Node community Telegram group: https://t.me/layerairdropdiskusi"
-    echo "Please choose an option:"
-    echo "1. Install Cysic verifier node"
-    echo "2. View node logs"
-    echo "3. Remove node"
-    read -p "Enter your choice (1-3): " OPTION
-    case $OPTION in
-    1) install_cysic_node ;;
-    2) check_node ;;
-    3) uninstall_node ;;
-    *) echo "Invalid option." ;;
-    esac
+    	echo "Please choose an option:"
+    	echo "1. Install Cysic verifier node"
+     	echo "2. View node logs"
+   	echo "3. Remove node"
+  	read -p "Enter your choice (1-3): " OPTION
+ 	case $OPTION in
+  	1) install_cysic_node ;;
+    	2) check_node ;;
+   	3) uninstall_node ;;
+    	*) echo "Invalid option." ;;
+    	esac
 }
 
 # Display main menu
