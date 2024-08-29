@@ -14,7 +14,7 @@ Ensure your device meets the following minimal specs for a smooth Cysic verifier
 
 2. After that, run on Screen:
 ```shell
-screen -S Cysic-Verifier
+screen -S cysic-verifier
 ```
 
 # One-click Installation
