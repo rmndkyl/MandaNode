@@ -88,6 +88,12 @@ function view_accuser_status {
     echo "Accuser status: $STATUS"
 }
 
+# Function to backup private key, address, and public key
+function backup_credentials {
+    echo "Backing up private key, address, and public key..."
+    sudo cat /root/nillion/accuser/credentials.json || error_exit "Failed to read credentials file!"
+}
+
 # Function to display menu and handle user input
 function show_menu {
     echo "Please choose an option:"
@@ -95,8 +101,9 @@ function show_menu {
     echo "2. View node logs"
     echo "3. Remove node"
     echo "4. View Accuser status"
+    echo "5. Backup Private Key, Address, and Pubkey"
     
-    read -p "Enter your choice [1-4]: " choice
+    read -p "Enter your choice [1-5]: " choice
 
     case $choice in
         1)
@@ -111,8 +118,11 @@ function show_menu {
         4)
             view_accuser_status
             ;;
+        5)
+            backup_credentials
+            ;;
         *)
-            echo "Invalid option. Please choose a number between 1 and 4."
+            echo "Invalid option. Please choose a number between 1 and 5."
             ;;
     esac
 }
