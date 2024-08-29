@@ -1,15 +1,11 @@
 #!/bin/bash
 
-LOGFILE="install_log.txt"
-exec > >(tee -a "$LOGFILE") 2>&1
-
-# Function to handle errors
-function handle_error() {
-    echo "Error on line $1"
+# Check if the script is run as root
+if [ "$(id -u)" != "0" ]; then
+    echo "This script must be run as root."
+    echo "Please try switching to the root user using the 'sudo -i' command, and then run this script again."
     exit 1
-}
-
-trap 'handle_error $LINENO' ERR
+fi
 
 # Showing Animation
 echo "Showing Animation..."
@@ -17,157 +13,247 @@ wget -O loader.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/lo
 wget -O logo.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/logo.sh && chmod +x logo.sh && sed -i 's/\r$//' logo.sh && ./logo.sh
 sleep 4
 
-# Update and install necessary packages
-echo "Updating and installing necessary packages..."
-sudo apt update || { echo "Failed to update packages"; exit 1; }
-sudo apt install -y screen npm wget git curl || { echo "Failed to install essential packages"; exit 1; }
+# Install necessary dependencies
+function install_dependencies() {
+    apt update && apt upgrade -y
+    apt install curl wget jq make gcc nano -y
+}
 
-# Clone the node-utils repository
-echo "Cloning the node-utils repository..."
-git clone https://github.com/storyprotocol/node-utils.git || { echo "Failed to clone repository"; exit 1; }
-
-# Navigate to the directory containing the run_commands.sh script
-cd node-utils/story-node-cli/linux || { echo "Failed to navigate to node-utils directory"; exit 1; }
-
-# Make the run_commands.sh script executable
-echo "Making the run_commands.sh script executable..."
-chmod +x run_commands.sh || { echo "Failed to make run_commands.sh executable"; exit 1; }
-
-# Prompt the user for a moniker name
-read -p "Enter the moniker name you want to use: " MONIKER
-
-# Start the Geth client in a new screen session
-echo "Starting Geth in a new screen session..."
-screen -dmS geth bash -c 'sudo bash run_commands.sh <<EOF
-1
-EOF'
-
-# Wait for Geth to initialize
-echo "Waiting for Geth to start..."
-sleep 120  # Adjust the sleep time as needed
-
-# Start the Iliad client in a new screen session
-echo "Starting Iliad in a new screen session..."
-screen -dmS iliad bash -c "sudo bash run_commands.sh <<EOF
-2
-$MONIKER
-EOF"
-
-# Function to prompt for private key input
-function prompt_for_private_key() {
-    read -p "Please enter your private key (starting with 0x): " PRIVATE_KEY
-    if [[ $PRIVATE_KEY != 0x* ]]; then
-        echo "Invalid private key format. The private key should start with '0x'."
-        exit 1
+# Install Node.js and npm
+function install_nodejs_and_npm() {
+    if command -v node > /dev/null 2>&1; then
+        echo "Node.js is already installed, version: $(node -v)"
+    else
+        echo "Node.js is not installed, installing now..."
+        curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
+        sudo apt-get install -y nodejs
+    fi
+    if command -v npm > /dev/null 2>&1; then
+        echo "npm is already installed, version: $(npm -v)"
+    else
+        echo "npm is not installed, installing now..."
+        sudo apt-get install -y npm
     fi
 }
 
-# Check for nvm installation and install Node.js 20
-echo "Checking Node.js version..."
-if ! command -v nvm &> /dev/null; then
-    echo "nvm is not installed. Installing nvm..."
-    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
-    source ~/.bashrc
-    source ~/.nvm/nvm.sh
-fi
+# Install PM2
+function install_pm2() {
+    if command -v pm2 > /dev/null 2>&1; then
+        echo "PM2 is already installed, version: $(pm2 -v)"
+    else
+        echo "PM2 is not installed, installing now..."
+        npm install pm2@latest -g
+    fi
+}
 
-nvm install 20
-nvm use 20
+# Install Story Node
+function install_story_node() {
+    install_dependencies
+    install_nodejs_and_npm
+    install_pm2  # Ensure PM2 is installed
 
-# Check if ts-node is installed, and install if necessary
-if ! command -v ts-node &> /dev/null; then
-    echo "ts-node is not installed. Installing ts-node..."
-    npm install -g ts-node || { echo "Failed to install ts-node"; exit 1; }
-fi
+    echo "Starting Story node installation..."
 
-# Install the Story Protocol SDK and dependencies
-echo "Installing Story Protocol SDK and dependencies..."
-npm install --save @story-protocol/core-sdk viem@1.21.4 || { echo "Failed to install Story Protocol SDK"; exit 1; }
+    # Download the execution client and consensus client
+    echo "Downloading the execution client and consensus client..."
+    wget https://story-geth-binaries.s3.us-west-1.amazonaws.com/geth-public/geth-linux-amd64-0.9.2-ea9f0d2.tar.gz
+    wget https://story-geth-binaries.s3.us-west-1.amazonaws.com/story-public/story-linux-amd64-0.9.11-2a25df1.tar.gz
 
-# Fix or update packages if necessary
-echo "Running npm audit fix..."
-npm audit fix --force || { echo "npm audit fix failed"; exit 1; }
+    # Extract the downloaded files
+    tar -xzf geth-linux-amd64-0.9.2-ea9f0d2.tar.gz
+    tar -xzf story-linux-amd64-0.9.11-2a25df1.tar.gz
 
-# Prompt for private key input
-prompt_for_private_key
+    echo "Default data directories are set to:"
+    echo "Story data root: ${STORY_DATA_ROOT}"
+    echo "Geth data root: ${GETH_DATA_ROOT}"
 
-# Create .env file and insert private key
-echo "Creating or updating .env file..."
-cat << EOF > .env
-WALLET_PRIVATE_KEY=$PRIVATE_KEY
-RPC_PROVIDER_URL=https://rpc.partner.testnet.storyprotocol.net
-EOF
+    # Execution client setup
+    echo "Setting up the execution client..."
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        sudo xattr -rd com.apple.quarantine ./geth
+    fi
 
-# Create createWallet.ts script
-echo "Creating createWallet.ts..."
-cat << 'EOF' > createWallet.ts
-import { config } from "dotenv";
-import { privateKeyToAccount } from "viem/accounts";
-import type { Address } from "viem";
+    # Run the execution client with PM2
+    cp /root/geth-linux-amd64-0.9.2-ea9f0d2/geth /usr/local/bin
+    pm2 start /usr/local/bin/geth --name story-geth -- --iliad --syncmode full
 
-// Load environment variables from .env file
-config();
+    # Consensus client setup
+    echo "Setting up the consensus client..."
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        sudo xattr -rd com.apple.quarantine ./story
+    fi
 
-// Get the private key from the .env file
-const PRIVATE_KEY = process.env.WALLET_PRIVATE_KEY || "0x";
+    # Initialize the consensus client
+    cp /root/story-linux-amd64-0.9.11-2a25df1/story /usr/local/bin
+    /usr/local/bin/story init --network iliad
 
-// Create the account object using the private key
-const account = privateKeyToAccount(PRIVATE_KEY as Address);
+    # Run the consensus client with PM2
+    pm2 start /usr/local/bin/story --name story-client -- run
 
-// Export the account object for use in other parts of your project
-export default account;
+    echo "Story node installation completed!"
+}
 
-// For demonstration, you can log the account address (not recommended for production)
-console.log(`Wallet address: ${account.address}`);
-EOF
+# Clear state function
+function clear_state() {
+    echo "Clearing state and reinitializing the node..."
+    rm -rf ${GETH_DATA_ROOT} && pm2 start /usr/local/bin/geth --name story-geth -- --iliad --syncmode full
+    rm -rf ${STORY_DATA_ROOT} && /usr/local/bin/story init --network iliad && pm2 start /usr/local/bin/story --name story-client -- run
+}
 
-# Run createWallet.ts script
-echo "Running createWallet.ts script..."
-npx ts-node createWallet.ts || { echo "Failed to run createWallet.ts"; exit 1; }
+# Check node status function
+function check_status() {
+    echo "Checking Geth status..."
+    pm2 logs story-geth
+    pm2 logs story-client
+}
 
-# Create setupClient.ts script
-echo "Creating setupClient.ts..."
-cat << 'EOF' > setupClient.ts
-import { config as loadEnv } from "dotenv";
-import { Account, privateKeyToAccount, Address } from 'viem/accounts';
-import { StoryClient, StoryConfig } from "@story-protocol/core-sdk";
-import { http } from 'viem'
+# Check .env file and read the private key
+function check_env_file() {
+    if [ -f ".env" ]; then
+        # Read the PRIVATE_KEY from the .env file
+        source .env
+        echo ".env file loaded, private key is: ${PRIVATE_KEY}"
+    else
+        # If .env file does not exist, prompt the user to input the private key
+        read -p "Please enter your ETH wallet private key (without the 0x prefix): " PRIVATE_KEY
+        # Create the .env file
+        echo "# ~/story/.env" > .env
+        echo "PRIVATE_KEY=${PRIVATE_KEY}" >> .env
+        echo ".env file has been created, contents are as follows:"
+        cat .env
+        echo "Please ensure the account has received IP funding (you can refer to the tutorial for funding)."
+    fi
+}
 
-// Load environment variables from .env file
-loadEnv();
+# Function to set up the validator
+function setup_validator() {
+    echo "Setting up the validator..."
+    # Check .env file and read the private key
+    check_env_file
 
-// Get the private key from the .env file and ensure it's valid
-const privateKey: Address = process.env.WALLET_PRIVATE_KEY as Address;
-const account: Account = privateKeyToAccount(privateKey);
+    # Prompt the user to perform validator operations
+    echo "You can perform the following validator operations:"
+    echo "1. Export validator key"
+    echo "2. Create a new validator"
+    echo "3. Stake to an existing validator"
+    echo "4. Unstake"
+    echo "5. Stake on behalf of another delegator"
+    echo "6. Unstake on behalf of another delegator"
+    echo "7. Add operator"
+    echo "8. Remove operator"
+    echo "9. Set withdrawal address"
+    read -p "Please enter an option (1-9): " OPTION
 
-// Configure the SDK client using the environment variables and the account
-const config: StoryConfig = {
-  transport: http(process.env.RPC_PROVIDER_URL),
-  account: account, // the account object from above
-  chainId: '1513' // change from Sepolia
-};
+    case $OPTION in
+    1) export_validator_key ;;
+    2) create_validator ;;
+    3) stake_to_validator ;;
+    4) unstake_from_validator ;;
+    5) stake_on_behalf ;;
+    6) unstake_on_behalf ;;
+    7) add_operator ;;
+    8) remove_operator ;;
+    9) set_withdrawal_address ;;
+    *) echo "Invalid option." ;;
+    esac
+}
 
-export const client = StoryClient.newClient(config);
-console.log("SDK Client is set up and ready to use.");
-EOF
+# Export validator key
+function export_validator_key() {
+    echo "Exporting validator key..."
+    /usr/local/bin/story validator export
+}
 
-# Run setupClient.ts script
-echo "Running setupClient.ts script..."
-npx ts-node setupClient.ts || { echo "Failed to run setupClient.ts"; exit 1; }
+# Create a new validator
+function create_validator() {
+    read -p "Please enter the stake amount (in IP): " AMOUNT_TO_STAKE_IN_IP
+    AMOUNT_TO_STAKE_IN_WEI=$((AMOUNT_TO_STAKE_IN_IP * 1000000000000000000))
+    /usr/local/bin/story validator create --stake ${AMOUNT_TO_STAKE_IN_WEI}
+}
 
-# Optional cleanup
-# echo "Cleaning up..."
-# rm loader.sh logo.sh
+# Stake to an existing validator
+function stake_to_validator() {
+    read -p "Please enter the validator public key (Base64 format): " VALIDATOR_PUB_KEY_IN_BASE64
+    read -p "Please enter the stake amount (in IP): " AMOUNT_TO_STAKE_IN_IP
+    AMOUNT_TO_STAKE_IN_WEI=$((AMOUNT_TO_STAKE_IN_IP * 1000000000000000000))
+    /usr/local/bin/story validator stake --validator-pubkey ${VALIDATOR_PUB_KEY_IN_BASE64} --stake ${AMOUNT_TO_STAKE_IN_WEI}
+}
 
-# Display Watermark and Author
-echo "Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions"
-echo "================================================================"
-echo "Node community Telegram channel: https://t.me/layerairdrop"
-echo "Node community Telegram group: https://t.me/layerairdropdiskusi"
-echo "================================================================"
+# Unstake
+function unstake_from_validator() {
+    read -p "Please enter the validator public key (Base64 format): " VALIDATOR_PUB_KEY_IN_BASE64
+    read -p "Please enter the unstake amount (in IP): " AMOUNT_TO_UNSTAKE_IN_IP
+    AMOUNT_TO_UNSTAKE_IN_WEI=$((AMOUNT_TO_UNSTAKE_IN_IP * 1000000000000000000))
+    /usr/local/bin/story validator unstake --validator-pubkey ${VALIDATOR_PUB_KEY_IN_BASE64} --unstake ${AMOUNT_TO_UNSTAKE_IN_WEI}
+}
 
-# Display instructions for accessing the screen sessions
-echo "Installation and setup complete. Your SDK should be ready to use!"
-echo "Geth and Iliad are running in their respective screen sessions."
-echo "To reattach to the Geth screen session, use: screen -r geth"
-echo "To reattach to the Iliad screen session, use: screen -r iliad"
+# Stake on behalf of another delegator
+function stake_on_behalf() {
+    read -p "Please enter the delegator public key (Base64 format): " DELEGATOR_PUB_KEY_IN_BASE64
+    read -p "Please enter the validator public key (Base64 format): " VALIDATOR_PUB_KEY_IN_BASE64
+    read -p "Please enter the stake amount (in IP): " AMOUNT_TO_STAKE_IN_IP
+    AMOUNT_TO_STAKE_IN_WEI=$((AMOUNT_TO_STAKE_IN_IP * 1000000000000000000))
+    /usr/local/bin/story validator stake-on-behalf --delegator-pubkey ${DELEGATOR_PUB_KEY_IN_BASE64} --validator-pubkey ${VALIDATOR_PUB_KEY_IN_BASE64} --stake ${AMOUNT_TO_STAKE_IN_WEI}
+}
+
+# Unstake on behalf of another delegator
+function unstake_on_behalf() {
+    read -p "Please enter the delegator public key (Base64 format): " DELEGATOR_PUB_KEY_IN_BASE64
+    read -p "Please enter the validator public key (Base64 format): " VALIDATOR_PUB_KEY_IN_BASE64
+    read -p "Please enter the unstake amount (in IP): " AMOUNT_TO_UNSTAKE_IN_IP
+    AMOUNT_TO_UNSTAKE_IN_WEI=$((AMOUNT_TO_UNSTAKE_IN_IP * 1000000000000000000))
+    /usr/local/bin/story validator unstake-on-behalf --delegator-pubkey ${DELEGATOR_PUB_KEY_IN_BASE64} --validator-pubkey ${VALIDATOR_PUB_KEY_IN_BASE64} --unstake ${AMOUNT_TO_UNSTAKE_IN_WEI}
+}
+
+# Add operator
+function add_operator() {
+    read -p "Please enter the operator's EVM address: " OPERATOR_EVM_ADDRESS
+    /usr/local/bin/story validator add-operator --operator ${OPERATOR_EVM_ADDRESS}
+}
+
+# Remove operator
+function remove_operator() {
+    read -p "Please enter the operator's EVM address: " OPERATOR_EVM_ADDRESS
+    /usr/local/bin/story validator remove-operator --operator ${OPERATOR_EVM_ADDRESS}
+}
+
+# Set withdrawal address
+function set_withdrawal_address() {
+    read -p "Please enter the new withdrawal address: " NEW_WITHDRAWAL_ADDRESS
+    /usr/local/bin/story validator set-withdrawal-address --address ${NEW_WITHDRAWAL_ADDRESS}
+}
+
+# Main menu
+function main_menu() {
+    clear
+    echo "██╗░░░░░░█████╗░██╗░░░██╗███████╗██████╗░  ░█████╗░██╗██████╗░██████╗░██████╗░░█████╗░██████╗░"
+    echo "██║░░░░░██╔══██╗╚██╗░██╔╝██╔════╝██╔══██╗  ██╔══██╗██║██╔══██╗██╔══██╗██╔══██╗██╔══██╗██╔══██╗"
+    echo "██║░░░░░███████║░╚████╔╝░█████╗░░██████╔╝  ███████║██║██████╔╝██║░░██║██████╔╝██║░░██║██████╔╝"
+    echo "██║░░░░░██╔══██║░░╚██╔╝░░██╔══╝░░██╔══██╗  ██╔══██║██║██╔══██╗██║░░██║██╔══██╗██║░░██║██╔═══╝░"
+    echo "███████╗██║░░██║░░░██║░░░███████╗██║░░██║  ██║░░██║██║██║░░██║██████╔╝██║░░██║╚█████╔╝██║░░░░░"
+    echo "╚══════╝╚═╝░░╚═╝░░░╚═╝░░░╚══════╝╚═╝░░╚═╝  ╚═╝░░╚═╝╚═╝╚═╝░░╚═╝╚═════╝░╚═╝░░╚═╝░╚════╝░╚═╝░░░░░"
+    echo "Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions"
+    echo "============================ Nubit Node Installation ===================================="
+    echo "Node community Telegram channel: https://t.me/layerairdrop"
+    echo "Node community Telegram group: https://t.me/layerairdropdiskusi"
+    echo "Please select an operation to execute:"
+    echo "1. Install Story Node"
+    echo "2. Clear state and reinitialize"
+    echo "3. Check node status"
+    echo "4. Set up validator"
+    echo "5. Exit"
+    read -p "Please enter an option (1-5): " OPTION
+
+    case $OPTION in
+    1) install_story_node ;;
+    2) clear_state ;;
+    3) check_status ;;
+    4) setup_validator ;;
+    5) exit 0 ;;
+    *) echo "Invalid option." ;;
+    esac
+}
+
+# Display the main menu
+check_env_file  # Check .env file before the main menu
+main_menu
