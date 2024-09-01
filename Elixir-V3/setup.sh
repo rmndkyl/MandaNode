@@ -97,11 +97,11 @@ function main_menu() {
 	echo "============================ Elixir V3 Node Installation ===================================="
 	echo "Node community Telegram channel: https://t.me/layerairdrop"
 	echo "Node community Telegram group: https://t.me/layerairdropdiskusi"
-    echo "Please select the operation you want to perform:"
-    echo "1. Install Elixir V3 Node"
-    echo "2. View Docker Logs"
-    echo "3. Delete Elixir Docker Container"
-    read -p "Please enter an option (1-3): " OPTION
+    	echo "Please select the operation you want to perform:"
+    	echo "1. Install Elixir V3 Node"
+	echo "2. View Docker Logs"
+    	echo "3. Delete Elixir Docker Container"
+   	read -p "Please enter an option (1-3): " OPTION
 
     case $OPTION in
     1) install_node ;;
