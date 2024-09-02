@@ -8,6 +8,18 @@ Operating System | Ubuntu 22.04.2 LTS or higher versions (x86-64)
 Storage | 50 GB
 Network Bandwidth | 10MB/s 
 
+## Persiapan Bahan dulu
+- Join Waitlist : https://beta.nesa.ai/
+- Register with email & verify
+
+- Signup Hugging Face : https://huggingface.co/
+- Register with email & verify
+- Login > Go to Profil
+- Pilih Settings > Access Token
+- Create New Token > Centangin Semua
+- Create Token & Copy Api Key
+
+
 # Instructions
 
 1. **Download and run the setup script:**
