@@ -3,6 +3,12 @@
 # Script save path
 SCRIPT_PATH="$HOME/sonaric.sh"
 
+# Showing Logo
+echo "Showing Animation.."
+wget -O loader.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/loader.sh && chmod +x loader.sh && sed -i 's/\r$//' loader.sh && ./loader.sh
+wget -O logo.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/logo.sh && chmod +x logo.sh && sed -i 's/\r$//' logo.sh && ./logo.sh
+sleep 4
+
 # Check if the script is run as root user
 if [ "$(id -u)" != "0" ]; then
     echo "This script needs to be run with root user privileges."
@@ -10,20 +16,16 @@ if [ "$(id -u)" != "0" ]; then
     exit 1
 fi
 
-# Showing Logo
-echo "Showing Animation.."
-wget -O loader.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/loader.sh && chmod +x loader.sh && sed -i 's/\r$//' loader.sh && ./loader.sh
-wget -O logo.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/logo.sh && chmod +x logo.sh && sed -i 's/\r$//' logo.sh && ./logo.sh
-sleep 4
+
 
 # Main menu function
 function main_menu() {
     while true; do
         clear
-		echo "Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions"
-		echo "============================ Sonaric Node Installation ===================================="
-		echo "Node community Telegram channel: https://t.me/layerairdrop"
-		echo "Node community Telegram group: https://t.me/layerairdropdiskusi"
+	echo "Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions"
+	echo "============================ Sonaric Node Installation ===================================="
+	echo "Node community Telegram channel: https://t.me/layerairdrop"
+	echo "Node community Telegram group: https://t.me/layerairdropdiskusi"
         echo "To exit the script, press ctrl + C."
         echo "Please select an operation:"
         echo "1) Start Node"
