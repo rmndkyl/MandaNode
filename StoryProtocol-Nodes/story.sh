@@ -207,53 +207,57 @@ function unstake_on_behalf() {
 
 # Add operator
 function add_operator() {
-    read -p "Please enter the operator's EVM address: " OPERATOR_EVM_ADDRESS
-    /usr/local/bin/story validator add-operator --operator ${OPERATOR_EVM_ADDRESS}
+    read -p "Please enter the operator address: " OPERATOR_ADDRESS
+    /usr/local/bin/story validator add-operator --operator-address ${OPERATOR_ADDRESS}
 }
 
 # Remove operator
 function remove_operator() {
-    read -p "Please enter the operator's EVM address: " OPERATOR_EVM_ADDRESS
-    /usr/local/bin/story validator remove-operator --operator ${OPERATOR_EVM_ADDRESS}
+    read -p "Please enter the operator address: " OPERATOR_ADDRESS
+    /usr/local/bin/story validator remove-operator --operator-address ${OPERATOR_ADDRESS}
 }
 
 # Set withdrawal address
 function set_withdrawal_address() {
-    read -p "Please enter the new withdrawal address: " NEW_WITHDRAWAL_ADDRESS
-    /usr/local/bin/story validator set-withdrawal-address --address ${NEW_WITHDRAWAL_ADDRESS}
+    read -p "Please enter the withdrawal address: " WITHDRAWAL_ADDRESS
+    /usr/local/bin/story validator set-withdrawal-address --withdrawal-address ${WITHDRAWAL_ADDRESS}
+}
+
+# Delete nodes function
+function delete_nodes() {
+    echo "Deleting nodes..."
+    pm2 stop story-geth
+    pm2 delete story-geth
+    pm2 stop story-client
+    pm2 delete story-client
+
+    # Remove binaries and data directories
+    rm -rf /usr/local/bin/geth /usr/local/bin/story
+    rm -rf ${GETH_DATA_ROOT} ${STORY_DATA_ROOT}
+
+    echo "Nodes deleted successfully!"
 }
 
 # Main menu
 function main_menu() {
-    clear
-    echo "██╗░░░░░░█████╗░██╗░░░██╗███████╗██████╗░  ░█████╗░██╗██████╗░██████╗░██████╗░░█████╗░██████╗░"
-    echo "██║░░░░░██╔══██╗╚██╗░██╔╝██╔════╝██╔══██╗  ██╔══██╗██║██╔══██╗██╔══██╗██╔══██╗██╔══██╗██╔══██╗"
-    echo "██║░░░░░███████║░╚████╔╝░█████╗░░██████╔╝  ███████║██║██████╔╝██║░░██║██████╔╝██║░░██║██████╔╝"
-    echo "██║░░░░░██╔══██║░░╚██╔╝░░██╔══╝░░██╔══██╗  ██╔══██║██║██╔══██╗██║░░██║██╔══██╗██║░░██║██╔═══╝░"
-    echo "███████╗██║░░██║░░░██║░░░███████╗██║░░██║  ██║░░██║██║██║░░██║██████╔╝██║░░██║╚█████╔╝██║░░░░░"
-    echo "╚══════╝╚═╝░░╚═╝░░░╚═╝░░░╚══════╝╚═╝░░╚═╝  ╚═╝░░╚═╝╚═╝╚═╝░░╚═╝╚═════╝░╚═╝░░╚═╝░╚════╝░╚═╝░░░░░"
-    echo "Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions"
-    echo "============================ Story Node Installation ===================================="
-    echo "Node community Telegram channel: https://t.me/layerairdrop"
-    echo "Node community Telegram group: https://t.me/layerairdropdiskusi"
-    echo "Please select an operation to execute:"
-    echo "1. Install Story Node"
-    echo "2. Clear state and reinitialize"
+    echo "1. Install Story node"
+    echo "2. Clear state and reinitialize node"
     echo "3. Check node status"
-    echo "4. Set up validator"
-    echo "5. Exit"
-    read -p "Please enter an option (1-5): " OPTION
+    echo "4. Setup validator"
+    echo "5. Delete nodes"
+    echo "6. Exit"
+    read -p "Please enter an option (1-6): " OPTION
 
     case $OPTION in
     1) install_story_node ;;
     2) clear_state ;;
     3) check_status ;;
     4) setup_validator ;;
-    5) exit 0 ;;
+    5) delete_nodes ;;
+    6) exit 0 ;;
     *) echo "Invalid option." ;;
     esac
 }
 
-# Display the main menu
-check_env_file  # Check .env file before the main menu
+# Run the main menu
 main_menu
