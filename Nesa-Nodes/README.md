@@ -30,7 +30,7 @@ screen -S nesa-nodes
    ```
 
    ```sh
-   wget -O setup.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Nesa-Nodes/setup.sh && chmod +x setup.sh && sed -i 's/\r$//' setup.sh && ./setup.sh
+   wget -O nesa.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Nesa-Nodes/nesa.sh && chmod +x nesa.sh && sed -i 's/\r$//' nesa.sh && ./nesa.sh
    ```
 - Pilih Wizardy
 - Submit nama node
