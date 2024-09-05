@@ -18,5 +18,5 @@ screen -S sunrise-lightnode
 
 # One-click Installation
 ```shell
-wget -O run.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Sunrise-Layer/run.sh && chmod +x run.sh && sed -i 's/\r$//' run.sh && ./run.sh
+wget -O sunrise.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Sunrise-Layer/sunrise.sh && chmod +x sunrise.sh && sed -i 's/\r$//' sunrise.sh && ./sunrise.sh
 ```
