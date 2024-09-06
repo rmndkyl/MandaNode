@@ -23,6 +23,7 @@ Explorer URL | https://brn.explorer.caldera.xyz
 2. After that, run on Screen:
 ```python
 screen -S tern-executor
+```
 
 3. **Download and run the setup script:**
 
