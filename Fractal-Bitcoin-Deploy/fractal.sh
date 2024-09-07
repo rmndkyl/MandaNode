@@ -19,7 +19,7 @@ function main_menu() {
 	echo "Node community Telegram group: https://t.me/layerairdropdiskusi"
         echo "To exit the script, press Ctrl+C."
         echo "Please select the operation to execute:"
-        echo "1) Install Node (version 0.1.8)"
+        echo "1) Install Node (version 0.2.0)"
         echo "2) View Service Logs"
         echo "3) Create Wallet"
         echo "4) View Private Key"
