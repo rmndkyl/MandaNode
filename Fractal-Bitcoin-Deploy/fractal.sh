@@ -56,7 +56,7 @@ function install_node() {
 
     # Download fractald library
     echo "Downloading fractald library..."
-    wget https://github.com/fractal-bitcoin/fractald-release/releases/download/v0.1.8/fractald-0.1.8-x86_64-linux-gnu.tar.gz
+    wget https://github.com/fractal-bitcoin/fractald-release/releases/download/v0.2.0/fractald-0.2.0-x86_64-linux-gnu.tar.gz
 
     # Extract fractald library
     echo "Extracting fractald library..."
