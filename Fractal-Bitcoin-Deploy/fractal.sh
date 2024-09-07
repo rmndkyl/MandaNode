@@ -60,11 +60,11 @@ function install_node() {
 
     # Extract fractald library
     echo "Extracting fractald library..."
-    tar -zxvf fractald-0.1.8-x86_64-linux-gnu.tar.gz
+    tar -zxvf fractald-0.2.0-x86_64-linux-gnu.tar.gz
 
     # Enter fractald directory
     echo "Entering fractald directory..."
-    cd fractald-0.1.8-x86_64-linux-gnu
+    cd fractald-0.2.0-x86_64-linux-gnu
 
     # Create data directory
     echo "Creating data directory..."
@@ -83,8 +83,8 @@ After=network.target
 
 [Service]
 User=root
-WorkingDirectory=/root/fractald-0.1.8-x86_64-linux-gnu
-ExecStart=/root/fractald-0.1.8-x86_64-linux-gnu/bin/bitcoind -datadir=/root/fractald-0.1.8-x86_64-linux-gnu/data/ -maxtipage=504576000
+WorkingDirectory=/root/fractald-0.2.0-x86_64-linux-gnu
+ExecStart=/root/fractald-0.2.0-x86_64-linux-gnu/bin/bitcoind -datadir=/root/fractald-0.2.0-x86_64-linux-gnu/data/ -maxtipage=504576000
 Restart=always
 RestartSec=3
 LimitNOFILE=infinity
@@ -120,7 +120,7 @@ function view_logs() {
 # Create wallet function
 function create_wallet() {
     echo "Creating wallet..."
-    cd /root/fractald-0.1.8-x86_64-linux-gnu/bin && ./bitcoin-wallet -wallet=wallet -legacy create
+    cd /root/fractald-0.2.0-x86_64-linux-gnu/bin && ./bitcoin-wallet -wallet=wallet -legacy create
     
     # Prompt the user to press any key to return to the main menu
     read -p "Press any key to return to the main menu..."
@@ -131,7 +131,7 @@ function view_private_key() {
     echo "Viewing private key..."
     
     # Enter fractald directory
-    cd /root/fractald-0.1.8-x86_64-linux-gnu/bin
+    cd /root/fractald-0.2.0-x86_64-linux-gnu/bin
     
     # Use bitcoin-wallet to export the private key
     ./bitcoin-wallet -wallet=/root/.bitcoin/wallets/wallet/wallet.dat -dumpfile=/root/.bitcoin/wallets/wallet/MyPK.dat dump
