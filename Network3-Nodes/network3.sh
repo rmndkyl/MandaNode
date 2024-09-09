@@ -1,0 +1,164 @@
+#!/bin/bash
+
+# Check if the script is run as root
+if [ "$(id -u)" != "0" ]; then
+    echo "This script must be run as root."
+    echo "Please try switching to the root user using 'sudo -i', then run this script again."
+    exit 1
+fi
+
+#Showing Logo
+echo "Showing Animation.."
+wget -O loader.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/loader.sh && chmod +x loader.sh && sed -i 's/\r$//' loader.sh && ./loader.sh
+wget -O logo.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/logo.sh && chmod +x logo.sh && sed -i 's/\r$//' logo.sh && ./logo.sh
+sleep 4
+
+# Function to check and install Docker and Docker Compose
+install_docker() {
+    # Check if Docker is installed
+    if command -v docker &> /dev/null
+    then
+        echo "Docker is already installed."
+    else
+        echo "Docker is not installed. Installing Docker..."
+        wget https://get.docker.com/ -O docker.sh
+        sudo sh docker.sh
+        echo "Docker installation completed."
+    fi
+
+    # Check if Docker Compose is installed
+    if docker compose version &> /dev/null
+    then
+        echo "Docker Compose is already installed."
+    else
+        echo "Docker Compose is not installed. Installing Docker Compose..."
+        # Docker Compose is included with recent versions of Docker, but we ensure it is installed.
+        sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        sudo chmod +x /usr/local/bin/docker-compose
+        sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+        echo "Docker Compose installation completed."
+    fi
+}
+
+# Function to create the docker-compose.yml file with user input
+create_docker_compose() {
+    read -p "Enter your Network3 account email: " user_email
+    read -p "Enter the path on your machine for WireGuard (e.g., /path/to/wireguard): " user_path
+    
+    echo "Creating docker-compose.yml file..."
+    mkdir -p network3
+    cd network3
+    touch docker-compose.yml
+    cat > docker-compose.yml <<EOL
+version: '3.3'
+services:  
+  network3-01:    
+    image: aron666/network3-ai    
+    container_name: network3-01    
+    ports:      
+      - 8080:8080/tcp
+    environment:
+      - EMAIL=$user_email
+    volumes:
+      - $user_path:/usr/local/etc/wireguard    
+    healthcheck:      
+      test: curl -fs http://localhost:8080/ || exit 1      
+      interval: 30s      
+      timeout: 5s      
+      retries: 5      
+      start_period: 30s    
+    privileged: true    
+    devices:      
+      - /dev/net/tun    
+    cap_add:      
+      - NET_ADMIN    
+    restart: always
+
+  autoheal:    
+    restart: always    
+    image: willfarrell/autoheal    
+    container_name: autoheal    
+    environment:      
+      - AUTOHEAL_CONTAINER_LABEL=all    
+    volumes:      
+      - /var/run/docker.sock:/var/run/docker.sock
+EOL
+    echo "docker-compose.yml created with your inputs."
+    cd ..
+}
+
+# Function to start the Network3 node
+start_node() {
+    echo "Starting Network3 node..."
+    cd network3
+    docker compose up -d
+    echo "Network3 node started."
+    cd ..
+}
+
+# Function to stop the Network3 node
+stop_node() {
+    echo "Stopping Network3 node..."
+    cd network3
+    docker compose down
+    echo "Network3 node stopped."
+    cd ..
+}
+
+# Function to check container status
+check_status() {
+    echo "Checking container status..."
+    cd network3
+    docker compose ps
+    cd ..
+}
+
+# Function to update the containers
+update_node() {
+    echo "Updating Network3 node..."
+    cd network3
+    docker compose down
+    docker compose pull
+    docker compose up -d
+    echo "Network3 node updated."
+    cd ..
+}
+
+# Main Menu
+main_menu() {
+    echo "██╗░░░░░░█████╗░██╗░░░██╗███████╗██████╗░  ░█████╗░██╗██████╗░██████╗░██████╗░░█████╗░██████╗░"
+    echo "██║░░░░░██╔══██╗╚██╗░██╔╝██╔════╝██╔══██╗  ██╔══██╗██║██╔══██╗██╔══██╗██╔══██╗██╔══██╗██╔══██╗"
+    echo "██║░░░░░███████║░╚████╔╝░█████╗░░██████╔╝  ███████║██║██████╔╝██║░░██║██████╔╝██║░░██║██████╔╝"
+    echo "██║░░░░░██╔══██║░░╚██╔╝░░██╔══╝░░██╔══██╗  ██╔══██║██║██╔══██╗██║░░██║██╔══██╗██║░░██║██╔═══╝░"
+    echo "███████╗██║░░██║░░░██║░░░███████╗██║░░██║  ██║░░██║██║██║░░██║██████╔╝██║░░██║╚█████╔╝██║░░░░░"
+    echo "╚══════╝╚═╝░░╚═╝░░░╚═╝░░░╚══════╝╚═╝░░╚═╝  ╚═╝░░╚═╝╚═╝╚═╝░░╚═╝╚═════╝░╚═╝░░╚═╝░╚════╝░╚═╝░░░░░"
+    echo "Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions"
+    echo "============================ Network3 Node Installation ===================================="
+    echo "Node community Telegram channel: https://t.me/+U3vHFLDNC5JjN2Jl"
+    echo "Node community Telegram group: https://t.me/+UgQeEnnWrodiNTI1"
+    echo "1. Install Docker and Docker Compose"
+    echo "2. Create docker-compose.yml"
+    echo "3. Start Network3 Node"
+    echo "4. Stop Network3 Node"
+    echo "5. Check Container Status"
+    echo "6. Update Network3 Node"
+    echo "7. Exit"
+    echo "========================"
+    read -p "Please choose an option [1-7]: " choice
+
+    case $choice in
+        1) install_docker ;;
+        2) create_docker_compose ;;
+        3) start_node ;;
+        4) stop_node ;;
+        5) check_status ;;
+        6) update_node ;;
+        7) exit 0 ;;
+        *) echo "Invalid option. Please try again." ;;
+    esac
+}
+
+# Loop the menu until exit is chosen
+while true; do
+    main_menu
+done
