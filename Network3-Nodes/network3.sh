@@ -179,6 +179,10 @@ main_menu() {
         8) exit 0 ;;
         *) echo "Invalid option. Please try again." ;;
     esac
+    
+    # Wait for the user to press any key to return to the main menu
+    echo "Press any key to return to the main menu..."
+    read -n 1 -s -r
 }
 
 # Loop the menu until exit is chosen
