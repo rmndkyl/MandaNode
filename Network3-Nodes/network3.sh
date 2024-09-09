@@ -87,6 +87,27 @@ EOL
     cd ..
 }
 
+# Function to check and return the IP for the binding URL
+check_url() {
+    # Get the machine's IP address
+    ip_address=$(hostname -I | awk '{print $1}')
+    
+    if [ -z "$ip_address" ]; then
+        echo "Could not retrieve IP address. Trying with external service..."
+        ip_address=$(curl -s ifconfig.me)
+    fi
+
+    if [ -z "$ip_address" ]; then
+        echo "Could not retrieve IP address. Please check your network settings."
+        return 1
+    fi
+
+    # Construct the URL
+    node_url="http://account.network3.ai:8080/main?o=$ip_address:8080"
+    echo "Bind your node using the following URL: $node_url"
+    echo "You can open the url above at Google/Brave/Mozilla."
+}
+
 # Function to start the Network3 node
 start_node() {
     echo "Starting Network3 node..."
@@ -142,7 +163,8 @@ main_menu() {
     echo "4. Stop Network3 Node"
     echo "5. Check Container Status"
     echo "6. Update Network3 Node"
-    echo "7. Exit"
+    echo "7. Get Node Binding URL"
+    echo "8. Exit"
     echo "========================"
     read -p "Please choose an option [1-7]: " choice
 
@@ -153,7 +175,8 @@ main_menu() {
         4) stop_node ;;
         5) check_status ;;
         6) update_node ;;
-        7) exit 0 ;;
+        7) check_url ;;
+        8) exit 0 ;;
         *) echo "Invalid option. Please try again." ;;
     esac
 }
