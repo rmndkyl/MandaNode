@@ -10,7 +10,12 @@ Network Bandwidth | 10MB/s
 
 # Instructions
 
-1. **Download and run the setup script:**
+1. **First thing, run on Screen:**
+```bash
+screen -S autonomys-nodes
+```
+
+2. **Download and run the setup script:**
 
 Open your terminal and execute the following command to download and run the script:
 
