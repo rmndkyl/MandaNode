@@ -12,7 +12,7 @@ Network Bandwidth | 10MB/s
 
 1. **First thing, run on Screen:**
    ```sh
-screen -S network3-nodes
+   screen -S network3-nodes
    ```
 
 2. **Download and run the setup script:**
