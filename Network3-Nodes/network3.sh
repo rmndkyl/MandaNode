@@ -185,7 +185,7 @@ main_menu() {
     echo "7. Get Node Binding URL"
     echo "8. Exit"
     echo "========================"
-    read -p "Please choose an option [1-7]: " choice
+    read -p "Please choose an option [1-8]: " choice
 
     case $choice in
         1) install_docker ;;
