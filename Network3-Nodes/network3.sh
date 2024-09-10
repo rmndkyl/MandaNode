@@ -58,7 +58,8 @@ install_docker() {
 # Function to create the docker-compose.yml file with user input
 create_docker_compose() {
     read -p "Enter your Network3 account email: " user_email
-    read -p "Enter the path on your machine for WireGuard (e.g., /path/to/wireguard): " user_path
+    read -p "Enter the path on your machine for WireGuard (default: /root/network3/wireguard): " user_path
+    user_path=${user_path:-/root/network3/wireguard}  # Use default path if user presses Enter
     
     echo "Creating docker-compose.yml file..."
     mkdir -p network3
