@@ -16,14 +16,30 @@ sleep 4
 # Function to check and install Docker and Docker Compose
 install_docker() {
     # Check if Docker is installed
-    if command -v docker &> /dev/null
+    if ! command -v docker &> /dev/null
     then
-        echo "Docker is already installed."
-    else
-        echo "Docker is not installed. Installing Docker..."
-        wget https://get.docker.com/ -O docker.sh
-        sudo sh docker.sh
+        echo "Docker not detected, installing..."
+        sudo apt-get update
+        sudo apt-get install ca-certificates curl gnupg lsb-release -y
+
+        # Add Docker's official GPG key
+        sudo mkdir -p /etc/apt/keyrings
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+
+        # Set up the Docker repository
+        echo \
+          "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+          $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+        # Authorize Docker files
+        sudo chmod a+r /etc/apt/keyrings/docker.gpg
+        sudo apt-get update
+
+        # Install the latest version of Docker
+        sudo apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin -y
         echo "Docker installation completed."
+    else
+        echo "Docker is already installed."
     fi
 
     # Check if Docker Compose is installed
@@ -32,7 +48,6 @@ install_docker() {
         echo "Docker Compose is already installed."
     else
         echo "Docker Compose is not installed. Installing Docker Compose..."
-        # Docker Compose is included with recent versions of Docker, but we ensure it is installed.
         sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
         sudo chmod +x /usr/local/bin/docker-compose
         sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
