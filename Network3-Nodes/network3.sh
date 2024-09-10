@@ -53,6 +53,7 @@ install_docker() {
         sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
         echo "Docker Compose installation completed."
     fi
+    read -n 1 -s -r
 }
 
 # Function to create the docker-compose.yml file with user input
@@ -101,6 +102,7 @@ services:
 EOL
     echo "docker-compose.yml created with your inputs."
     cd ..
+    read -n 1 -s -r
 }
 
 # Function to check and return the IP for the binding URL
@@ -122,6 +124,7 @@ check_url() {
     node_url="http://account.network3.ai:8080/main?o=$ip_address:8080"
     echo "Bind your node using the following URL: $node_url"
     echo "You can open the url above at Google/Brave/Mozilla."
+    read -n 1 -s -r
 }
 
 # Function to start the Network3 node
@@ -131,6 +134,7 @@ start_node() {
     docker compose up -d
     echo "Network3 node started."
     cd ..
+    read -n 1 -s -r
 }
 
 # Function to stop the Network3 node
@@ -140,6 +144,7 @@ stop_node() {
     docker compose down
     echo "Network3 node stopped."
     cd ..
+    read -n 1 -s -r
 }
 
 # Function to restart the Network3 node
@@ -150,6 +155,7 @@ restart_node() {
     docker compose up -d
     echo "Network3 node restarted."
     cd ..
+    read -n 1 -s -r
 }
 
 # Function to check container status and view logs
@@ -177,6 +183,7 @@ check_status() {
         fi
     fi
     cd ..
+    read -n 1 -s -r
 }
 
 # Function to update the containers
@@ -188,6 +195,7 @@ update_node() {
     docker compose up -d
     echo "Network3 node updated."
     cd ..
+    read -n 1 -s -r
 }
 
 # Function to get private key from file and display instructions
@@ -202,6 +210,7 @@ get_private_key() {
     else
         echo "Private key file not found at $key_file. Please make sure the file exists."
     fi
+    read -n 1 -s -r
 }
 
 # Main Menu
