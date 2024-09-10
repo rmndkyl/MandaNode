@@ -242,6 +242,8 @@ main_menu() {
         10) echo "Exiting the script. Goodbye!"; exit 0 ;;
         *) echo "Invalid option. Please choose a valid number between 1-10." ;;
     esac
+    echo "Press any key to return to the main menu..."
+    read -n 1 -s -r
 }
 
 # Main loop
