@@ -190,6 +190,20 @@ update_node() {
     cd ..
 }
 
+# Function to get private key from file and display instructions
+get_private_key() {
+    key_file="/root/network3/wireguard/utun.key"
+    
+    # Check if the key file exists
+    if [ -f "$key_file" ]; then
+        # Read the private key from the file
+        private_key=$(cat "$key_file")
+        echo "Private Key: $private_key"
+    else
+        echo "Private key file not found at $key_file. Please make sure the file exists."
+    fi
+}
+
 # Main Menu
 main_menu() {
     echo "██╗░░░░░░█████╗░██╗░░░██╗███████╗██████╗░  ░█████╗░██╗██████╗░██████╗░██████╗░░█████╗░██████╗░"
@@ -210,9 +224,10 @@ main_menu() {
     echo "6. Update Network3 Node"
     echo "7. Get Node Binding URL"
     echo "8. Restart Network3 Node"
-    echo "9. Exit"
+    echo "9. Get Private Key and Bind URL"
+    echo "10. Exit"
     echo "========================"
-    read -p "Please choose an option [1-9]: " choice
+    read -p "Please choose an option [1-10]: " choice
 
     case $choice in
         1) install_docker ;;
@@ -223,8 +238,9 @@ main_menu() {
         6) update_node ;;
         7) check_url ;;
         8) restart_node ;;
-        9) echo "Exiting the script. Goodbye!"; exit 0 ;;
-        *) echo "Invalid option. Please choose a valid number between 1-9." ;;
+        9) get_private_key ;;  # Call the new function here
+        10) echo "Exiting the script. Goodbye!"; exit 0 ;;
+        *) echo "Invalid option. Please choose a valid number between 1-10." ;;
     esac
 }
 
