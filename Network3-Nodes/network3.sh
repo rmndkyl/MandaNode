@@ -126,11 +126,30 @@ stop_node() {
     cd ..
 }
 
-# Function to check container status
+# Function to check container status and view logs
 check_status() {
     echo "Checking container status..."
     cd network3
     docker compose ps
+
+    echo ""
+    echo "Would you like to view the logs of a specific service? (y/n)"
+    read -p "Enter your choice: " view_logs
+
+    if [[ "$view_logs" == "y" ]]; then
+        echo ""
+        echo "Available services:"
+        docker compose ps --services
+        echo ""
+        read -p "Enter the service name to view logs: " service_name
+
+        if [ -n "$service_name" ]; then
+            echo "Fetching logs for $service_name..."
+            docker compose logs $service_name
+        else
+            echo "No service name entered. Skipping log fetch."
+        fi
+    fi
     cd ..
 }
 
