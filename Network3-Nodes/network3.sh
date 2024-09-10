@@ -126,6 +126,16 @@ stop_node() {
     cd ..
 }
 
+# Function to restart the Network3 node
+restart_node() {
+    echo "Restarting Network3 node..."
+    cd network3
+    docker compose down
+    docker compose up -d
+    echo "Network3 node restarted."
+    cd ..
+}
+
 # Function to check container status and view logs
 check_status() {
     echo "Checking container status..."
@@ -183,9 +193,10 @@ main_menu() {
     echo "5. Check Container Status"
     echo "6. Update Network3 Node"
     echo "7. Get Node Binding URL"
-    echo "8. Exit"
+    echo "8. Restart Network3 Node"
+    echo "9. Exit"
     echo "========================"
-    read -p "Please choose an option [1-8]: " choice
+    read -p "Please choose an option [1-9]: " choice
 
     case $choice in
         1) install_docker ;;
@@ -195,16 +206,13 @@ main_menu() {
         5) check_status ;;
         6) update_node ;;
         7) check_url ;;
-        8) exit 0 ;;
-        *) echo "Invalid option. Please try again." ;;
+        8) restart_node ;;
+        9) echo "Exiting the script. Goodbye!"; exit 0 ;;
+        *) echo "Invalid option. Please choose a valid number between 1-9." ;;
     esac
-    
-    # Wait for the user to press any key to return to the main menu
-    echo "Press any key to return to the main menu..."
-    read -n 1 -s -r
 }
 
-# Loop the menu until exit is chosen
+# Main loop
 while true; do
     main_menu
 done
