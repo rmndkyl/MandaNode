@@ -96,11 +96,28 @@ create_wallet() {
     
     read -p "Enter your wallet name: " WALLET_NAME
     log "info" "Creating wallet: $WALLET_NAME"
+    
+    # Ensure BTC_USERNAME and BTC_PASSWORD are correctly passed
+    if [ -z "$BTC_USERNAME" ] || [ -z "$BTC_PASSWORD" ]; then
+        log "error" "Bitcoin Core username or password is missing."
+        read -p "Enter your Bitcoin Core username: " BTC_USERNAME
+        read -p "Enter your Bitcoin Core password: " BTC_PASSWORD
+    fi
 
-    docker exec bitcoind bitcoin-cli -testnet4 -rpcuser=$BTC_USERNAME -rpcpassword=$BTC_PASSWORD -rpcport=5000 createwallet $WALLET_NAME
+    # Log credentials for debugging (make sure to remove this in production)
+    log "info" "Using RPC username: $BTC_USERNAME and password: $BTC_PASSWORD"
+    
+    # Create wallet using bitcoin-cli
+    docker exec bitcoind bitcoin-cli -testnet4 -rpcuser="$BTC_USERNAME" -rpcpassword="$BTC_PASSWORD" -rpcport=5000 createwallet "$WALLET_NAME"
 
+    if [ $? -ne 0 ]; then
+        log "error" "Failed to create wallet. Please check your credentials and wallet name."
+        return
+    fi
+
+    # Fetch new address from the created wallet
     log "info" "Fetching new address from the wallet..."
-    docker exec bitcoind bitcoin-cli -testnet4 -rpcuser=$BTC_USERNAME -rpcpassword=$BTC_PASSWORD -rpcport=5000 getnewaddress
+    docker exec bitcoind bitcoin-cli -testnet4 -rpcuser="$BTC_USERNAME" -rpcpassword="$BTC_PASSWORD" -rpcport=5000 getnewaddress
 }
 
 # Function to view logs for Bitcoin node
