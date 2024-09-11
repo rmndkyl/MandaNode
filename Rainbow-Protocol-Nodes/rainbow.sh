@@ -8,11 +8,28 @@ if [ "$(id -u)" != "0" ]; then
 fi
 
 # Show animation and logo
-echo "Showing Animation.."
+echo "Showing Animation..."
 wget -O loader.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/loader.sh && chmod +x loader.sh && sed -i 's/\r$//' loader.sh && ./loader.sh
 wget -O logo.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/logo.sh && chmod +x logo.sh && sed -i 's/\r$//' logo.sh && ./logo.sh
 sleep 4
 
+# System updates and dependencies
+sudo apt update && sudo apt upgrade -y
+sudo apt install -y pkg-config libssl-dev
+
+# Docker and Docker Compose installation
+if ! command -v docker &> /dev/null; then
+    echo "Docker is not installed. Installing Docker..."
+    sudo apt install -y docker.io
+else
+    echo "Docker is already installed."
+fi
+docker --version
+
+sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+
+# Main menu function
 main_menu() {
     clear
     echo "██╗░░░░░░█████╗░██╗░░░██╗███████╗██████╗░  ░█████╗░██╗██████╗░██████╗░██████╗░░█████╗░██████╗░"
@@ -56,7 +73,7 @@ check_install_docker() {
     echo "Checking Docker installation..."
     if ! command -v docker &> /dev/null; then
         echo "Docker is not installed. Installing Docker..."
-        sudo apt update && sudo apt install -y docker.io
+        sudo apt install -y docker.io
     else
         echo "Docker is already installed."
     fi
