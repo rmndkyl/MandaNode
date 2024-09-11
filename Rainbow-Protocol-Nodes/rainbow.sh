@@ -14,7 +14,7 @@ if [ "$(id -u)" != "0" ]; then
     exit 1
 fi
 
-#Showing Logo
+# Showing Logo
 echo "Showing Animation.."
 wget -O loader.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/loader.sh && chmod +x loader.sh && sed -i 's/\r$//' loader.sh && ./loader.sh
 wget -O logo.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/logo.sh && chmod +x logo.sh && sed -i 's/\r$//' logo.sh && ./logo.sh
@@ -34,8 +34,8 @@ check_and_install_ufw() {
     ufw allow 22/tcp
     ufw allow 5000/tcp
     ufw --force enable
-read -n 1 -s -r -p "Press any key to continue..."
-main_menu
+    read -n 1 -s -r -p "Press any key to continue..."
+    main_menu
 }
 
 # Install Rainbow Protocol nodes
@@ -62,19 +62,27 @@ install_nodes() {
 
     log "info" "Starting Bitcoin Core with Docker Compose"
     docker-compose up -d
-read -n 1 -s -r -p "Press any key to continue..."
-main_menu
+    read -n 1 -s -r -p "Press any key to continue..."
+    main_menu
 }
 
 # Create a new wallet for Bitcoin Core
 create_wallet() {
     log "info" "Creating a new wallet in Bitcoin Core..."
-    docker exec -it bitcoind /bin/bash <<EOF
+
+    # Check if the bitcoind container is running
+    if [ "$(docker ps -q -f name=bitcoind)" ]; then
+        docker exec -it bitcoind /bin/bash <<EOF
         bitcoin-cli -testnet4 -rpcuser=$BTC_USERNAME -rpcpassword=$BTC_PASSWORD -rpcport=5000 createwallet yourwalletname
         exit
 EOF
-read -n 1 -s -r -p "Press any key to continue..."
-main_menu
+        log "info" "Wallet created successfully."
+    else
+        log "error" "Bitcoin Core container 'bitcoind' not found or not running."
+        log "info" "Make sure the node is installed and running before creating a wallet."
+    fi
+    read -n 1 -s -r -p "Press any key to continue..."
+    main_menu
 }
 
 # View logs of the Bitcoin Core and the indexer
@@ -83,7 +91,7 @@ view_logs() {
     docker logs bitcoind
     log "info" "To view indexer logs, check the output in your terminal."
     read -n 1 -s -r -p "Press any key to continue..."
-main_menu
+    main_menu
 }
 
 # Restart Rainbow Protocol nodes
@@ -93,7 +101,7 @@ restart_nodes() {
     docker-compose up -d
     log "info" "Node restarted successfully."
     read -n 1 -s -r -p "Press any key to continue..."
-main_menu
+    main_menu
 }
 
 # Update Rainbow Protocol nodes
@@ -105,7 +113,7 @@ update_nodes() {
     docker-compose up -d
     log "info" "Node updated successfully."
     read -n 1 -s -r -p "Press any key to continue..."
-main_menu
+    main_menu
 }
 
 # Main menu function
@@ -128,6 +136,7 @@ main_menu() {
         echo "5. Restart Nodes"
         echo "6. Update Nodes"
         echo "7. Exit"
+		echo "==========================================================================================="
         read -p "Choose an option (1-7): " choice
 
         case $choice in
@@ -154,7 +163,8 @@ main_menu() {
                 exit 0
                 ;;
             *)
-                log "error" "Invalid option. Please choose a number between 1 and 7." && read -n 1 -s -r -p "Press any key to continue..." && main_menu
+                log "error" "Invalid option. Please choose a number between 1 and 7." 
+                read -n 1 -s -r -p "Press any key to continue..."
                 ;;
         esac
     done
