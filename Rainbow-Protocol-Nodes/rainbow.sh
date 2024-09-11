@@ -51,9 +51,10 @@ main_menu() {
     echo "7. Restart Node"
     echo "8. Stop Node"
     echo "9. Update Node"
-    echo "10. Exit"
+    echo "10. Set Up Bitcoin Core"
+    echo "11. Exit"
 
-    read -p "Choose an option [1-10]: " choice
+    read -p "Choose an option [1-11]: " choice
     case $choice in
         1) check_install_docker ;;
         2) install_rainbow_node ;;
@@ -64,7 +65,8 @@ main_menu() {
         7) restart_node ;;
         8) stop_node ;;
         9) update_node ;;
-        10) exit 0 ;;
+        10) setup_bitcoin_core ;;
+        11) exit 0 ;;
         *) echo "Invalid choice. Please choose again." && read -n 1 -s -r -p "Press any key to continue..." && main_menu ;;
     esac
 }
@@ -143,6 +145,32 @@ update_node() {
     git pull origin main
     wget https://github.com/rainbowprotocol-xyz/rbo_indexer_testnet/releases/download/v0.0.1-alpha/rbo_worker -O rbo_worker
     chmod +x rbo_worker
+    read -n 1 -s -r -p "Press any key to continue..." && main_menu
+}
+
+setup_bitcoin_core() {
+    echo "Setting Up Bitcoin Core..."
+    echo "Enter the RPC username for Bitcoin Core:"
+    read BTC_RPC_USER
+    echo "Enter the RPC password for Bitcoin Core:"
+    read BTC_RPC_PASS
+
+    PROJECT_DIR="/root/project/run_btc_testnet4"
+    mkdir -p $PROJECT_DIR/data
+    git clone https://github.com/rainbowprotocol-xyz/btc_testnet4
+    cd btc_testnet4
+
+    sed -i "s/-rpcuser=demo/-rpcuser=$BTC_RPC_USER/g" docker-compose.yml
+    sed -i "s/-rpcpassword=demo/-rpcpassword=$BTC_RPC_PASS/g" docker-compose.yml
+    docker-compose up -d
+
+    echo "Enter a name for your Bitcoin Core wallet:"
+    read WALLET_NAME
+
+    docker exec bitcoind bitcoin-cli -testnet -rpcuser=$BTC_RPC_USER -rpcpassword=$BTC_RPC_PASS -rpcport=5000 createwallet $WALLET_NAME
+    docker exec bitcoind bitcoin-cli -testnet -rpcuser=$BTC_RPC_USER -rpcpassword=$BTC_RPC_PASS -rpcport=5000 getnewaddress
+
+    echo "Bitcoin Core setup is complete."
     read -n 1 -s -r -p "Press any key to continue..." && main_menu
 }
 
