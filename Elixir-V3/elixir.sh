@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 # Check if the script is running as root
 if [ "$(id -u)" != "0" ]; then
     echo "This script must be run as root."
@@ -13,29 +15,44 @@ wget -O loader.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/lo
 wget -O logo.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/logo.sh && chmod +x logo.sh && sed -i 's/\r$//' logo.sh && ./logo.sh
 sleep 4
 
+# System update and dependency installation
+echo "Updating and upgrading system..."
+sudo apt update && sudo apt upgrade -y
+
+echo "Installing dependencies..."
+sudo apt install curl iptables build-essential git wget lz4 jq make gcc nano automake autoconf tmux htop nvme-cli pkg-config libssl-dev libleveldb-dev tar clang bsdmainutils ncdu unzip -y
+
+# Check for existing Docker installation
+if dpkg -l | grep -q 'docker'; then
+    echo "Docker is already installed. Skipping removal of existing Docker packages."
+else
+    echo "Removing conflicting Docker packages if any..."
+    for pkg in docker.io docker-doc docker-compose podman-docker containerd runc; do 
+        sudo apt-get remove -y $pkg || true  
+    done
+fi
+
+# Add Docker GPG key and repository
+echo "Adding Docker GPG key and repository..."
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# Install Docker
+echo "Installing Docker..."
+sudo apt update -y && sudo apt upgrade -y
+sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y
+
+# Verify Docker installation
+docker --version
+
 # Script save path
 SCRIPT_PATH="$HOME/ElixirV3.sh"
 
-# Check and install Docker
-function check_and_install_docker() {
-    if ! command -v docker &> /dev/null; then
-        echo "Docker not detected, installing..."
-        sudo apt-get update
-        sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
-        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-        sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-        sudo apt-get update
-        sudo apt-get install -y docker-ce
-        echo "Docker installed."
-    else
-        echo "Docker is already installed."
-    fi
-}
-
 # Node installation function
 function install_node() {
-    check_and_install_docker
-
     # Prompt the user to input environment variable values
     read -p "Please enter the IP address of the validator node device: " ip_address
     read -p "Please enter the display name of the validator node: " validator_name
@@ -45,7 +62,6 @@ function install_node() {
     # Save environment variables to the validator.env file
     cat <<EOF > validator.env
 ENV=testnet-3
-
 STRATEGY_EXECUTOR_IP_ADDRESS=${ip_address}
 STRATEGY_EXECUTOR_DISPLAY_NAME=${validator_name}
 STRATEGY_EXECUTOR_BENEFICIARY=${safe_public_address}
@@ -55,6 +71,7 @@ EOF
     echo "Environment variables have been set and saved to the validator.env file."
 
     # Pull the Docker image
+    echo "Pulling Elixir Validator Docker image..."
     docker pull elixirprotocol/validator:v3
 
     # Prompt the user to select the platform
@@ -62,16 +79,22 @@ EOF
 
     if [[ "$is_arm" == "y" ]]; then
         # Running on Apple/ARM architecture
-        docker run -it -d \
+        echo "Running on Apple/ARM architecture..."
+        docker run -d \
           --env-file validator.env \
           --name elixir \
           --platform linux/amd64 \
+          --restart unless-stopped \
+          -p 17690:17690 \
           elixirprotocol/validator:v3
     else
         # Default run
-        docker run -it -d \
+        echo "Running on standard architecture..."
+        docker run -d \
           --env-file validator.env \
           --name elixir \
+          --restart unless-stopped \
+          -p 17690:17690 \
           elixirprotocol/validator:v3
     fi
 }
@@ -93,15 +116,15 @@ function delete_docker_container() {
 # Main menu
 function main_menu() {
     clear
-	echo "Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions"
-	echo "============================ Elixir V3 Node Installation ===================================="
-	echo "Node community Telegram channel: https://t.me/layerairdrop"
-	echo "Node community Telegram group: https://t.me/layerairdropdiskusi"
-    	echo "Please select the operation you want to perform:"
-    	echo "1. Install Elixir V3 Node"
-	echo "2. View Docker Logs"
-    	echo "3. Delete Elixir Docker Container"
-   	read -p "Please enter an option (1-3): " OPTION
+    echo "Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions"
+    echo "============================ Elixir V3 Node Installation ===================================="
+    echo "Node community Telegram channel: https://t.me/layerairdrop"
+    echo "Node community Telegram group: https://t.me/layerairdropdiskusi"
+    echo "Please select the operation you want to perform:"
+    echo "1. Install Elixir V3 Node"
+    echo "2. View Docker Logs"
+    echo "3. Delete Elixir Docker Container"
+    read -p "Please enter an option (1-3): " OPTION
 
     case $OPTION in
     1) install_node ;;
