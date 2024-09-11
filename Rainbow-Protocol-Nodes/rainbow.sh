@@ -34,6 +34,8 @@ check_and_install_ufw() {
     ufw allow 22/tcp
     ufw allow 5000/tcp
     ufw --force enable
+read -n 1 -s -r -p "Press any key to continue..."
+main_menu
 }
 
 # Install Rainbow Protocol nodes
@@ -60,6 +62,8 @@ install_nodes() {
 
     log "info" "Starting Bitcoin Core with Docker Compose"
     docker-compose up -d
+read -n 1 -s -r -p "Press any key to continue..."
+main_menu
 }
 
 # Create a new wallet for Bitcoin Core
@@ -69,13 +73,17 @@ create_wallet() {
         bitcoin-cli -testnet4 -rpcuser=$BTC_USERNAME -rpcpassword=$BTC_PASSWORD -rpcport=5000 createwallet yourwalletname
         exit
 EOF
+read -n 1 -s -r -p "Press any key to continue..."
+main_menu
 }
 
 # View logs of the Bitcoin Core and the indexer
 view_logs() {
-    log "info" "To view Bitcoin Core logs, run:"
-    echo "  docker logs bitcoind"
+    log "info" "Viewing Bitcoin Core logs:"
+    docker logs bitcoind
     log "info" "To view indexer logs, check the output in your terminal."
+    read -n 1 -s -r -p "Press any key to continue..."
+main_menu
 }
 
 # Restart Rainbow Protocol nodes
@@ -84,6 +92,8 @@ restart_nodes() {
     docker-compose down
     docker-compose up -d
     log "info" "Node restarted successfully."
+    read -n 1 -s -r -p "Press any key to continue..."
+main_menu
 }
 
 # Update Rainbow Protocol nodes
@@ -94,21 +104,23 @@ update_nodes() {
     docker-compose down
     docker-compose up -d
     log "info" "Node updated successfully."
+    read -n 1 -s -r -p "Press any key to continue..."
+main_menu
 }
 
 # Main menu function
 main_menu() {
     while true; do
-		echo "██╗░░░░░░█████╗░██╗░░░██╗███████╗██████╗░  ░█████╗░██╗██████╗░██████╗░██████╗░░█████╗░██████╗░"
-		echo "██║░░░░░██╔══██╗╚██╗░██╔╝██╔════╝██╔══██╗  ██╔══██╗██║██╔══██╗██╔══██╗██╔══██╗██╔══██╗██╔══██╗"
-		echo "██║░░░░░███████║░╚████╔╝░█████╗░░██████╔╝  ███████║██║██████╔╝██║░░██║██████╔╝██║░░██║██████╔╝"
-		echo "██║░░░░░██╔══██║░░╚██╔╝░░██╔══╝░░██╔══██╗  ██╔══██║██║██╔══██╗██║░░██║██╔══██╗██║░░██║██╔═══╝░"
-		echo "███████╗██║░░██║░░░██║░░░███████╗██║░░██║  ██║░░██║██║██║░░██║██████╔╝██║░░██║╚█████╔╝██║░░░░░"
-		echo "╚══════╝╚═╝░░╚═╝░░░╚═╝░░░╚══════╝╚═╝░░╚═╝  ╚═╝░░╚═╝╚═╝╚═╝░░╚═╝╚═════╝░╚═╝░░╚═╝░╚════╝░╚═╝░░░░░"
-		echo "Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions"
-		echo "============================ Rainbow Node Installation ===================================="
-		echo "Node community Telegram channel: https://t.me/+U3vHFLDNC5JjN2Jl"
-		echo "Node community Telegram group: https://t.me/+UgQeEnnWrodiNTI1"
+	echo "██╗░░░░░░█████╗░██╗░░░██╗███████╗██████╗░  ░█████╗░██╗██████╗░██████╗░██████╗░░█████╗░██████╗░"
+	echo "██║░░░░░██╔══██╗╚██╗░██╔╝██╔════╝██╔══██╗  ██╔══██╗██║██╔══██╗██╔══██╗██╔══██╗██╔══██╗██╔══██╗"
+	echo "██║░░░░░███████║░╚████╔╝░█████╗░░██████╔╝  ███████║██║██████╔╝██║░░██║██████╔╝██║░░██║██████╔╝"
+	echo "██║░░░░░██╔══██║░░╚██╔╝░░██╔══╝░░██╔══██╗  ██╔══██║██║██╔══██╗██║░░██║██╔══██╗██║░░██║██╔═══╝░"
+	echo "███████╗██║░░██║░░░██║░░░███████╗██║░░██║  ██║░░██║██║██║░░██║██████╔╝██║░░██║╚█████╔╝██║░░░░░"
+	echo "╚══════╝╚═╝░░╚═╝░░░╚═╝░░░╚══════╝╚═╝░░╚═╝  ╚═╝░░╚═╝╚═╝╚═╝░░╚═╝╚═════╝░╚═╝░░╚═╝░╚════╝░╚═╝░░░░░"
+	echo "Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions"
+	echo "============================ Rainbow Node Installation ===================================="
+	echo "Node community Telegram channel: https://t.me/+U3vHFLDNC5JjN2Jl"
+	echo "Node community Telegram group: https://t.me/+UgQeEnnWrodiNTI1"
         echo "1. Check and Install UFW"
         echo "2. Install Rainbow Protocol Nodes"
         echo "3. Create Wallet"
@@ -142,7 +154,7 @@ main_menu() {
                 exit 0
                 ;;
             *)
-                log "error" "Invalid option. Please choose a number between 1 and 7."
+                log "error" "Invalid option. Please choose a number between 1 and 7." && read -n 1 -s -r -p "Press any key to continue..." && main_menu
                 ;;
         esac
     done
