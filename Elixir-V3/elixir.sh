@@ -101,12 +101,14 @@ EOF
           -p 17690:17690 \
           elixirprotocol/validator:v3
     fi
+    read -n 1 -s -r -p "Press any key to continue..."
 }
 
 # View Docker logs function
 function check_docker_logs() {
     echo "Viewing logs of the Elixir Docker container..."
     docker logs -f elixir
+    read -n 1 -s -r -p "Press any key to continue..."
 }
 
 # Delete Docker container function
@@ -115,12 +117,14 @@ function delete_docker_container() {
     docker stop elixir
     docker rm elixir
     echo "Elixir Docker container has been deleted."
+    read -n 1 -s -r -p "Press any key to continue..."
 }
 
 # Validator Health Status function
 function check_validator_health() {
     echo "Checking Validator Health Status..."
     curl 127.0.0.1:17690/health | jq
+    read -n 1 -s -r -p "Press any key to continue..."
 }
 
 # Main menu
@@ -142,7 +146,7 @@ function main_menu() {
     2) check_docker_logs ;;
     3) delete_docker_container ;;
     4) check_validator_health ;;
-    *) echo "Invalid option." ;;
+    *) echo "Invalid choice. Please choose again." && read -n 1 -s -r -p "Press any key to continue..." && main_menu ;;
     esac
 }
 
