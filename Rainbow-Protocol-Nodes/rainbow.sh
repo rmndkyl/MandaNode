@@ -76,6 +76,7 @@ update_and_install() {
     sudo apt update -y
     sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y
     docker --version
+    read -n 1 -s -r -p "Press any key to continue..."
     main_menu
 }
 
@@ -124,6 +125,7 @@ EOF
     docker exec bitcoind /bin/bash -c "bitcoin-cli -testnet=1 -rpcuser=demo -rpcpassword=demo -rpcport=6000 unloadwallet test || true"
     sleep 5
     docker exec bitcoind /bin/bash -c "bitcoin-cli -testnet=1 -rpcuser=demo -rpcpassword=demo -rpcport=6000 createwallet test && bitcoin-cli -testnet=1 -rpcuser=demo -rpcpassword=demo -rpcport=6000 loadwallet test && bitcoin-cli -testnet=1 -rpcuser=demo -rpcpassword=demo -rpcport=6000 getnewaddress"
+    read -n 1 -s -r -p "Press any key to continue..."
     main_menu
 }
 
@@ -168,6 +170,7 @@ EOF
     sudo iptables -A INPUT -p tcp --dport 2376 -j ACCEPT
     sudo iptables -A INPUT -p tcp --dport 6000 -j ACCEPT  
     sudo sh -c "iptables-save > /etc/iptables/rules.v4"
+    read -n 1 -s -r -p "Press any key to continue..."
     main_menu
 }
 
@@ -185,12 +188,14 @@ enable_and_start_rainbow_service() {
     echo "To get your principal ID, use the following command after a few minutes:"
     echo "cat /root/rbo_indexer_testnet/identity/principal.json"
     echo "===== Installation and setup process is complete ====="
+    read -n 1 -s -r -p "Press any key to continue..."
     main_menu
 }
 
 view_logs() {
     echo "Viewing Rainbow logs..."
     sudo journalctl -u rainbow -f
+    read -n 1 -s -r -p "Press any key to continue..."
     main_menu
 }
 
@@ -202,6 +207,7 @@ get_principal_id() {
     else
         echo "Principal ID file not found."
     fi
+    read -n 1 -s -r -p "Press any key to continue..."
     main_menu
 }
 
@@ -213,6 +219,7 @@ view_private_key() {
     else
         echo "Private key file not found."
     fi
+    read -n 1 -s -r -p "Press any key to continue..."
     main_menu
 }
 
