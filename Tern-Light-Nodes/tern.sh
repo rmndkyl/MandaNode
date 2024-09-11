@@ -67,7 +67,7 @@ download_initialize_executor() {
 
     # Step 4: Create a systemd service file
     echo "Creating executor service file..."
-    sudo tee /etc/systemd/system/executor.service > /dev/null <<EOF
+sudo tee /etc/systemd/system/executor.service > /dev/null <<EOF
 [Unit]
 Description=Executor Service
 After=network.target
@@ -79,7 +79,7 @@ Environment="NODE_ENV=testnet"
 Environment="LOG_LEVEL=debug"
 Environment="LOG_PRETTY=false"
 Environment="PRIVATE_KEY_LOCAL=$PRIVATE_KEY_LOCAL"
-Environment="ENABLED_NETWORKS=arbitrum-sepolia,base-sepolia,optimism-sepolia,l1rn"
+Environment="ENABLED_NETWORKS=arbitrum-sepolia,base-sepolia,blast-sepolia,optimism-sepolia,l1rn"
 ExecStart=$(pwd)/executor/executor/bin/executor
 Restart=always
 RestartSec=3
