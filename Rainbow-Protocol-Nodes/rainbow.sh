@@ -1,12 +1,5 @@
 #!/bin/bash
 
-# Function to log messages
-log() {
-    level=$1
-    message=$2
-    echo "[$level] $message"
-}
-
 # Check if the script is run as root
 if [ "$(id -u)" != "0" ]; then
     echo "This script must be run as root."
@@ -20,136 +13,8 @@ wget -O loader.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/lo
 wget -O logo.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/logo.sh && chmod +x logo.sh && sed -i 's/\r$//' logo.sh && ./logo.sh
 sleep 4
 
-# Check if UFW is installed and set up the firewall
-check_and_install_ufw() {
-    log "info" "Checking if UFW is installed..."
-    if ! command -v ufw &> /dev/null; then
-        log "info" "UFW is not installed. Installing UFW..."
-        apt-get update -y && apt-get install ufw -y
-    else
-        log "info" "UFW is already installed."
-    fi
-
-    log "info" "Allowing necessary ports (22, 5000)..."
-    ufw allow 22/tcp
-    ufw allow 5000/tcp
-    ufw --force enable
-    read -n 1 -s -r -p "Press any key to continue..."
-    main_menu
-}
-
-# Check if Docker and Docker Compose are installed
-check_and_install_docker() {
-    log "info" "Checking if Docker is installed..."
-    if ! command -v docker &> /dev/null; then
-        log "info" "Docker is not installed. Installing Docker..."
-        apt-get update -y
-        apt-get install -y docker.io
-        systemctl start docker
-        systemctl enable docker
-    else
-        log "info" "Docker is already installed."
-    fi
-
-    log "info" "Checking if Docker Compose is installed..."
-    if ! command -v docker-compose &> /dev/null; then
-        log "info" "Docker Compose is not installed. Installing Docker Compose..."
-        curl -L "https://github.com/docker/compose/releases/download/v2.2.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-        chmod +x /usr/local/bin/docker-compose
-    else
-        log "info" "Docker Compose is already installed."
-    fi
-}
-
-# Install Rainbow Protocol nodes
-install_nodes() {
-    log "info" "Installing Rainbow Protocol node..."
-    check_and_install_docker
-
-    log "info" "Prompting for Bitcoin Core username and password"
-    read -p "Enter your Bitcoin Core username: " BTC_USERNAME
-    read -p "Enter your Bitcoin Core password: " BTC_PASSWORD
-    echo
-
-    log "info" "Setting up directories and cloning the repository"
-    mkdir -p /root/project/run_btc_testnet4/data
-    cd /root/project/run_btc_testnet4
-    git clone https://github.com/mocacinno/btc_testnet4
-    cd btc_testnet4
-    git switch bci_node
-
-    log "info" "Editing docker-compose.yml with VPS IP, username, and password"
-    VPS_IP=$(hostname -I | awk '{print $1}')
-    sed -i "s/<replace_with_vps_ip>/$VPS_IP/g" docker-compose.yml
-    sed -i "s/<replace_with_username>/$BTC_USERNAME/g" docker-compose.yml
-    sed -i "s/<replace_with_password>/$BTC_PASSWORD/g" docker-compose.yml
-
-    log "info" "Starting Bitcoin Core with Docker Compose"
-    docker-compose up -d
-    read -n 1 -s -r -p "Press any key to continue..."
-    main_menu
-}
-
-# Function to create a Bitcoin wallet
-create_wallet() {
-    log "info" "Creating a new wallet on Bitcoin Core"
-    
-    read -p "Enter your wallet name: " WALLET_NAME
-    log "info" "Creating wallet: $WALLET_NAME"
-    
-    # Ensure BTC_USERNAME and BTC_PASSWORD are correctly passed
-    if [ -z "$BTC_USERNAME" ] || [ -z "$BTC_PASSWORD" ]; then
-        log "error" "Bitcoin Core username or password is missing."
-        read -p "Enter your Bitcoin Core username: " BTC_USERNAME
-        read -p "Enter your Bitcoin Core password: " BTC_PASSWORD
-    fi
-
-    # Log credentials for debugging (make sure to remove this in production)
-    log "info" "Using RPC username: $BTC_USERNAME and password: $BTC_PASSWORD"
-    
-    # Create wallet using bitcoin-cli
-    docker exec bitcoind bitcoin-cli -testnet4 -rpcuser="$BTC_USERNAME" -rpcpassword="$BTC_PASSWORD" -rpcport=5000 createwallet "$WALLET_NAME"
-
-    if [ $? -ne 0 ]; then
-        log "error" "Failed to create wallet. Please check your credentials and wallet name."
-        return
-    fi
-
-    # Fetch new address from the created wallet
-    log "info" "Fetching new address from the wallet..."
-    docker exec bitcoind bitcoin-cli -testnet4 -rpcuser="$BTC_USERNAME" -rpcpassword="$BTC_PASSWORD" -rpcport=5000 getnewaddress
-}
-
-# Function to view logs for Bitcoin node
-view_logs() {
-    log "info" "Displaying logs for Bitcoin node"
-    
-    docker logs bitcoind --tail 100 -f
-}
-
-# Function to restart nodes
-restart_nodes() {
-    log "info" "Restarting Bitcoin node"
-
-    docker-compose down
-    docker-compose up -d
-}
-
-# Function to update nodes
-update_nodes() {
-    log "info" "Updating Bitcoin node and related containers"
-    
-    cd /root/project/run_btc_testnet4/btc_testnet4
-    git pull
-
-    log "info" "Rebuilding and restarting node"
-    docker-compose down
-    docker-compose up --build -d
-}
-
-# Main menu function
 main_menu() {
-    while true; do
+    clear
 	echo "██╗░░░░░░█████╗░██╗░░░██╗███████╗██████╗░  ░█████╗░██╗██████╗░██████╗░██████╗░░█████╗░██████╗░"
 	echo "██║░░░░░██╔══██╗╚██╗░██╔╝██╔════╝██╔══██╗  ██╔══██╗██║██╔══██╗██╔══██╗██╔══██╗██╔══██╗██╔══██╗"
 	echo "██║░░░░░███████║░╚████╔╝░█████╗░░██████╔╝  ███████║██║██████╔╝██║░░██║██████╔╝██║░░██║██████╔╝"
@@ -160,49 +25,99 @@ main_menu() {
 	echo "============================ Rainbow Node Installation ===================================="
 	echo "Node community Telegram channel: https://t.me/+U3vHFLDNC5JjN2Jl"
 	echo "Node community Telegram group: https://t.me/+UgQeEnnWrodiNTI1"
-        echo "1. Check and Install UFW"
-        echo "2. Install Docker and Docker Compose"
-        echo "3. Install Rainbow Protocol Nodes"
-        echo "4. Create Wallet"
-        echo "5. View Logs"
-        echo "6. Restart Nodes"
-        echo "7. Update Nodes"
-        echo "8. Exit"
-		echo "======================================================================================="
-        read -p "Choose an option (1-8): " choice
+    echo "1. Check and Install Docker"
+    echo "2. Install Rainbow Node"
+    echo "3. Start Node"
+    echo "4. Check Principal ID and Private Key (keep it safely)"
+    echo "5. Check Node Status"
+    echo "6. View Logs"
+    echo "7. Restart Node"
+    echo "8. Stop Node"
+    echo "9. Update Node"
+    echo "10. Exit"
 
-        case $choice in
-            1)
-                check_and_install_ufw
-                ;;
-            2)
-                check_and_install_docker
-                ;;
-            3)
-                install_nodes
-                ;;
-            4)
-                create_wallet
-                ;;
-            5)
-                view_logs
-                ;;
-            6)
-                restart_nodes
-                ;;
-            7)
-                update_nodes
-                ;;
-            8)
-                log "info" "Exiting script."
-                exit 0
-                ;;
-            *)
-                log "error" "Invalid option. Please choose a number between 1 and 8." && read -n 1 -s -r -p "Press any key to continue..." && main_menu
-                ;;
-        esac
-    done
+    read -p "Choose an option [1-10]: " choice
+    case $choice in
+        1) check_install_docker ;;
+        2) install_rainbow_node ;;
+        3) start_node ;;
+        4) check_principal_id_and_private_key ;;
+        5) check_node_status ;;
+        6) view_logs ;;
+        7) restart_node ;;
+        8) stop_node ;;
+        9) update_node ;;
+        10) exit 0 ;;
+        *) echo "Invalid choice. Please choose again." && read -n 1 -s -r -p "Press any key to continue..." && main_menu ;;
+    esac
 }
 
-# Start by showing the main menu
+check_install_docker() {
+    echo "Checking Docker installation..."
+    if ! command -v docker &> /dev/null; then
+        echo "Docker is not installed. Installing Docker..."
+        sudo apt update && sudo apt install -y docker.io
+    else
+        echo "Docker is already installed."
+    fi
+    docker --version
+    read -n 1 -s -r -p "Press any key to continue..." && main_menu
+}
+
+install_rainbow_node() {
+    echo "Installing Rainbow Node..."
+    cd $HOME
+    git clone https://github.com/rainbowprotocol-xyz/rbo_indexer_testnet.git
+    cd rbo_indexer_testnet
+    wget https://github.com/rainbowprotocol-xyz/rbo_indexer_testnet/releases/download/v0.0.1-alpha/rbo_worker
+    chmod +x rbo_worker
+    read -n 1 -s -r -p "Press any key to continue..." && main_menu
+}
+
+start_node() {
+    echo "Starting Rainbow Node..."
+    ./rbo_worker worker --rpc http://127.0.0.1:5000 --password $BTC_RPC_PASS --username $BTC_RPC_USER --start_height 42000
+    read -n 1 -s -r -p "Press any key to continue..." && main_menu
+}
+
+check_principal_id_and_private_key() {
+    echo "Checking Principal ID and Private Key..."
+    cat rbo_indexer_testnet/identity/principal.json
+    cat rbo_indexer_testnet/identity/private_key.pem
+    read -n 1 -s -r -p "Press any key to continue..." && main_menu
+}
+
+check_node_status() {
+    echo "Checking Node Status..."
+    docker ps
+    read -n 1 -s -r -p "Press any key to continue..." && main_menu
+}
+
+view_logs() {
+    echo "Viewing Logs..."
+    docker logs $(docker ps -q)  # Assuming there's only one container running
+    read -n 1 -s -r -p "Press any key to continue..." && main_menu
+}
+
+restart_node() {
+    echo "Restarting Node..."
+    docker restart $(docker ps -q)  # Assuming there's only one container running
+    read -n 1 -s -r -p "Press any key to continue..." && main_menu
+}
+
+stop_node() {
+    echo "Stopping Node..."
+    docker stop $(docker ps -q)  # Assuming there's only one container running
+    read -n 1 -s -r -p "Press any key to continue..." && main_menu
+}
+
+update_node() {
+    echo "Updating Node..."
+    cd rbo_indexer_testnet
+    git pull origin main
+    wget https://github.com/rainbowprotocol-xyz/rbo_indexer_testnet/releases/download/v0.0.1-alpha/rbo_worker -O rbo_worker
+    chmod +x rbo_worker
+    read -n 1 -s -r -p "Press any key to continue..." && main_menu
+}
+
 main_menu
