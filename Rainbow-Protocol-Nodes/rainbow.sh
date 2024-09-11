@@ -93,14 +93,23 @@ install_rainbow_node() {
 
 start_node() {
     echo "Starting Rainbow Node..."
-    ./rbo_worker worker --rpc http://127.0.0.1:5000 --password $BTC_RPC_PASS --username $BTC_RPC_USER --start_height 42000
+    if [ -z "$BTC_RPC_PASS" ] || [ -z "$BTC_RPC_USER" ]; then
+        echo "Bitcoin RPC credentials are missing."
+        echo "Please set the BTC_RPC_PASS and BTC_RPC_USER environment variables."
+        exit 1
+    fi
+    ./rbo_worker worker --rpc http://127.0.0.1:5000 --password "$BTC_RPC_PASS" --username "$BTC_RPC_USER" --start_height 42000
     read -n 1 -s -r -p "Press any key to continue..." && main_menu
 }
 
 check_principal_id_and_private_key() {
     echo "Checking Principal ID and Private Key..."
-    cat rbo_indexer_testnet/identity/principal.json
-    cat rbo_indexer_testnet/identity/private_key.pem
+    if [ -f rbo_indexer_testnet/identity/principal.json ] && [ -f rbo_indexer_testnet/identity/private_key.pem ]; then
+        cat rbo_indexer_testnet/identity/principal.json
+        cat rbo_indexer_testnet/identity/private_key.pem
+    else
+        echo "Principal ID and/or Private Key files not found."
+    fi
     read -n 1 -s -r -p "Press any key to continue..." && main_menu
 }
 
