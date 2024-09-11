@@ -20,53 +20,52 @@ main_menu() {
     echo "============================ Tern Light Node (Executor) Menu ================================="
     echo "Node community Telegram channel: https://t.me/+U3vHFLDNC5JjN2Jl"
     echo "Node community Telegram group: https://t.me/+UgQeEnnWrodiNTI1"
-    echo "1. Input Private Key (Make sure funds available)"
-    echo "2. Download and Initialize Tern Executor"
-    echo "3. Start Executor"
-    echo "4. View Logs"
-    echo "5. Check Executor Status"
-    echo "6. Stop Executor"
-    echo "7. Restart Executor"
-    echo "8. Update Executor"
-    echo "9. Delete Executor"
-    echo "10. Exit"
+    echo "1. Download and Initialize Tern Executor (Input Private Key)"
+    echo "2. Start Executor"
+    echo "3. View Logs"
+    echo "4. Check Executor Status"
+    echo "5. Stop Executor"
+    echo "6. Restart Executor"
+    echo "7. Update Executor"
+    echo "8. Delete Executor"
+    echo "9. Exit"
     echo "============================================================================================="
     read -p "Please choose an option: " choice
     case $choice in
-        1) input_private_key ;;
-        2) download_initialize_executor ;;
-        3) start_executor ;;
-        4) view_logs ;;
-        5) check_status ;;
-        6) stop_executor ;;
-        7) restart_executor ;;
-        8) update_executor ;;
-        9) delete_executor ;;
-        10) exit 0 ;;
+        1) download_initialize_executor ;;
+        2) start_executor ;;
+        3) view_logs ;;
+        4) check_status ;;
+        5) stop_executor ;;
+        6) restart_executor ;;
+        7) update_executor ;;
+        8) delete_executor ;;
+        9) exit 0 ;;
         *) echo "Invalid choice. Please choose again." && read -n 1 -s -r -p "Press any key to continue..." && main_menu ;;
     esac
 }
 
-# Option 1: Input Private Key
-input_private_key() {
+# Option 1: Download and Initialize Tern Executor (with Private Key input)
+download_initialize_executor() {
+    # Step 1: Input Private Key
     read -p "Enter your PRIVATE_KEY_LOCAL: " PRIVATE_KEY_LOCAL
     export PRIVATE_KEY_LOCAL
     echo "Private key stored successfully."
-    read -n 1 -s -r -p "Press any key to continue..."
-    main_menu
-}
 
-# Option 2: Download and Initialize Tern Executor
-download_initialize_executor() {
+    # Step 2: Install dependencies
     echo "Updating package list and installing dependencies..."
     sudo apt update && sudo apt upgrade -y
     sudo apt install curl wget tar build-essential jq unzip -y
 
-    echo "Downloading executor..."
-    wget -q https://github.com/t3rn/executor-release/releases/download/v0.20.0/executor-linux-v0.20.0.tar.gz
-    tar -xvf executor-linux-v0.20.0.tar.gz
+    # Step 3: Define the latest version and download
+    LATEST_VERSION="v0.21.0"
+    EXECUTOR_URL="https://github.com/t3rn/executor-release/releases/download/$LATEST_VERSION/executor-linux-$LATEST_VERSION.tar.gz"
+    
+    echo "Downloading executor version $LATEST_VERSION..."
+    wget -q $EXECUTOR_URL -O executor-linux-$LATEST_VERSION.tar.gz
+    tar -xvf executor-linux-$LATEST_VERSION.tar.gz
 
-    # Create a systemd service file
+    # Step 4: Create a systemd service file
     echo "Creating executor service file..."
     sudo tee /etc/systemd/system/executor.service > /dev/null <<EOF
 [Unit]
@@ -89,16 +88,17 @@ RestartSec=3
 WantedBy=multi-user.target
 EOF
 
+    # Step 5: Reload and enable the service
     echo "Reloading systemd daemon and enabling executor service..."
     sudo systemctl daemon-reload
     sudo systemctl enable executor
 
-    echo "Executor initialized."
+    echo "Executor initialized successfully."
     read -n 1 -s -r -p "Press any key to continue..."
     main_menu
 }
 
-# Option 3: Start Executor
+# Option 2: Start Executor
 start_executor() {
     echo "Starting executor service..."
     sudo systemctl start executor
@@ -107,7 +107,7 @@ start_executor() {
     main_menu
 }
 
-# Option 4: View Logs
+# Option 3: View Logs
 view_logs() {
     echo "Displaying executor logs... (Press Ctrl+C to exit logs)"
     sleep 2
@@ -116,7 +116,7 @@ view_logs() {
     main_menu
 }
 
-# Option 5: Check Executor Status
+# Option 4: Check Executor Status
 check_status() {
     echo "Checking executor status..."
     sudo systemctl status executor
@@ -124,7 +124,7 @@ check_status() {
     main_menu
 }
 
-# Option 6: Stop Executor
+# Option 5: Stop Executor
 stop_executor() {
     echo "Stopping executor service..."
     sudo systemctl stop executor
@@ -133,7 +133,7 @@ stop_executor() {
     main_menu
 }
 
-# Option 7: Restart Executor
+# Option 6: Restart Executor
 restart_executor() {
     echo "Restarting executor service..."
     sudo systemctl restart executor
@@ -142,7 +142,7 @@ restart_executor() {
     main_menu
 }
 
-# Option 8: Update Executor
+# Option 7: Update Executor
 update_executor() {
     echo "Updating executor service..."
     sudo systemctl stop executor
@@ -160,7 +160,7 @@ update_executor() {
     main_menu
 }
 
-# Option 9: Delete Executor
+# Option 8: Delete Executor
 delete_executor() {
     echo "Deleting executor service and files..."
     sudo systemctl stop executor
