@@ -7,10 +7,10 @@ if [ "$(id -u)" != "0" ]; then
     exit 1
 fi
 
-#Showing Logo from Our Group
-echo "Showing Animation.."
-wget -O loader.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/loader.sh && chmod +x loader.sh && ./loader.sh
-wget -O logo.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/logo.sh && chmod +x logo.sh && ./logo.sh
+# Showing Logo from Our Group
+echo "Showing Animation..."
+wget -q -O loader.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/loader.sh && chmod +x loader.sh && ./loader.sh
+wget -q -O logo.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/logo.sh && chmod +x logo.sh && ./logo.sh
 sleep 4
 
 # Function to display the main menu
@@ -34,7 +34,8 @@ main_menu() {
     echo "6. Stop Executor"
     echo "7. Restart Executor"
     echo "8. Update Executor"
-    echo "9. Exit"
+    echo "9. Delete Executor"
+    echo "10. Exit"
     echo "============================================================================================="
     read -p "Please choose an option: " choice
     case $choice in
@@ -46,7 +47,8 @@ main_menu() {
         6) stop_executor ;;
         7) restart_executor ;;
         8) update_executor ;;
-        9) exit 0 ;;
+        9) delete_executor ;;
+        10) exit 0 ;;
         *) echo "Invalid choice. Please choose again." && read -n 1 -s -r -p "Press any key to continue..." && main_menu ;;
     esac
 }
@@ -67,32 +69,37 @@ download_initialize_executor() {
     sudo apt install curl wget tar build-essential jq unzip -y
 
     echo "Downloading executor..."
-    wget https://github.com/t3rn/executor-release/releases/download/v0.20.0/executor-linux-v0.20.0.tar.gz
+    wget -q https://github.com/t3rn/executor-release/releases/download/v0.20.0/executor-linux-v0.20.0.tar.gz
     tar -xvf executor-linux-v0.20.0.tar.gz
-    echo "Executor initialized."
-	
-	# Create a systemd service file
-	echo "Creating executor service file..."
-	sudo tee /etc/systemd/system/executor.service > /dev/null <<EOF
-	[Unit]
-	Description=Executor Service
-	After=network.target
 
-	[Service]
-	User=root
-	WorkingDirectory=$(pwd)/executor/executor
-	Environment="NODE_ENV=testnet"
-	Environment="LOG_LEVEL=debug"
-	Environment="LOG_PRETTY=false"
-	Environment="PRIVATE_KEY_LOCAL=$PRIVATE_KEY_LOCAL"
-	Environment="ENABLED_NETWORKS=arbitrum-sepolia,base-sepolia,optimism-sepolia,l1rn"
-	ExecStart=$(pwd)/executor/executor/bin/executor
-	Restart=always
-	RestartSec=3
+    # Create a systemd service file
+    echo "Creating executor service file..."
+    sudo tee /etc/systemd/system/executor.service > /dev/null <<EOF
+[Unit]
+Description=Executor Service
+After=network.target
 
-	[Install]
-	WantedBy=multi-user.target
+[Service]
+User=root
+WorkingDirectory=$(pwd)/executor/executor
+Environment="NODE_ENV=testnet"
+Environment="LOG_LEVEL=debug"
+Environment="LOG_PRETTY=false"
+Environment="PRIVATE_KEY_LOCAL=$PRIVATE_KEY_LOCAL"
+Environment="ENABLED_NETWORKS=arbitrum-sepolia,base-sepolia,optimism-sepolia,l1rn"
+ExecStart=$(pwd)/executor/executor/bin/executor
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
 EOF
+
+    echo "Reloading systemd daemon and enabling executor service..."
+    sudo systemctl daemon-reload
+    sudo systemctl enable executor
+
+    echo "Executor initialized."
     read -n 1 -s -r -p "Press any key to continue..."
     main_menu
 }
@@ -108,7 +115,8 @@ start_executor() {
 
 # Option 4: View Logs
 view_logs() {
-    echo "Displaying executor logs..."
+    echo "Displaying executor logs... (Press Ctrl+C to exit logs)"
+    sleep 2
     journalctl -u executor -f
     read -n 1 -s -r -p "Press any key to continue..."
     main_menu
@@ -151,10 +159,23 @@ update_executor() {
     curl -L -o $EXECUTOR_FILE $EXECUTOR_URL
     tar -xzvf $EXECUTOR_FILE
     rm -f $EXECUTOR_FILE
-    rm -rf $(pwd)/executor
     sudo systemctl start executor
     sudo systemctl status executor
     echo "Executor service updated."
+    read -n 1 -s -r -p "Press any key to continue..."
+    main_menu
+}
+
+# Option 9: Delete Executor
+delete_executor() {
+    echo "Deleting executor service and files..."
+    sudo systemctl stop executor
+    sudo systemctl disable executor
+    sudo rm /etc/systemd/system/executor.service
+    sudo systemctl daemon-reload
+    rm -rf executor
+    sudo systemctl status executor
+    echo "Executor service and files have been deleted."
     read -n 1 -s -r -p "Press any key to continue..."
     main_menu
 }
