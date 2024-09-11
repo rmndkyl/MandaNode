@@ -53,8 +53,12 @@ SCRIPT_PATH="$HOME/ElixirV3.sh"
 
 # Node installation function
 function install_node() {
+    # Get default IP address (localhost)
+    default_ip="localhost"
+
     # Prompt the user to input environment variable values
-    read -p "Please enter the IP address of the validator node device: " ip_address
+    read -p "Please enter the IP address of the validator node device [default: ${default_ip}]: " ip_address
+    ip_address=${ip_address:-$default_ip}
     read -p "Please enter the display name of the validator node: " validator_name
     read -p "Please enter the reward address of the validator node: " safe_public_address
     read -p "Please enter the signer's private key, without 0x: " private_key
@@ -113,6 +117,12 @@ function delete_docker_container() {
     echo "Elixir Docker container has been deleted."
 }
 
+# Validator Health Status function
+function check_validator_health() {
+    echo "Checking Validator Health Status..."
+    curl 127.0.0.1:17690/health | jq
+}
+
 # Main menu
 function main_menu() {
     clear
@@ -124,12 +134,14 @@ function main_menu() {
     echo "1. Install Elixir V3 Node"
     echo "2. View Docker Logs"
     echo "3. Delete Elixir Docker Container"
-    read -p "Please enter an option (1-3): " OPTION
+    echo "4. Check Validator Health Status"
+    read -p "Please enter an option (1-4): " OPTION
 
     case $OPTION in
     1) install_node ;;
     2) check_docker_logs ;;
     3) delete_docker_container ;;
+    4) check_validator_health ;;
     *) echo "Invalid option." ;;
     esac
 }
