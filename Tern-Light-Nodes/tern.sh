@@ -16,7 +16,16 @@ sleep 4
 # Function to display the main menu
 main_menu() {
     clear
-    echo "============================ Tern Light Node (Executor) Menu ===================================="
+    echo "██╗░░░░░░█████╗░██╗░░░██╗███████╗██████╗░  ░█████╗░██╗██████╗░██████╗░██████╗░░█████╗░██████╗░"
+    echo "██║░░░░░██╔══██╗╚██╗░██╔╝██╔════╝██╔══██╗  ██╔══██╗██║██╔══██╗██╔══██╗██╔══██╗██╔══██╗██╔══██╗"
+    echo "██║░░░░░███████║░╚████╔╝░█████╗░░██████╔╝  ███████║██║██████╔╝██║░░██║██████╔╝██║░░██║██████╔╝"
+    echo "██║░░░░░██╔══██║░░╚██╔╝░░██╔══╝░░██╔══██╗  ██╔══██║██║██╔══██╗██║░░██║██╔══██╗██║░░██║██╔═══╝░"
+    echo "███████╗██║░░██║░░░██║░░░███████╗██║░░██║  ██║░░██║██║██║░░██║██████╔╝██║░░██║╚█████╔╝██║░░░░░"
+    echo "╚══════╝╚═╝░░╚═╝░░░╚═╝░░░╚══════╝╚═╝░░╚═╝  ╚═╝░░╚═╝╚═╝╚═╝░░╚═╝╚═════╝░╚═╝░░╚═╝░╚════╝░╚═╝░░░░░"
+    echo "Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions"
+    echo "============================ Tern Light Node (Executor) Menu ================================="
+    echo "Node community Telegram channel: https://t.me/+U3vHFLDNC5JjN2Jl"
+    echo "Node community Telegram group: https://t.me/+UgQeEnnWrodiNTI1"
     echo "1. Input Private Key (Make sure funds available)"
     echo "2. Download and Initialize Tern Executor"
     echo "3. Start Executor"
