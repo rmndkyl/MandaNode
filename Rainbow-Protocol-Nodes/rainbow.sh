@@ -14,7 +14,7 @@ if [ "$(id -u)" != "0" ]; then
     exit 1
 fi
 
-# Showing Logo
+# Show animation and logo
 echo "Showing Animation.."
 wget -O loader.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/loader.sh && chmod +x loader.sh && sed -i 's/\r$//' loader.sh && ./loader.sh
 wget -O logo.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/logo.sh && chmod +x logo.sh && sed -i 's/\r$//' logo.sh && ./logo.sh
@@ -38,9 +38,33 @@ check_and_install_ufw() {
     main_menu
 }
 
+# Check if Docker and Docker Compose are installed
+check_and_install_docker() {
+    log "info" "Checking if Docker is installed..."
+    if ! command -v docker &> /dev/null; then
+        log "info" "Docker is not installed. Installing Docker..."
+        apt-get update -y
+        apt-get install -y docker.io
+        systemctl start docker
+        systemctl enable docker
+    else
+        log "info" "Docker is already installed."
+    fi
+
+    log "info" "Checking if Docker Compose is installed..."
+    if ! command -v docker-compose &> /dev/null; then
+        log "info" "Docker Compose is not installed. Installing Docker Compose..."
+        curl -L "https://github.com/docker/compose/releases/download/v2.2.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        chmod +x /usr/local/bin/docker-compose
+    else
+        log "info" "Docker Compose is already installed."
+    fi
+}
+
 # Install Rainbow Protocol nodes
 install_nodes() {
     log "info" "Installing Rainbow Protocol node..."
+    check_and_install_docker
 
     log "info" "Prompting for Bitcoin Core username and password"
     read -p "Enter your Bitcoin Core username: " BTC_USERNAME
@@ -66,56 +90,6 @@ install_nodes() {
     main_menu
 }
 
-# Create a new wallet for Bitcoin Core
-create_wallet() {
-    log "info" "Creating a new wallet in Bitcoin Core..."
-
-    # Check if the bitcoind container is running
-    if [ "$(docker ps -q -f name=bitcoind)" ]; then
-        docker exec -it bitcoind /bin/bash <<EOF
-        bitcoin-cli -testnet4 -rpcuser=$BTC_USERNAME -rpcpassword=$BTC_PASSWORD -rpcport=5000 createwallet yourwalletname
-        exit
-EOF
-        log "info" "Wallet created successfully."
-    else
-        log "error" "Bitcoin Core container 'bitcoind' not found or not running."
-        log "info" "Make sure the node is installed and running before creating a wallet."
-    fi
-    read -n 1 -s -r -p "Press any key to continue..."
-    main_menu
-}
-
-# View logs of the Bitcoin Core and the indexer
-view_logs() {
-    log "info" "Viewing Bitcoin Core logs:"
-    docker logs bitcoind
-    log "info" "To view indexer logs, check the output in your terminal."
-    read -n 1 -s -r -p "Press any key to continue..."
-    main_menu
-}
-
-# Restart Rainbow Protocol nodes
-restart_nodes() {
-    log "info" "Restarting Rainbow Protocol node..."
-    docker-compose down
-    docker-compose up -d
-    log "info" "Node restarted successfully."
-    read -n 1 -s -r -p "Press any key to continue..."
-    main_menu
-}
-
-# Update Rainbow Protocol nodes
-update_nodes() {
-    log "info" "Updating Rainbow Protocol node..."
-    cd /root/project/run_btc_testnet4
-    git pull
-    docker-compose down
-    docker-compose up -d
-    log "info" "Node updated successfully."
-    read -n 1 -s -r -p "Press any key to continue..."
-    main_menu
-}
-
 # Main menu function
 main_menu() {
     while true; do
@@ -130,41 +104,44 @@ main_menu() {
 	echo "Node community Telegram channel: https://t.me/+U3vHFLDNC5JjN2Jl"
 	echo "Node community Telegram group: https://t.me/+UgQeEnnWrodiNTI1"
         echo "1. Check and Install UFW"
-        echo "2. Install Rainbow Protocol Nodes"
-        echo "3. Create Wallet"
-        echo "4. View Logs"
-        echo "5. Restart Nodes"
-        echo "6. Update Nodes"
-        echo "7. Exit"
-		echo "==========================================================================================="
-        read -p "Choose an option (1-7): " choice
+        echo "2. Install Docker and Docker Compose"
+        echo "3. Install Rainbow Protocol Nodes"
+        echo "4. Create Wallet"
+        echo "5. View Logs"
+        echo "6. Restart Nodes"
+        echo "7. Update Nodes"
+        echo "8. Exit"
+		echo "======================================================================================="
+        read -p "Choose an option (1-8): " choice
 
         case $choice in
             1)
                 check_and_install_ufw
                 ;;
             2)
-                install_nodes
+                check_and_install_docker
                 ;;
             3)
-                create_wallet
+                install_nodes
                 ;;
             4)
-                view_logs
+                create_wallet
                 ;;
             5)
-                restart_nodes
+                view_logs
                 ;;
             6)
-                update_nodes
+                restart_nodes
                 ;;
             7)
+                update_nodes
+                ;;
+            8)
                 log "info" "Exiting script."
                 exit 0
                 ;;
             *)
-                log "error" "Invalid option. Please choose a number between 1 and 7." 
-                read -n 1 -s -r -p "Press any key to continue..."
+                log "error" "Invalid option. Please choose a number between 1 and 8." && read -n 1 -s -r -p "Press any key to continue..." && main_menu
                 ;;
         esac
     done
