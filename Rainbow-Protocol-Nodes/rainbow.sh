@@ -113,15 +113,25 @@ services:
       -rpcport=6000
     ports:
       - "6000:6000"
+    environment:
+      - BITCOIN_MAX_CONNECTIONS=20
+      - BITCOIN_ZMQPUBRAWBLOCK=tcp://0.0.0.0:28332
 EOF
     fi
 
     docker-compose up -d
 
+    echo "Waiting for Bitcoin Core to start..."
+    sleep 30  # Increased sleep time to ensure the container is running
+
+    # Check if the container is running
+    if [ "$(docker inspect -f '{{.State.Running}}' bitcoind)" != "true" ]; then
+        echo "Error: Docker container bitcoind is not running."
+        docker-compose logs bitcoind  # View logs for more details
+        exit 1
+    fi
+
     echo "Setting up Bitcoin Core wallet..."
-    sleep 10
-    docker stop bitcoind || true
-    sleep 5
     docker exec bitcoind /bin/bash -c "bitcoin-cli -testnet=1 -rpcuser=demo -rpcpassword=demo -rpcport=6000 unloadwallet test || true"
     sleep 5
     docker exec bitcoind /bin/bash -c "bitcoin-cli -testnet=1 -rpcuser=demo -rpcpassword=demo -rpcport=6000 createwallet test && bitcoin-cli -testnet=1 -rpcuser=demo -rpcpassword=demo -rpcport=6000 loadwallet test && bitcoin-cli -testnet=1 -rpcuser=demo -rpcpassword=demo -rpcport=6000 getnewaddress"
