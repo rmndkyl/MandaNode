@@ -90,6 +90,46 @@ install_nodes() {
     main_menu
 }
 
+# Function to create a Bitcoin wallet
+create_wallet() {
+    log "info" "Creating a new wallet on Bitcoin Core"
+    
+    read -p "Enter your wallet name: " WALLET_NAME
+    log "info" "Creating wallet: $WALLET_NAME"
+
+    docker exec bitcoind bitcoin-cli -testnet4 -rpcuser=$BTC_USERNAME -rpcpassword=$BTC_PASSWORD -rpcport=5000 createwallet $WALLET_NAME
+
+    log "info" "Fetching new address from the wallet..."
+    docker exec bitcoind bitcoin-cli -testnet4 -rpcuser=$BTC_USERNAME -rpcpassword=$BTC_PASSWORD -rpcport=5000 getnewaddress
+}
+
+# Function to view logs for Bitcoin node
+view_logs() {
+    log "info" "Displaying logs for Bitcoin node"
+    
+    docker logs bitcoind --tail 100 -f
+}
+
+# Function to restart nodes
+restart_nodes() {
+    log "info" "Restarting Bitcoin node"
+
+    docker-compose down
+    docker-compose up -d
+}
+
+# Function to update nodes
+update_nodes() {
+    log "info" "Updating Bitcoin node and related containers"
+    
+    cd /root/project/run_btc_testnet4/btc_testnet4
+    git pull
+
+    log "info" "Rebuilding and restarting node"
+    docker-compose down
+    docker-compose up --build -d
+}
+
 # Main menu function
 main_menu() {
     while true; do
