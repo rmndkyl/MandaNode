@@ -208,8 +208,8 @@ view_key_balance_address() {
         main_menu
     fi
 
-    # Convert private key to address
-    ADDRESS=$(curl -s -X POST -H "Content-Type: application/json" --data "{\"method\":\"eth_accounts\",\"params\":[],\"id\":1,\"jsonrpc\":\"2.0\"}" http://localhost:8545 | jq -r .result[0])
+    # Use Python script to convert private key to address
+    ADDRESS=$(python3 derive_address.py "$PRIVATE_KEY_LOCAL")
 
     if [ -z "$ADDRESS" ]; then
         log "ERROR" "Failed to fetch address from private key."
