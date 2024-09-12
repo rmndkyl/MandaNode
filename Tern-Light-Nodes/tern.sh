@@ -1,9 +1,15 @@
 #!/bin/bash
 
+log() {
+    local level=$1
+    local message=$2
+    echo "[$level] $message"
+}
+
 # Check if the script is run as root user
 if [ "$(id -u)" != "0" ]; then
-    echo "This script needs to be run with root user privileges."
-    echo "Please try switching to the root user using 'sudo -i' and then run this script again."
+    log "ERROR" "This script needs to be run with root user privileges."
+    log "INFO" "Please try switching to the root user using 'sudo -i' and then run this script again."
     exit 1
 fi
 
@@ -18,8 +24,6 @@ main_menu() {
     echo "╚══════╝╚═╝░░╚═╝░░░╚═╝░░░╚══════╝╚═╝░░╚═╝  ╚═╝░░╚═╝╚═╝╚═╝░░╚═╝╚═════╝░╚═╝░░╚═╝░╚════╝░╚═╝░░░░░"
     echo "Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions"
     echo "============================ Tern Light Node (Executor) Menu ================================="
-    echo "Node community Telegram channel: https://t.me/+U3vHFLDNC5JjN2Jl"
-    echo "Node community Telegram group: https://t.me/+UgQeEnnWrodiNTI1"
     echo "1. Download and Initialize Tern Executor (Input Private Key)"
     echo "2. Start Executor"
     echo "3. View Logs"
@@ -29,7 +33,7 @@ main_menu() {
     echo "7. Update Executor"
     echo "8. Delete Executor"
     echo "9. Exit"
-    echo "============================================================================================="
+    echo "================================================================="
     read -p "Please choose an option: " choice
     case $choice in
         1) download_initialize_executor ;;
@@ -41,33 +45,63 @@ main_menu() {
         7) update_executor ;;
         8) delete_executor ;;
         9) exit 0 ;;
-        *) echo "Invalid choice. Please choose again." && read -n 1 -s -r -p "Press any key to continue..." && main_menu ;;
+        *) log "ERROR" "Invalid choice. Please choose again." && read -n 1 -s -r -p "Press any key to continue..." && main_menu ;;
     esac
 }
 
 # Option 1: Download and Initialize Tern Executor (with Private Key input)
 download_initialize_executor() {
-    # Step 1: Input Private Key
-    read -p "Enter your PRIVATE_KEY_LOCAL: " PRIVATE_KEY_LOCAL
+    remove_old_service
+
+    read -p "Enter your PRIVATE_KEY_LOCAL (without 0x prefix): " PRIVATE_KEY_LOCAL
+    if [ ${#PRIVATE_KEY_LOCAL} -ne 64 ]; then
+        log "ERROR" "Invalid private key. It must be 64 characters long."
+        exit 1
+    fi
+
     export PRIVATE_KEY_LOCAL
-    echo "Private key stored successfully."
+    log "INFO" "Private key stored successfully."
 
-    # Step 2: Install dependencies
-    echo "Updating package list and installing dependencies..."
-    sudo apt update && sudo apt upgrade -y
-    sudo apt install curl wget tar build-essential jq unzip -y
+    update_system
 
-    # Step 3: Define the latest version and download
-    LATEST_VERSION="v0.21.0"
+    # Retrieve latest version dynamically
+    LATEST_VERSION=$(curl -s https://api.github.com/repos/t3rn/executor-release/releases/latest | grep 'tag_name' | cut -d\" -f4)
     EXECUTOR_URL="https://github.com/t3rn/executor-release/releases/download/$LATEST_VERSION/executor-linux-$LATEST_VERSION.tar.gz"
-    
-    echo "Downloading executor version $LATEST_VERSION..."
+
+    log "INFO" "Downloading Executor version $LATEST_VERSION..."
     wget -q $EXECUTOR_URL -O executor-linux-$LATEST_VERSION.tar.gz
     tar -xvf executor-linux-$LATEST_VERSION.tar.gz
 
-    # Step 4: Create a systemd service file
-    echo "Creating executor service file..."
-sudo tee /etc/systemd/system/executor.service > /dev/null <<EOF
+    create_systemd_service
+    log "INFO" "Executor initialized successfully."
+    read -n 1 -s -r -p "Press any key to continue..."
+    main_menu
+}
+
+# Remove old service
+remove_old_service() {
+    log "INFO" "Stopping and removing old Executor service..."
+    sudo systemctl stop executor.service 2>/dev/null
+    sudo systemctl disable executor.service 2>/dev/null
+    sudo rm -f /etc/systemd/system/executor.service
+    sudo systemctl daemon-reload
+    log "INFO" "Old service has been removed."
+}
+
+# Update the system
+update_system() {
+    log "INFO" "Updating and upgrading system packages..."
+    sudo apt update -q && sudo apt upgrade -qy
+    if [ $? -ne 0 ]; then
+        log "ERROR" "System update failed. Exiting."
+        exit 1
+    fi
+}
+
+# Create systemd service file
+create_systemd_service() {
+    log "INFO" "Creating systemd service file..."
+    sudo tee /etc/systemd/system/executor.service > /dev/null <<EOF
 [Unit]
 Description=Executor Service
 After=network.target
@@ -87,30 +121,22 @@ RestartSec=3
 [Install]
 WantedBy=multi-user.target
 EOF
-
-    # Step 5: Reload and enable the service
-    echo "Reloading systemd daemon and enabling executor service..."
     sudo systemctl daemon-reload
     sudo systemctl enable executor
-
-    echo "Executor initialized successfully."
-    read -n 1 -s -r -p "Press any key to continue..."
-    main_menu
 }
 
 # Option 2: Start Executor
 start_executor() {
-    echo "Starting executor service..."
+    log "INFO" "Starting Executor service..."
     sudo systemctl start executor
-    echo "Executor service started."
+    log "INFO" "Executor service started."
     read -n 1 -s -r -p "Press any key to continue..."
     main_menu
 }
 
 # Option 3: View Logs
 view_logs() {
-    echo "Displaying executor logs... (Press Ctrl+C to exit logs)"
-    sleep 2
+    log "INFO" "Displaying executor logs... (Press Ctrl+C to exit)"
     journalctl -u executor -f
     read -n 1 -s -r -p "Press any key to continue..."
     main_menu
@@ -118,7 +144,7 @@ view_logs() {
 
 # Option 4: Check Executor Status
 check_status() {
-    echo "Checking executor status..."
+    log "INFO" "Checking Executor status..."
     sudo systemctl status executor
     read -n 1 -s -r -p "Press any key to continue..."
     main_menu
@@ -126,50 +152,46 @@ check_status() {
 
 # Option 5: Stop Executor
 stop_executor() {
-    echo "Stopping executor service..."
+    log "INFO" "Stopping Executor service..."
     sudo systemctl stop executor
-    echo "Executor service stopped."
+    log "INFO" "Executor service stopped."
     read -n 1 -s -r -p "Press any key to continue..."
     main_menu
 }
 
 # Option 6: Restart Executor
 restart_executor() {
-    echo "Restarting executor service..."
+    log "INFO" "Restarting Executor service..."
     sudo systemctl restart executor
-    echo "Executor service restarted."
+    log "INFO" "Executor service restarted."
     read -n 1 -s -r -p "Press any key to continue..."
     main_menu
 }
 
 # Option 7: Update Executor
 update_executor() {
-    echo "Updating executor service..."
+    log "INFO" "Updating Executor service..."
     sudo systemctl stop executor
-    [ -d "executor" ] && rm -rf executor
+    rm -rf executor
     LATEST_VERSION=$(curl -s https://api.github.com/repos/t3rn/executor-release/releases/latest | jq -r .tag_name)
     EXECUTOR_URL="https://github.com/t3rn/executor-release/releases/download/$LATEST_VERSION/executor-linux-$LATEST_VERSION.tar.gz"
-    EXECUTOR_FILE="executor-linux-$LATEST_VERSION.tar.gz"
-    curl -L -o $EXECUTOR_FILE $EXECUTOR_URL
-    tar -xzvf $EXECUTOR_FILE
-    rm -f $EXECUTOR_FILE
+    wget -q $EXECUTOR_URL -O executor-linux-$LATEST_VERSION.tar.gz
+    tar -xvf executor-linux-$LATEST_VERSION.tar.gz
     sudo systemctl start executor
-    sudo systemctl status executor
-    echo "Executor service updated."
+    log "INFO" "Executor service updated."
     read -n 1 -s -r -p "Press any key to continue..."
     main_menu
 }
 
 # Option 8: Delete Executor
 delete_executor() {
-    echo "Deleting executor service and files..."
+    log "INFO" "Deleting Executor service..."
     sudo systemctl stop executor
     sudo systemctl disable executor
     sudo rm /etc/systemd/system/executor.service
     sudo systemctl daemon-reload
     rm -rf executor
-    sudo systemctl status executor
-    echo "Executor service and files have been deleted."
+    log "INFO" "Executor service deleted."
     read -n 1 -s -r -p "Press any key to continue..."
     main_menu
 }
