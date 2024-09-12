@@ -208,7 +208,7 @@ view_key_balance_address() {
         main_menu
     fi
 
-    # Use Python script to convert private key to address
+    # Convert private key to address using Python script
     ADDRESS=$(python3 derive_address.py "$PRIVATE_KEY_LOCAL")
 
     if [ -z "$ADDRESS" ]; then
@@ -217,20 +217,23 @@ view_key_balance_address() {
         main_menu
     fi
 
-    # Fetch BRN balance using RPC
-    RPC_URL="https://brn.rpc.caldera.xyz/http"
-    BALANCE_HEX=$(curl -s -X POST $RPC_URL -H "Content-Type: application/json" --data "{\"jsonrpc\":\"2.0\",\"method\":\"eth_getBalance\",\"params\":[\"$ADDRESS\",\"latest\"],\"id\":1}" | jq -r .result)
-    
-    # Convert balance from hex to decimal
-    BALANCE_DECIMAL=$(printf "%d\n" "$((16#$BALANCE_HEX))")
-    
-    # Convert balance from Wei to BRN (assuming 1 BRN = 10^18 Wei)
-    BALANCE_BRN=$(echo "scale=18; $BALANCE_DECIMAL / 1000000000000000000" | bc -l)
+    # Fetch BRN balance using RPC endpoint
+    BALANCE=$(curl -s -X POST -H "Content-Type: application/json" \
+        --data '{"jsonrpc":"2.0","method":"eth_getBalance","params":["'"$ADDRESS"'","latest"],"id":1}' \
+        https://brn.rpc.caldera.xyz/http | jq -r '.result')
 
-    # Print the results
+    if [ "$BALANCE" = "null" ]; then
+        log "ERROR" "Failed to fetch BRN balance from RPC."
+        read -n 1 -s -r -p "Press any key to continue..."
+        main_menu
+    fi
+
+    # Convert the balance from Wei to BRN (assuming BRN has 18 decimals)
+    BALANCE=$(echo "scale=18; $BALANCE / 1000000000000000000" | bc)
+
     echo "Private Key: $PRIVATE_KEY_LOCAL"
     echo "Address: $ADDRESS"
-    echo "BRN Balance: $BALANCE_BRN"
+    echo "BRN Balance: $BALANCE"
 
     read -n 1 -s -r -p "Press any key to continue..."
     main_menu
