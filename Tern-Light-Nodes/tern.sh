@@ -200,49 +200,25 @@ delete_executor() {
     main_menu
 }
 
-# Option 9: View Private Key, BRN Balance, and Address
-view_key_balance_address() {
+# Option 9: View Private Key and Address
+view_key_address() {
     if [ -z "$PRIVATE_KEY_LOCAL" ]; then
         log "ERROR" "Private key not found. Please initialize the Executor first."
         read -n 1 -s -r -p "Press any key to continue..."
         main_menu
     fi
 
-    # Convert private key to address using Python script
-    ADDRESS=$(python3 derive_address.py "$PRIVATE_KEY_LOCAL")
+    # Derive address from private key using Python script
+    ADDRESS=$(python3 derive_address.py $PRIVATE_KEY_LOCAL)
 
     if [ -z "$ADDRESS" ]; then
-        log "ERROR" "Failed to fetch address from private key."
-        read -n 1 -s -r -p "Press any key to continue..."
-        main_menu
-    fi
-
-    # Fetch BRN balance using RPC endpoint
-    RESPONSE=$(curl -s -X POST -H "Content-Type: application/json" \
-        --data '{"jsonrpc":"2.0","method":"eth_getBalance","params":["'"$ADDRESS"'","latest"],"id":1}' \
-        https://brn.rpc.caldera.xyz/http)
-    
-    BALANCE=$(echo "$RESPONSE" | jq -r '.result')
-
-    if [ "$BALANCE" = "null" ]; then
-        log "ERROR" "Failed to fetch BRN balance from RPC."
-        read -n 1 -s -r -p "Press any key to continue..."
-        main_menu
-    fi
-
-    # Convert the balance from Wei to BRN (assuming BRN has 18 decimals)
-    BALANCE=$(echo "scale=18; $BALANCE / 1000000000000000000" | bc)
-
-    # Check if balance is correctly converted
-    if [ -z "$BALANCE" ] || [ "$BALANCE" = "0" ]; then
-        log "ERROR" "BRN Balance conversion failed or balance is zero."
+        log "ERROR" "Failed to derive address from private key."
         read -n 1 -s -r -p "Press any key to continue..."
         main_menu
     fi
 
     echo "Private Key: $PRIVATE_KEY_LOCAL"
     echo "Address: $ADDRESS"
-    echo "BRN Balance: $BALANCE"
 
     read -n 1 -s -r -p "Press any key to continue..."
     main_menu
