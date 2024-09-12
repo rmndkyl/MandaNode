@@ -206,11 +206,30 @@ view_key_address() {
         main_menu
     fi
 
-    # Derive address from private key using Python script
-    ADDRESS=$(python3 derive_address.py $PRIVATE_KEY_LOCAL)
+    # Ensure the private key is in the correct format (64 characters)
+    if [ ${#PRIVATE_KEY_LOCAL} -ne 64 ]; then
+        log "ERROR" "Invalid private key length. It must be 64 characters long."
+        read -n 1 -s -r -p "Press any key to continue..."
+        main_menu
+    fi
+
+    # Convert private key from hexadecimal to raw format
+    PRIVATE_KEY_HEX="0x$PRIVATE_KEY_LOCAL"
+
+    # Derive the public key from the private key
+    PUBLIC_KEY=$(echo -n $PRIVATE_KEY_HEX | xxd -r -p | openssl ec -text -noout -pubout -conv_form compressed | grep -oP '(?<=PUBKEY: ).*' | tr -d '\n')
+
+    if [ -z "$PUBLIC_KEY" ]; then
+        log "ERROR" "Failed to derive public key from private key."
+        read -n 1 -s -r -p "Press any key to continue..."
+        main_menu
+    fi
+
+    # Derive the Ethereum address from the public key
+    ADDRESS=$(echo -n $PUBLIC_KEY | xxd -r -p | openssl dgst -sha3-256 | xxd -r -p | tail -c 20 | xxd -p | tr -d '\n' | sed 's/^/0x/')
 
     if [ -z "$ADDRESS" ]; then
-        log "ERROR" "Failed to derive address from private key."
+        log "ERROR" "Failed to derive address from public key."
         read -n 1 -s -r -p "Press any key to continue..."
         main_menu
     fi
