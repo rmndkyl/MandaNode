@@ -29,7 +29,7 @@ screen -S tern-executor
 
 Open your terminal and execute the following command to download and run the script:
 
-## This is for One-Account(PrivateKeys)
+## This is for One-Account(PrivateKeys)(_Still can't accessible_)
 
    ```sh
    wget -O tern.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Tern-Light-Nodes/tern.sh && chmod +x tern.sh && sed -i 's/\r$//' tern.sh && ./tern.sh
