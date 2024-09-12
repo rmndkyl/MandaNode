@@ -10,16 +10,23 @@ sleep 4
 function main_menu() {
     while true; do
         clear
-	echo "Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions"
-	echo "============================ Nesa Node Installation ===================================="
-	echo "Node community Telegram channel: https://t.me/layerairdrop"
-	echo "Node community Telegram group: https://t.me/layerairdropdiskusi"
+        echo "Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions"
+        echo "============================ Nesa Node Installation ===================================="
+        echo "Node community Telegram channel: https://t.me/layerairdrop"
+        echo "Node community Telegram group: https://t.me/layerairdropdiskusi"
         echo "To exit the script, press ctrl+c on the keyboard."
         echo "Please choose an option:"
         echo "1) Install Node"
         echo "2) Get Node Status URL"
-        echo "3) Exit"
-        read -p "Enter your choice [1-3]: " choice
+        echo "3) Check Nesa Node Status"
+        echo "4) Start Nesa Node"
+        echo "5) Stop Nesa Node"
+        echo "6) Restart Nesa Node"
+        echo "7) Update Nesa Node"
+        echo "8) Delete Nesa Node"
+        echo "9) View Private Key and Node ID"
+        echo "10) Exit"
+        read -p "Enter your choice [1-10]: " choice
 
         case $choice in
             1)
@@ -29,6 +36,27 @@ function main_menu() {
                 get_node_status_url
                 ;;
             3)
+                check_nesa_status
+                ;;
+            4)
+                start_node
+                ;;
+            5)
+                stop_node
+                ;;
+            6)
+                restart_node
+                ;;
+            7)
+                update_node
+                ;;
+            8)
+                delete_node
+                ;;
+            9)
+                view_private_key_and_node_id
+                ;;
+            10)
                 echo "Exiting the script."
                 exit 0
                 ;;
@@ -39,6 +67,99 @@ function main_menu() {
     done
 }
 
+# Function to check Nesa node status
+function check_nesa_status() {
+    echo "Checking Nesa Node status..."
+    # Run the status command and capture the exit code
+    sudo systemctl status nesa-node.service > /tmp/nesa_node_status.txt
+    if [ $? -eq 0 ]; then
+        echo "Nesa Node status:"
+        cat /tmp/nesa_node_status.txt | grep -E "Loaded|Active|Main PID|Tasks|Memory|CPU|CGroup"
+        echo "Nesa Node is running."
+    else
+        echo "Failed to retrieve Nesa Node status."
+    fi
+    # Clean up temporary file
+    rm /tmp/nesa_node_status.txt
+    read -p "Press any key to return to the main menu..."
+}
+
+# Function to start the Nesa node
+function start_node() {
+    echo "Starting Nesa Node..."
+    sudo systemctl start nesa-node.service
+    if [ $? -eq 0 ]; then
+        echo "Nesa Node started successfully."
+    else
+        echo "Failed to start Nesa Node."
+    fi
+    read -p "Press any key to return to the main menu..."
+}
+
+# Function to stop the Nesa node
+function stop_node() {
+    echo "Stopping Nesa Node..."
+    sudo systemctl stop nesa-node.service
+    if [ $? -eq 0 ]; then
+        echo "Nesa Node stopped successfully."
+    else
+        echo "Failed to stop Nesa Node."
+    fi
+    read -p "Press any key to return to the main menu..."
+}
+
+# Function to restart the Nesa node
+function restart_node() {
+    echo "Restarting Nesa Node..."
+    sudo systemctl restart nesa-node.service
+    if [ $? -eq 0 ]; then
+        echo "Nesa Node restarted successfully."
+    else
+        echo "Failed to restart Nesa Node."
+    fi
+    read -p "Press any key to return to the main menu..."
+}
+
+# Function to update the Nesa node
+function update_node() {
+    echo "Updating Nesa Node..."
+    cd $HOME/nesa-node && git pull
+    if [ $? -eq 0 ]; then
+        echo "Nesa Node updated successfully."
+    else
+        echo "Failed to update Nesa Node."
+    fi
+    read -p "Press any key to return to the main menu..."
+}
+
+# Function to delete Nesa nodes
+function delete_node() {
+    echo "Deleting Nesa Node..."
+    sudo systemctl stop nesa-node.service
+    sudo systemctl disable nesa-node.service
+    sudo rm -rf /etc/systemd/system/nesa-node.service
+    sudo rm -rf $HOME/nesa-node
+    if [ $? -eq 0 ]; then
+        echo "Nesa Node deleted successfully."
+    else
+        echo "Failed to delete Nesa Node."
+    fi
+    read -p "Press any key to return to the main menu..."
+}
+
+# Function to view Private Key and Node ID
+function view_private_key_and_node_id() {
+    if [ -f "$HOME/.nesa/identity/node_id.id" ]; then
+        PUB_KEY=$(cat $HOME/.nesa/identity/node_id.id)
+        PRIVATE_KEY=$(cat $HOME/.nesa/identity/private_key.id)
+        echo "Node ID: $PUB_KEY"
+        echo "Private Key: $PRIVATE_KEY"
+    else
+        echo "Node ID or Private Key not found. Please ensure $HOME/.nesa/identity/ exists."
+    fi
+    read -p "Press any key to return to the main menu..."
+}
+
 # Function to get the Node Status URL
 function get_node_status_url() {
     if [ -f "$HOME/.nesa/identity/node_id.id" ]; then
@@ -47,8 +168,6 @@ function get_node_status_url() {
     else
         echo "Node identity file not found. Please make sure $HOME/.nesa/identity/node_id.id exists."
     fi
-
-    # Wait for the user to press any key to return to the main menu
     read -p "Press any key to return to the main menu..."
 }
 
@@ -90,8 +209,11 @@ function install_node() {
         sudo add-apt-repository ppa:graphics-drivers/ppa
         sudo apt-get update
 
+        # Ensure `ubuntu-drivers-common` is installed
+        sudo apt-get install -y ubuntu-drivers-common
+
         # Install the latest version of NVIDIA drivers
-        sudo apt-get install -y nvidia-driver-$(ubuntu-drivers devices | grep recommended | awk '{print $3}')
+        sudo ubuntu-drivers autoinstall
     else
         echo "NVIDIA drivers are already installed."
     fi
@@ -106,123 +228,148 @@ function install_node() {
         echo "gum is already installed."
     fi
 
-# Install jq (if not already installed)
-if ! command -v jq &> /dev/null
-then
-    echo "jq is not installed. Installing jq."
-    sudo apt-get install -y jq
-else
-    echo "jq is already installed."
-fi
+    # Install jq (if not already installed)
+    if ! command -v jq &> /dev/null
+    then
+        echo "jq is not installed. Installing jq."
+        sudo apt-get install -y jq
+    else
+        echo "jq is already installed."
+    fi
 
-# Check if Docker Compose is installed
-if ! command -v docker-compose &> /dev/null
-then
-    echo "Docker Compose is not installed. Installing Docker Compose."
-    # Install Docker Compose
-    DOCKER_COMPOSE_VERSION="v2.18.1"  # Adjust the version as needed
-    sudo curl -L "https://github.com/docker/compose/releases/download/$DOCKER_COMPOSE_VERSION/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-    sudo chmod +x /usr/local/bin/docker-compose
-else
-    echo "Docker Compose is already installed."
-fi
+    # Check if Docker Compose is installed
+    if ! command -v docker-compose &> /dev/null
+    then
+        echo "Docker Compose is not installed. Installing Docker Compose."
+        # Install Docker Compose
+        DOCKER_COMPOSE_VERSION="v2.18.1"  # Adjust the version as needed
+        sudo curl -L "https://github.com/docker/compose/releases/download/$DOCKER_COMPOSE_VERSION/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        sudo chmod +x /usr/local/bin/docker-compose
+    else
+        echo "Docker Compose is already installed."
+    fi
 
-# Configure the node
-echo "Configuring the node..."
-read -p "Please choose a unique name for your node: " NODE_NAME
+    # Configure the node
+    echo "Configuring the node..."
+    read -p "Please choose a unique name for your node: " NODE_NAME
 
-PS3="Please select the node type: "
-NODE_TYPE_OPTIONS=("Validator" "Miner" "Exit")
-select NODE_TYPE in "${NODE_TYPE_OPTIONS[@]}"
-do
-    case $NODE_TYPE in
-        "Validator")
-            read -p "Validator's Private Key: " PRIVATE_KEY
-            echo "Node Name: $NODE_NAME"
-            echo "Node Type: Validator"
-            echo "Validator's Private Key: $PRIVATE_KEY"
-            break
-            ;;
-        "Miner")
-            PS3="Please select the miner type: "
-            MINER_TYPE_OPTIONS=("Distributed Miner" "Non-Distributed Miner" "Exit")
-            select MINER_TYPE in "${MINER_TYPE_OPTIONS[@]}"
-            do
-                case $MINER_TYPE in
-                    "Distributed Miner")
-                        PS3="Please select a swarm action: "
-                        SWARM_ACTION_OPTIONS=("Join existing swarm" "Start a new swarm" "Exit")
-                        select SWARM_ACTION in "${SWARM_ACTION_OPTIONS[@]}"
-                        do
-                            case $SWARM_ACTION in
-                                "Start a new swarm")
-                                    read -p "Which model would you like to run? (meta-llama/Llama-2-13b-Chat-Hf): " MODEL
-                                    echo "Node Name: $NODE_NAME"
-                                    echo "Node Type: Miner"
-                                    echo "Miner Type: Distributed Miner"
-                                    echo "Swarm Action: Start a new swarm"
-                                    echo "Model: $MODEL"
-                                    break
-                                    ;;
-                                "Join existing swarm")
-                                    echo "Logic for joining an existing swarm is not yet implemented."
-                                    echo "Node Name: $NODE_NAME"
-                                    echo "Node Type: Miner"
-                                    echo "Miner Type: Distributed Miner"
-                                    echo "Swarm Action: Join existing swarm"
-                                    break
-                                    ;;
-                                "Exit")
-                                    exit 1
-                                    ;;
-                                *)
-                                    echo "Invalid option $REPLY"
-                                    ;;
-                            esac
-                        done
-                        break
-                        ;;
-                    "Non-Distributed Miner")
-                        read -p "Which model would you like to run? (meta-llama/Llama-2-13b-Chat-Hf): " MODEL
-                        echo "Node Name: $NODE_NAME"
-                        echo "Node Type: Miner"
-                        echo "Miner Type: Non-Distributed Miner"
-                        echo "Model: $MODEL"
-                        break
-                        ;;
-                    "Exit")
-                        exit 1
-                        ;;
-                    *)
-                        echo "Invalid option $REPLY"
-                        ;;
-                esac
-            done
-            break
-            ;;
-        "Exit")
-            exit 1
-            ;;
-        *)
-            echo "Invalid option $REPLY"
-            ;;
-    esac
-done
+    PS3="Please select the node type: "
+    NODE_TYPE_OPTIONS=("Validator" "Miner" "Exit")
+    select NODE_TYPE in "${NODE_TYPE_OPTIONS[@]}"
+    do
+        case $NODE_TYPE in
+            "Validator")
+                read -p "Validator's Private Key: " PRIVATE_KEY
+                echo "Node Name: $NODE_NAME"
+                echo "Node Type: Validator"
+                echo "Validator's Private Key: $PRIVATE_KEY"
+                break
+                ;;
+            "Miner")
+                PS3="Please select the miner type: "
+                MINER_TYPE_OPTIONS=("Distributed Miner" "Non-Distributed Miner" "Exit")
+                select MINER_TYPE in "${MINER_TYPE_OPTIONS[@]}"
+                do
+                    case $MINER_TYPE in
+                        "Distributed Miner")
+                            PS3="Please select a swarm action: "
+                            SWARM_ACTION_OPTIONS=("Join existing swarm" "Start a new swarm" "Exit")
+                            select SWARM_ACTION in "${SWARM_ACTION_OPTIONS[@]}"
+                            do
+                                case $SWARM_ACTION in
+                                    "Start a new swarm")
+                                        read -p "Which model would you like to run? (meta-llama/Llama-2-13b-Chat-Hf): " MODEL
+                                        echo "Node Name: $NODE_NAME"
+                                        echo "Node Type: Miner"
+                                        echo "Miner Type: Distributed Miner"
+                                        echo "Swarm Action: Start a new swarm"
+                                        echo "Model: $MODEL"
+                                        break
+                                        ;;
+                                    "Join existing swarm")
+                                        echo "Logic for joining an existing swarm is not yet implemented."
+                                        echo "Node Name: $NODE_NAME"
+                                        echo "Node Type: Miner"
+                                        echo "Miner Type: Distributed Miner"
+                                        echo "Swarm Action: Join existing swarm"
+                                        break
+                                        ;;
+                                    "Exit")
+                                        exit 1
+                                        ;;
+                                    *)
+                                        echo "Invalid option $REPLY"
+                                        ;;
+                                esac
+                            done
+                            break
+                            ;;
+                        "Non-Distributed Miner")
+                            read -p "Which model would you like to run? (meta-llama/Llama-2-13b-Chat-Hf): " MODEL
+                            MODEL=${MODEL:-Llama-2-13b-Chat-Hf}  # Set default value if MODEL is empty
+                            echo "Node Name: $NODE_NAME"
+                            echo "Node Type: Miner"
+                            echo "Miner Type: Non-Distributed Miner"
+                            echo "Model: $MODEL"
+                            break
+                            ;;
+                        "Exit")
+                            exit 1
+                            ;;
+                        *)
+                            echo "Invalid option $REPLY"
+                            ;;
+                    esac
+                done
+                break
+                ;;
+            "Exit")
+                exit 1
+                ;;
+            *)
+                echo "Invalid option $REPLY"
+                ;;
+        esac
+    done
 
-# Run the remote script for all OS
-echo "Running remote initialization script..."
-bash <(curl -s https://raw.githubusercontent.com/nesaorg/bootstrap/master/bootstrap.sh)
+    # Run the remote script for all OS
+    echo "Running remote initialization script..."
+    bash <(curl -s https://raw.githubusercontent.com/nesaorg/bootstrap/master/bootstrap.sh)
 
-# Try to start Docker Compose
-echo "Attempting to start Docker Compose containers..."
-if sudo docker-compose up -d; then
-    echo "Docker Compose containers started successfully."
-else
-    echo "Failed to start Docker Compose containers. Please check the configuration and logs."
-fi
+    # Create a systemd service for the node
+    echo "Creating systemd service for Nesa Node..."
+    sudo tee /etc/systemd/system/nesa-node.service > /dev/null <<EOF
+[Unit]
+Description=Nesa Node Service
+After=docker.service
+Requires=docker.service
 
-# Wait for the user to press any key to return to the main menu
-read -p "Press any key to return to the main menu..."
+[Service]
+WorkingDirectory=$HOME/nesa-node
+ExecStart=/usr/local/bin/docker-compose up
+ExecStop=/usr/local/bin/docker-compose down
+Restart=always
+User=$(whoami)
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+    # Reload systemd and enable the service
+    sudo systemctl daemon-reload
+    sudo systemctl enable nesa-node.service
+
+    # Start the service
+    echo "Starting Nesa Node..."
+    sudo systemctl start nesa-node.service
+    if [ $? -eq 0 ]; then
+        echo "Nesa Node installed and started successfully."
+    else
+        echo "Failed to start Nesa Node."
+    fi
+
+    # Wait for the user to press any key to return to the main menu
+    read -p "Press any key to return to the main menu..."
 }
 
 # Run the main menu
