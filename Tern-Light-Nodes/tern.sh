@@ -55,17 +55,6 @@ main_menu() {
 download_initialize_executor() {
     remove_old_service
 
-    # Ensure required tools are installed
-    log "INFO" "Checking and installing required tools (openssl, xxd)..."
-    if ! command -v openssl &> /dev/null; then
-        log "INFO" "openssl not found. Installing..."
-        sudo apt-get install -y openssl
-    fi
-    if ! command -v xxd &> /dev/null; then
-        log "INFO" "xxd not found. Installing..."
-        sudo apt-get install -y xxd
-    fi
-
     read -p "Enter your PRIVATE_KEY_LOCAL (without 0x prefix): " PRIVATE_KEY_LOCAL
     if [ ${#PRIVATE_KEY_LOCAL} -ne 64 ]; then
         log "ERROR" "Invalid private key. It must be 64 characters long."
@@ -76,6 +65,14 @@ download_initialize_executor() {
     log "INFO" "Private key stored successfully."
 
     update_system
+
+    # Install Node.js, npm, and ethers library
+    log "INFO" "Installing Node.js and npm..."
+    sudo apt-get update
+    sudo apt-get install -y nodejs npm
+
+    log "INFO" "Installing ethers library..."
+    npm install -g ethers
 
     # Retrieve latest version dynamically
     LATEST_VERSION=$(curl -s https://api.github.com/repos/t3rn/executor-release/releases/latest | grep 'tag_name' | cut -d\" -f4)
@@ -224,29 +221,67 @@ view_key_address() {
         main_menu
     fi
 
-    # Convert private key from hexadecimal to raw format
-    PRIVATE_KEY_HEX="0x$PRIVATE_KEY_LOCAL"
-
-    # Derive the public key from the private key
-    PUBLIC_KEY=$(echo -n $PRIVATE_KEY_HEX | xxd -r -p | openssl ec -text -noout -pubout -conv_form compressed | grep -oP '(?<=PUBKEY: ).*' | tr -d '\n')
-
-    if [ -z "$PUBLIC_KEY" ]; then
-        log "ERROR" "Failed to derive public key from private key."
+    # Ensure Node.js is installed
+    if ! command -v node > /dev/null; then
+        log "ERROR" "Node.js is not installed. Please run Option 1 to install it."
         read -n 1 -s -r -p "Press any key to continue..."
         main_menu
     fi
 
-    # Derive the Ethereum address from the public key
-    ADDRESS=$(echo -n $PUBLIC_KEY | xxd -r -p | openssl dgst -sha3-256 | xxd -r -p | tail -c 20 | xxd -p | tr -d '\n' | sed 's/^/0x/')
+    # Create a directory for the Node.js script
+    mkdir -p temp_dir
+    cd temp_dir || exit
+
+    # Create the package.json file
+    cat <<EOF > package.json
+{
+  "name": "temp_dir",
+  "version": "1.0.0",
+  "dependencies": {
+    "ethers": "^6.5.0"
+  }
+}
+EOF
+
+    # Install ethers locally
+    npm install
+
+    # Create the Node.js script for deriving the address
+    cat <<EOF > derive_address.js
+const { ethers } = require('ethers');
+
+// Get private key from command line arguments
+const privateKey = process.argv[2];
+
+// Check if private key is valid
+if (privateKey.length !== 64) {
+    console.error("Invalid private key length. It must be 64 characters long.");
+    process.exit(1);
+}
+
+// Convert private key to wallet and get address
+const wallet = new ethers.Wallet(\`0x\${privateKey}\`);
+const address = wallet.address;
+
+// Output the address
+console.log(address);
+EOF
+
+    # Call the Node.js script to derive the address
+    ADDRESS=$(node derive_address.js $PRIVATE_KEY_LOCAL)
 
     if [ -z "$ADDRESS" ]; then
-        log "ERROR" "Failed to derive address from public key."
+        log "ERROR" "Failed to derive address from private key."
         read -n 1 -s -r -p "Press any key to continue..."
         main_menu
     fi
 
     echo "Private Key: $PRIVATE_KEY_LOCAL"
     echo "Address: $ADDRESS"
+
+    # Clean up the Node.js script and dependencies
+    cd ..
+    rm -rf temp_dir
 
     read -n 1 -s -r -p "Press any key to continue..."
     main_menu
