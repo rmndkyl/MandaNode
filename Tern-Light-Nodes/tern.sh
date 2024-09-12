@@ -55,6 +55,17 @@ main_menu() {
 download_initialize_executor() {
     remove_old_service
 
+    # Ensure required tools are installed
+    log "INFO" "Checking and installing required tools (openssl, xxd)..."
+    if ! command -v openssl &> /dev/null; then
+        log "INFO" "openssl not found. Installing..."
+        sudo apt-get install -y openssl
+    fi
+    if ! command -v xxd &> /dev/null; then
+        log "INFO" "xxd not found. Installing..."
+        sudo apt-get install -y xxd
+    fi
+
     read -p "Enter your PRIVATE_KEY_LOCAL (without 0x prefix): " PRIVATE_KEY_LOCAL
     if [ ${#PRIVATE_KEY_LOCAL} -ne 64 ]; then
         log "ERROR" "Invalid private key. It must be 64 characters long."
