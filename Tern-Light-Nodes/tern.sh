@@ -217,17 +217,20 @@ view_key_balance_address() {
         main_menu
     fi
 
-    # Fetch BRN balance using pricer API
-    RESPONSE=$(curl -s "https://pricer.t1rn.io/user/brn/balance?account=$ADDRESS")
-    BRN_BALANCE=$(echo "$RESPONSE" | jq -r '.BRNBalance')
+    # Fetch BRN balance using RPC
+    RPC_URL="https://brn.rpc.caldera.xyz/http"
+    BALANCE_HEX=$(curl -s -X POST $RPC_URL -H "Content-Type: application/json" --data "{\"jsonrpc\":\"2.0\",\"method\":\"eth_getBalance\",\"params\":[\"$ADDRESS\",\"latest\"],\"id\":1}" | jq -r .result)
+    
+    # Convert balance from hex to decimal
+    BALANCE_DECIMAL=$(printf "%d\n" "$((16#$BALANCE_HEX))")
+    
+    # Convert balance from Wei to BRN (assuming 1 BRN = 10^18 Wei)
+    BALANCE_BRN=$(echo "scale=18; $BALANCE_DECIMAL / 1000000000000000000" | bc -l)
 
-    if [ "$BRN_BALANCE" == "null" ]; then
-        log "ERROR" "Failed to fetch BRN balance for address $ADDRESS."
-    else
-        echo "Private Key: $PRIVATE_KEY_LOCAL"
-        echo "Address: $ADDRESS"
-        echo "BRN Balance: $BRN_BALANCE"
-    fi
+    # Print the results
+    echo "Private Key: $PRIVATE_KEY_LOCAL"
+    echo "Address: $ADDRESS"
+    echo "BRN Balance: $BALANCE_BRN"
 
     read -n 1 -s -r -p "Press any key to continue..."
     main_menu
