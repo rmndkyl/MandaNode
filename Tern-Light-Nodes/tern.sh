@@ -218,11 +218,16 @@ view_key_balance_address() {
     fi
 
     # Fetch BRN balance using pricer API
-    BALANCE=$(curl -s "https://pricer.t1rn.io/user/brn/balance?account=$ADDRESS" | jq -r '.balance')
+    RESPONSE=$(curl -s "https://pricer.t1rn.io/user/brn/balance?account=$ADDRESS")
+    BRN_BALANCE=$(echo "$RESPONSE" | jq -r '.BRNBalance')
 
-    echo "Private Key: $PRIVATE_KEY_LOCAL"
-    echo "Address: $ADDRESS"
-    echo "BRN Balance: $BALANCE"
+    if [ "$BRN_BALANCE" == "null" ]; then
+        log "ERROR" "Failed to fetch BRN balance for address $ADDRESS."
+    else
+        echo "Private Key: $PRIVATE_KEY_LOCAL"
+        echo "Address: $ADDRESS"
+        echo "BRN Balance: $BRN_BALANCE"
+    fi
 
     read -n 1 -s -r -p "Press any key to continue..."
     main_menu
