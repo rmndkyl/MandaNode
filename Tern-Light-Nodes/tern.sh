@@ -218,9 +218,11 @@ view_key_balance_address() {
     fi
 
     # Fetch BRN balance using RPC endpoint
-    BALANCE=$(curl -s -X POST -H "Content-Type: application/json" \
+    RESPONSE=$(curl -s -X POST -H "Content-Type: application/json" \
         --data '{"jsonrpc":"2.0","method":"eth_getBalance","params":["'"$ADDRESS"'","latest"],"id":1}' \
-        https://brn.rpc.caldera.xyz/http | jq -r '.result')
+        https://brn.rpc.caldera.xyz/http)
+    
+    BALANCE=$(echo "$RESPONSE" | jq -r '.result')
 
     if [ "$BALANCE" = "null" ]; then
         log "ERROR" "Failed to fetch BRN balance from RPC."
@@ -230,6 +232,13 @@ view_key_balance_address() {
 
     # Convert the balance from Wei to BRN (assuming BRN has 18 decimals)
     BALANCE=$(echo "scale=18; $BALANCE / 1000000000000000000" | bc)
+
+    # Check if balance is correctly converted
+    if [ -z "$BALANCE" ] || [ "$BALANCE" = "0" ]; then
+        log "ERROR" "BRN Balance conversion failed or balance is zero."
+        read -n 1 -s -r -p "Press any key to continue..."
+        main_menu
+    fi
 
     echo "Private Key: $PRIVATE_KEY_LOCAL"
     echo "Address: $ADDRESS"
