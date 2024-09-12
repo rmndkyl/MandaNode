@@ -24,8 +24,6 @@ main_menu() {
     echo "╚══════╝╚═╝░░╚═╝░░░╚═╝░░░╚══════╝╚═╝░░╚═╝  ╚═╝░░╚═╝╚═╝╚═╝░░╚═╝╚═════╝░╚═╝░░╚═╝░╚════╝░╚═╝░░░░░"
     echo "Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions"
     echo "============================ Tern Light Node (Executor) Menu ================================="
-    echo "Node community Telegram channel: https://t.me/+U3vHFLDNC5JjN2Jl"
-    echo "Node community Telegram group: https://t.me/+UgQeEnnWrodiNTI1"
     echo "1. Download and Initialize Tern Executor (Input Private Key)"
     echo "2. Start Executor"
     echo "3. View Logs"
@@ -34,7 +32,7 @@ main_menu() {
     echo "6. Restart Executor"
     echo "7. Update Executor"
     echo "8. Delete Executor"
-    echo "9. View Private Key, BRN Balance, and Address"
+    echo "9. View Private Key and Address"
     echo "10. Exit"
     echo "================================================================="
     read -p "Please choose an option: " choice
@@ -47,7 +45,7 @@ main_menu() {
         6) restart_executor ;;
         7) update_executor ;;
         8) delete_executor ;;
-        9) view_key_balance_address ;;
+        9) view_key_address ;;
         10) exit 0 ;;
         *) log "ERROR" "Invalid choice. Please choose again." && read -n 1 -s -r -p "Press any key to continue..." && main_menu ;;
     esac
