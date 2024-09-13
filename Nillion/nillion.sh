@@ -71,6 +71,7 @@ function main_menu {
             ;;
         *)
             echo "Invalid option. Please try again."
+            read -p "Press any key to return to the main menu..."
             main_menu
             ;;
     esac
@@ -81,6 +82,7 @@ function update_system {
     echo "1. Updating system and installing prerequisites..."
     sudo apt update && sudo apt upgrade -y
     sudo apt install apt-transport-https ca-certificates curl software-properties-common jq bc -y
+    read -p "Press any key to return to the main menu..."
     main_menu
 }
 
@@ -96,6 +98,7 @@ function install_docker {
         sudo apt install docker-ce docker-ce-cli containerd.io -y
         sudo docker run hello-world
     fi
+    read -p "Press any key to return to the main menu..."
     main_menu
 }
 
@@ -114,57 +117,115 @@ function remove_nillion {
     sudo docker ps | grep nillion | awk '{print $1}' | xargs -r docker stop
     sudo docker ps -a | grep nillion | awk '{print $1}' | xargs -r docker rm
 
+    read -p "Press any key to return to the main menu..."
     main_menu
 }
 
 # Function to initialize the Nillion accuser
 function initialize_accuser {
     echo "3. Initializing Nillion accuser..."
-    mkdir -p nillion/accuser
-    docker pull nillion/retailtoken-accuser:latest
-    docker run -v "$(pwd)/nillion/accuser:/var/tmp" nillion/retailtoken-accuser:v1.0.1 initialise
+    
+    # Prompt user to choose between using an existing wallet or creating a new one
+    read -p "Do you want to import an existing wallet? (y/Y for Yes, n/N for No): " wallet_choice
 
-    SECRET_FILE="./nillion/accuser/credentials.json"
-    if [ -f "$SECRET_FILE" ]; then
-        ADDRESS=$(jq -r '.address' "$SECRET_FILE")
-        echo "Request Nillion faucet (https://faucet.testnet.nillion.com) to your accuser wallet address: $ADDRESS"
+    if [[ "$wallet_choice" =~ ^[yY]$ ]]; then
+        # Input Private Key, Public Key, and Account ID manually
+        read -p "Enter your Private Key: " PRIVATE_KEY
+        read -p "Enter your Public Key: " PUBLIC_KEY
+        read -p "Enter your Account ID (Address): " ACCOUNT_ID
 
-        read -p "Have you requested the faucet to the accuser wallet? (y/Y to proceed): " FAUCET_REQUESTED1
-        if [[ "$FAUCET_REQUESTED1" =~ ^[yY]$ ]]; then
-            echo "Now visit: https://verifier.nillion.com/verifier"
-            echo "Connect a new Keplr wallet."
-            echo "Request faucet to the Nillion address: https://faucet.testnet.nillion.com"
+        # Create the credentials.json file with the provided data
+        mkdir -p nillion/accuser
+        SECRET_FILE="./nillion/accuser/credentials.json"
 
-            read -p "Have you requested faucet to your Keplr wallet? (y/Y to proceed): " FAUCET_REQUESTED2
-            if [[ "$FAUCET_REQUESTED2" =~ ^[yY]$ ]]; then
-                read -p "Input your Keplr wallet's Nillion address: " KEPLR
+        cat > "$SECRET_FILE" <<EOL
+{
+    "priv_key": "$PRIVATE_KEY",
+    "pub_key": "$PUBLIC_KEY",
+    "address": "$ACCOUNT_ID"
+}
+EOL
 
-                echo "Input the following information on the website: https://verifier.nillion.com/verifier"
-                echo "Address: $ADDRESS"
-                echo "Public Key: $(jq -r '.pub_key' "$SECRET_FILE")"
+        echo "Credentials saved to $SECRET_FILE"
+    else
+        # Create a new wallet (existing process)
+        mkdir -p nillion/accuser
+        docker pull nillion/retailtoken-accuser:latest
+        docker run -v "$(pwd)/nillion/accuser:/var/tmp" nillion/retailtoken-accuser:v1.0.1 initialise
 
-                read -p "Have you done this? (y/Y to proceed): " address_submitted
-                if [[ "$address_submitted" =~ ^[yY]$ ]]; then
-                    echo "Save this Private Key in a safe place: $(jq -r '.priv_key' "$SECRET_FILE")"
-                    read -p "Have you saved the private key? (y/Y to proceed): " private_key_saved
-                    if [[ "$private_key_saved" =~ ^[yY]$ ]]; then
-                        echo "Running Docker container with accuse command..."
-                        docker run -v "$(pwd)/nillion/accuser:/var/tmp" nillion/retailtoken-accuser:v1.0.1 accuse --rpc-endpoint "https://nillion-testnet.rpc.nodex.one" --block-start "$(curl -s "https://testnet-nillion-api.lavenderfive.com/cosmos/tx/v1beta1/txs?query=message.sender='$KEPLR'&pagination.limit=20&pagination.offset=0" | jq -r '[.tx_responses[] | select(.tx.body.memo == "AccusationRegistrationMessage")] | sort_by(.height | tonumber) | .[-1].height | tonumber - 5' | bc)"
-                    else
-                        echo "Please save the private key and try again."
+        SECRET_FILE="./nillion/accuser/credentials.json"
+        if [ ! -f "$SECRET_FILE" ]; then
+            echo "Failed to create new wallet. Please check the initialization process."
+            return
+        fi
+    fi
+
+    # Display wallet address and prompt to request faucet
+    ADDRESS=$(jq -r '.address' "$SECRET_FILE")
+    echo "Request Nillion faucet (https://faucet.testnet.nillion.com) to your accuser wallet address: $ADDRESS"
+
+    read -p "Have you requested the faucet to the accuser wallet? (y/Y to proceed): " FAUCET_REQUESTED1
+    if [[ "$FAUCET_REQUESTED1" =~ ^[yY]$ ]]; then
+        echo "Now visit: https://verifier.nillion.com/verifier"
+        echo "Connect a new Keplr wallet and request faucet for the Nillion address: https://faucet.testnet.nillion.com"
+
+        read -p "Have you requested the faucet to your Keplr wallet? (y/Y to proceed): " FAUCET_REQUESTED2
+        if [[ "$FAUCET_REQUESTED2" =~ ^[yY]$ ]]; then
+            read -p "Input your Keplr wallet's Nillion address: " KEPLR
+
+            # Display instructions to input address and public key
+            echo "Input the following information on the website: https://verifier.nillion.com/verifier"
+            echo "Address: $ADDRESS"
+            echo "Public Key: $(jq -r '.pub_key' "$SECRET_FILE")"
+
+            read -p "Have you done this? (y/Y to proceed): " address_submitted
+            if [[ "$address_submitted" =~ ^[yY]$ ]]; then
+                echo "Save this Private Key in a safe place: $(jq -r '.priv_key' "$SECRET_FILE")"
+                
+                read -p "Have you saved the private key? (y/Y to proceed): " private_key_saved
+                if [[ "$private_key_saved" =~ ^[yY]$ ]]; then
+                    echo "Fetching latest block height for accuse command..."
+
+                    # Fetch latest block height from the RPC
+                    LATEST_BLOCK_HEIGHT=$(curl -s "https://nillion-testnet-rpc.polkachu.com/status" | jq -r '.result.sync_info.latest_block_height')
+
+                    if [[ "$LATEST_BLOCK_HEIGHT" == "null" || -z "$LATEST_BLOCK_HEIGHT" ]]; then
+                        echo "Error: Could not retrieve the latest block height. Please check the RPC endpoint."
+                        return
                     fi
+
+                    # Use the latest block height minus a small offset (5 blocks back)
+                    BLOCK_START=$(echo "$LATEST_BLOCK_HEIGHT - 5" | bc)
+                    echo "Using block start height: $BLOCK_START"
+
+                    # Stop any existing accuser container
+                    echo "Stopping any existing accuser container..."
+                    docker stop $(docker ps -q --filter "ancestor=nillion/retailtoken-accuser:v1.0.1")
+
+                    # Run Docker container with accuse command
+                    echo "Running Docker container with accuse command..."
+                    docker run -v "$(pwd)/nillion/accuser:/var/tmp" \
+                        -e SLEEP_INTERVAL=300 \
+                        nillion/retailtoken-accuser:v1.0.1 accuse \
+                        --rpc-endpoint "https://nillion-testnet-rpc.polkachu.com" \
+                        --block-start "$BLOCK_START" || {
+                        echo "Docker container failed. Check Docker logs for more details."
+                        docker logs $(docker ps -q --filter "ancestor=nillion/retailtoken-accuser:v1.0.1")
+                    }
                 else
-                    echo "Please complete the submission and try again."
+                    echo "Please save the private key and try again."
                 fi
             else
-                echo "Please request the faucet to your Keplr wallet and try again."
+                echo "Please complete the submission and try again."
             fi
         else
-            echo "Please request the faucet and try again."
+            echo "Please request the faucet to your Keplr wallet and try again."
         fi
     else
-        echo "credentials.json file not found. Ensure the initialization step completed successfully."
+        echo "Please request the faucet and try again."
     fi
+
+    read -p "Press any key to return to the main menu..."
     main_menu
 }
 
@@ -180,37 +241,61 @@ function show_account_info {
     else
         echo "Credentials file not found!"
     fi
+    read -p "Press any key to return to the main menu..."
     main_menu
+}
+
+# Function to get container ID of Nillion Verifier based on image name
+function get_container_id {
+    echo "Fetching container ID for the Nillion Verifier..."
+    container_id=$(docker ps -q --filter "ancestor=nillion/retailtoken-accuser:v1.0.1")
+
+    if [ -z "$container_id" ]; then
+        echo "No running container found for the Nillion Verifier."
+    fi
 }
 
 # Function to view logs of Nillion Verifier
 function view_logs {
-    echo "Viewing logs of the Nillion Verifier..."
-    sudo docker logs nillion_verifier_container --follow
+    get_container_id
+    if [ -n "$container_id" ]; then
+        echo "Viewing logs for container ID: $container_id"
+        sudo docker logs "$container_id" --follow
+    fi
+    read -p "Press any key to return to the main menu..."
     main_menu
 }
 
 # Function to start Nillion Verifier
 function start_verifier {
     echo "Starting Nillion Verifier..."
-    docker run -d --name nillion_verifier_container nillion/verifier:latest
+    sudo docker start $(docker ps -aq --filter "ancestor=nillion/retailtoken-accuser:v1.0.1")
     echo "Nillion Verifier started."
+    read -p "Press any key to return to the main menu..."
     main_menu
 }
 
 # Function to restart Nillion Verifier
 function restart_verifier {
-    echo "Restarting Nillion Verifier..."
-    sudo docker restart nillion_verifier_container
-    echo "Nillion Verifier restarted."
+    get_container_id
+    if [ -n "$container_id" ]; then
+        echo "Restarting Nillion Verifier..."
+        sudo docker restart "$container_id"
+        echo "Nillion Verifier restarted."
+    fi
+    read -p "Press any key to return to the main menu..."
     main_menu
 }
 
 # Function to stop Nillion Verifier
 function stop_verifier {
-    echo "Stopping Nillion Verifier..."
-    sudo docker stop nillion_verifier_container
-    echo "Nillion Verifier stopped."
+    get_container_id
+    if [ -n "$container_id" ]; then
+        echo "Stopping Nillion Verifier..."
+        sudo docker stop "$container_id"
+        echo "Nillion Verifier stopped."
+    fi
+    read -p "Press any key to return to the main menu..."
     main_menu
 }
 
