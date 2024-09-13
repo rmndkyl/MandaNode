@@ -1,4 +1,4 @@
-#!/bin/bash
+	#!/bin/bash
 
 LOG_FILE="$HOME/nesa_install.log"
 
@@ -85,6 +85,110 @@ function main_menu() {
                 ;;
         esac
     done
+}
+
+# Function to check Nesa node status
+function check_nesa_status() {
+    echo "Checking Nesa Node status..."
+    # Run the status command and capture the exit code
+    sudo systemctl status nesa-node.service > /tmp/nesa_node_status.txt
+    if [ $? -eq 0 ]; then
+        echo "Nesa Node status:"
+        cat /tmp/nesa_node_status.txt | grep -E "Loaded|Active|Main PID|Tasks|Memory|CPU|CGroup"
+        echo "Nesa Node is running."
+    else
+        echo "Failed to retrieve Nesa Node status."
+    fi
+    # Clean up temporary file
+    rm /tmp/nesa_node_status.txt
+    read -p "Press any key to return to the main menu..."
+}
+
+# Function to start the Nesa node
+function start_node() {
+    echo "Starting Nesa Node..."
+    sudo systemctl start nesa-node.service
+    if [ $? -eq 0 ]; then
+        echo "Nesa Node started successfully."
+    else
+        echo "Failed to start Nesa Node."
+    fi
+    read -p "Press any key to return to the main menu..."
+}
+
+# Function to stop the Nesa node
+function stop_node() {
+    echo "Stopping Nesa Node..."
+    sudo systemctl stop nesa-node.service
+    if [ $? -eq 0 ]; then
+        echo "Nesa Node stopped successfully."
+    else
+        echo "Failed to stop Nesa Node."
+    fi
+    read -p "Press any key to return to the main menu..."
+}
+
+# Function to restart the Nesa node
+function restart_node() {
+    echo "Restarting Nesa Node..."
+    sudo systemctl restart nesa-node.service
+    if [ $? -eq 0 ]; then
+        echo "Nesa Node restarted successfully."
+    else
+        echo "Failed to restart Nesa Node."
+    fi
+    read -p "Press any key to return to the main menu..."
+}
+
+# Function to update the Nesa node
+function update_node() {
+    echo "Updating Nesa Node..."
+    cd $HOME/nesa-node && git pull
+    if [ $? -eq 0 ]; then
+        echo "Nesa Node updated successfully."
+    else
+        echo "Failed to update Nesa Node."
+    fi
+    read -p "Press any key to return to the main menu..."
+}
+
+# Function to delete Nesa nodes
+function delete_node() {
+    echo "Deleting Nesa Node..."
+    sudo systemctl stop nesa-node.service
+    sudo systemctl disable nesa-node.service
+    sudo rm -rf /etc/systemd/system/nesa-node.service
+    sudo rm -rf $HOME/nesa-node
+    if [ $? -eq 0 ]; then
+        echo "Nesa Node deleted successfully."
+    else
+        echo "Failed to delete Nesa Node."
+    fi
+    read -p "Press any key to return to the main menu..."
+}
+
+# Function to view Private Key and Node ID
+function view_private_key_and_node_id() {
+    if [ -f "$HOME/.nesa/identity/node_id.id" ]; then
+        PUB_KEY=$(cat $HOME/.nesa/identity/node_id.id)
+        PRIVATE_KEY=$(cat $HOME/.nesa/identity/private_key.id)
+        echo "Node ID: $PUB_KEY"
+        echo "Private Key: $PRIVATE_KEY"
+    else
+        echo "Node ID or Private Key not found. Please ensure $HOME/.nesa/identity/ exists."
+    fi
+    read -p "Press any key to return to the main menu..."
+}
+
+# Function to get the Node Status URL
+function get_node_status_url() {
+    if [ -f "$HOME/.nesa/identity/node_id.id" ]; then
+        PUB_KEY=$(cat $HOME/.nesa/identity/node_id.id)
+        echo "Node Status URL: https://node.nesa.ai/nodes/$PUB_KEY"
+    else
+        echo "Node identity file not found. Please make sure $HOME/.nesa/identity/node_id.id exists."
+    fi
+    read -p "Press any key to return to the main menu..."
 }
 
 # Separate functions for node types to keep install_node clean
