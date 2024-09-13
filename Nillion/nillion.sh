@@ -30,7 +30,11 @@ function main_menu {
     echo "3. Initialize Nillion accuser"
     echo "4. Show account information"
     echo "5. Remove existing Nillion setup"
-    echo "6. Exit"
+    echo "6. View Nillion Verifier logs"
+    echo "7. Start Nillion Verifier"
+    echo "8. Restart Nillion Verifier"
+    echo "9. Stop Nillion Verifier"
+    echo "10. Exit"
     echo "======================================================================================"
     read -p "Select an option: " choice
 
@@ -51,6 +55,18 @@ function main_menu {
             remove_nillion
             ;;
         6)
+            view_logs
+            ;;
+        7)
+            start_verifier
+            ;;
+        8)
+            restart_verifier
+            ;;
+        9)
+            stop_verifier
+            ;;
+        10)
             exit 0
             ;;
         *)
@@ -164,6 +180,37 @@ function show_account_info {
     else
         echo "Credentials file not found!"
     fi
+    main_menu
+}
+
+# Function to view logs of Nillion Verifier
+function view_logs {
+    echo "Viewing logs of the Nillion Verifier..."
+    sudo docker logs nillion_verifier_container --follow
+    main_menu
+}
+
+# Function to start Nillion Verifier
+function start_verifier {
+    echo "Starting Nillion Verifier..."
+    docker run -d --name nillion_verifier_container nillion/verifier:latest
+    echo "Nillion Verifier started."
+    main_menu
+}
+
+# Function to restart Nillion Verifier
+function restart_verifier {
+    echo "Restarting Nillion Verifier..."
+    sudo docker restart nillion_verifier_container
+    echo "Nillion Verifier restarted."
+    main_menu
+}
+
+# Function to stop Nillion Verifier
+function stop_verifier {
+    echo "Stopping Nillion Verifier..."
+    sudo docker stop nillion_verifier_container
+    echo "Nillion Verifier stopped."
     main_menu
 }
 
