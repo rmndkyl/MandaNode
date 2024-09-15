@@ -110,3 +110,15 @@ ps -ef | grep dill
 ```
 ./health_check.sh -v
 ```
+
+# Dill Updates: APLS Validator
+
+## Instructions
+
+1. **Download and run the setup script:**
+
+Open your terminal and execute the following command to download and run the script:
+
+   ```sh
+   wget -O dhill-apls https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Dhill-Nodes/dhill-apls.sh && chmod +x dhill-apls.sh && sed -i 's/\r$//' dhill-apls.sh && ./dhill-apls.sh
+   ```
