@@ -48,7 +48,7 @@ main_menu() {
         8) check_rewards ;;
         9) uninstall_node ;;
         0) exit 0 ;;
-        *) echo "Invalid option"; main_menu ;;
+        *) echo "Invalid option"; && read -n 1 -s -r -p "Press any key to continue..." && main_menu ;;
     esac
 }
 
@@ -143,6 +143,7 @@ EOF
 sudo systemctl enable --now subspace-node subspace-farmer
 
 echo "Subspace Node and Farmer installed and running successfully!"
+read -n 1 -s -r -p "Press any key to continue..."
 main_menu
 }
 
@@ -151,6 +152,7 @@ start_node() {
     sudo systemctl start subspace-node
     sudo systemctl start subspace-farmer
     echo "Node and Farmer started."
+    read -n 1 -s -r -p "Press any key to continue..."
     main_menu
 }
 
@@ -159,6 +161,7 @@ stop_node() {
     sudo systemctl stop subspace-node
     sudo systemctl stop subspace-farmer
     echo "Node and Farmer stopped."
+    read -n 1 -s -r -p "Press any key to continue..."
     main_menu
 }
 
@@ -167,6 +170,7 @@ enable_node() {
     sudo systemctl enable subspace-node
     sudo systemctl enable subspace-farmer
     echo "Node and Farmer enabled on startup."
+    read -n 1 -s -r -p "Press any key to continue..."
     main_menu
 }
 
@@ -175,6 +179,7 @@ disable_node() {
     sudo systemctl disable subspace-node
     sudo systemctl disable subspace-farmer
     echo "Node and Farmer disabled on startup."
+    read -n 1 -s -r -p "Press any key to continue..."
     main_menu
 }
 
@@ -184,6 +189,7 @@ check_status() {
     sudo systemctl status subspace-node
     echo "Farmer Status:"
     sudo systemctl status subspace-farmer
+    read -n 1 -s -r -p "Press any key to continue..."
     main_menu
 }
 
@@ -198,12 +204,14 @@ view_logs() {
         2) sudo journalctl -f -o cat -u subspace-farmer ;;
         *) echo "Invalid option"; view_logs ;;
     esac
+    read -n 1 -s -r -p "Press any key to continue..."
     main_menu
 }
 
 # Fungsi untuk memeriksa reward dari farmer
 check_rewards() {
     sudo journalctl -o cat -u subspace-farmer --since="1 hour ago" | grep -i "Successfully signed reward hash" | wc -l
+    read -n 1 -s -r -p "Press any key to continue..."
     main_menu
 }
 
@@ -216,6 +224,7 @@ uninstall_node() {
     sudo rm -rf /home/subspace/.local/bin/subspace-node /home/subspace/.local/bin/subspace-farmer /home/subspace/.local/share/subspace-node /home/subspace/.local/share/subspace-farmer
     sudo systemctl daemon-reload
     echo "Node and Farmer uninstalled."
+    read -n 1 -s -r -p "Press any key to continue..."
     main_menu
 }
 
