@@ -48,7 +48,7 @@ main_menu() {
         8) check_rewards ;;
         9) uninstall_node ;;
         0) exit 0 ;;
-        *) echo "Invalid option"; && read -n 1 -s -r -p "Press any key to continue..." && main_menu ;;
+        *) echo "Invalid option"; main_menu ;;
     esac
 }
 
