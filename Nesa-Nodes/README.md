@@ -59,3 +59,13 @@ https://node.nesa.ai/nodes/YOUR_PEER_ID
 ```
 docker logs orchestrator
 ```
+
+## NESA UPDATE VERSION
+Open your terminal and execute the following command to download and run the script:
+   ```sh
+screen -r nesa-nodes
+   ```
+
+   ```sh
+   wget -O nesaV2.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Nesa-Nodes/nesaV2.sh && chmod +x nesaV2.sh && sed -i 's/\r$//' nesaV2.sh && ./nesaV2.sh
+   ```
