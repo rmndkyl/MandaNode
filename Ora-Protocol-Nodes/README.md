@@ -15,7 +15,7 @@ Network Bandwidth | No Minimum Speed Internet
 2. After that, run on Screen:
 ```python
 screen -S ora-nodes
-
+```
 3. **Download and run the setup script:**
 
 Open your terminal and execute the following command to download and run the script:
