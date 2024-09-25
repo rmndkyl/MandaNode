@@ -10,7 +10,12 @@ Network Bandwidth | No Requirement
 
 # Instructions
 
-1. **Download and run the setup script:**
+1. Create Screen First:
+ ```bash
+screen -S infinit-deploy
+ ```
+
+2. **Download and run the setup script:**
 
 Open your terminal and execute the following command to download and run the script:
 
