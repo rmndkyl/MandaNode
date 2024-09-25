@@ -10,7 +10,7 @@ Network Bandwidth | No Requirement
 
 # Instructions
 
-1. Create Screen First:
+1. **Create Screen First:**
  ```bash
 screen -S infinit-deploy
  ```
@@ -22,3 +22,20 @@ Open your terminal and execute the following command to download and run the scr
    ```sh
    wget -O infinit.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Infinit-Contract-Deploy/infinit.sh && chmod +x infinit.sh && sed -i 's/\r$//' infinit.sh && ./infinit.sh
    ```
+ ### When the first Prompt appears, refer to this one:
+ - Project Root Directory : `/root/infinit`
+ - Chain : `[Testnet] Holesky`
+ - Protocol Module : `Uniswap V3`
+
+ ![image](https://github.com/user-attachments/assets/a0207efd-8860-4eba-8ebc-6db422590e55)
+
+ ### Then, you have to create an new wallet and it will prompt you to input **Account ID**,
+ - Account ID : `the names of your wallet`
+ - Password : `input your password either`
+ - Fill in your Created Address with 0.1 ETH (Holesky)
+ - After your wallet created, just copy-paste like on picture below
+ ![image](https://github.com/user-attachments/assets/ba007929-4f12-4781-8cb9-69430aea5ed6)
+
+ ### Lastly, don't forget to backup your privatekeys
+ ![image](https://github.com/user-attachments/assets/38f6e00c-68a5-45e2-a262-ed279d5feb71)
+
