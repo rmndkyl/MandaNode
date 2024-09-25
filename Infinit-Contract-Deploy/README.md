@@ -46,3 +46,12 @@ Open your terminal and execute the following command to download and run the scr
    
  ![image](https://github.com/user-attachments/assets/fd373393-6d26-4607-aa12-c14cf4530247)
 
+
+## When all step are completed, submit your proof on X and refer to [Infinit Discord](https://mee6.xyz/i/3htNZ9h69p) on Channel => [#community-content](https://discord.com/channels/1267781102966149191/1288098983071191120)
+```bash
+I just finished deploying a UniswapV3 Action script using
+@Infinit_Labs
+tech. The process was smooth and efficient! Accurate gas estimations. #infinittech #uniswapv3 #blockchain #defi
+```
+![image](https://github.com/user-attachments/assets/b59a4273-8889-4882-9881-a958f97a2172)
+
