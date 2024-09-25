@@ -13,10 +13,10 @@ sleep 4
 function main_menu() {
     while true; do
         clear
-		echo "Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions"
-		echo "============================ Infinit Contract Deployment ===================================="
-		echo "Node community Telegram channel: https://t.me/layerairdrop"
-		echo "Node community Telegram group: https://t.me/+UgQeEnnWrodiNTI1"
+	echo "Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions"
+	echo "============================ Infinit Contract Deployment ===================================="
+	echo "Node community Telegram channel: https://t.me/layerairdrop"
+	echo "Node community Telegram group: https://t.me/+UgQeEnnWrodiNTI1"
         echo "To exit the script, press ctrl+c"
         echo "Please select an action to perform:"
         echo "1) Deploy Contract"
@@ -97,7 +97,7 @@ function deploy_contract() {
     read -p "What is your account ID (enter the ID from the steps above): " ACCOUNT_ID
     echo
 
-    show "Copy this private key and save it somewhere, this is the private key for this wallet"
+    echo "Copy this private key and save it somewhere, this is the private key for this wallet"
     echo
     bunx infinit account export $ACCOUNT_ID
 
