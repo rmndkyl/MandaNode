@@ -36,6 +36,13 @@ Open your terminal and execute the following command to download and run the scr
  - After your wallet created, just copy-paste like on picture below
  ![image](https://github.com/user-attachments/assets/ba007929-4f12-4781-8cb9-69430aea5ed6)
 
- ### Lastly, don't forget to backup your privatekeys
+ ### Don't forget to backup your privatekeys
+
  ![image](https://github.com/user-attachments/assets/38f6e00c-68a5-45e2-a262-ed279d5feb71)
+
+ ### Lastly, when the prompt appears, just refer to this:
+ - Do you want to simulate the transactions to estimate the gas cost? `no`
+ - Confirm execution? `yes`
+   
+ ![image](https://github.com/user-attachments/assets/fd373393-6d26-4607-aa12-c14cf4530247)
 
