@@ -269,8 +269,8 @@ function install_dlp_node() {
     generate_encryption_keys
     write_public_key_to_env 
     deploy_smart_contracts
-    register_validator
     create_env_file
+    register_validator
     create_pm2_config
     start_validator
 }
