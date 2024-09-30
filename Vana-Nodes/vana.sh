@@ -291,11 +291,10 @@ function uninstall_node() {
 # Main menu
 function main_menu() {
     clear
-    echo "This script and tutorial were written by Twitter user 大赌哥 @y95277777. Free and open-source, do not trust any paid services."
-    echo "========================= VANA DLP Validator Node Installation ======================================="
-    echo "Node community Telegram group: https://t.me/niuwuriji"
-    echo "Node community Telegram channel: https://t.me/niuwuriji"
-    echo "Node community Discord: https://discord.gg/GbMV5EcNWF"    
+	echo "Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions"
+	echo "============================ Vana Node Installation ===================================="
+	echo "Node community Telegram channel: https://t.me/layerairdrop"
+	echo "Node community Telegram group: https://t.me/+UgQeEnnWrodiNTI1"
     echo "Please choose an action:"
     echo "1. Install DLP Validator node"
     echo "2. View node logs"
