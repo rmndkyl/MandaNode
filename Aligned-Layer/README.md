@@ -30,5 +30,5 @@ I am now #aligned ✅
 # UPDATE ALIGNED LAYER(ZKQUIS NFT)
 
 ```bash
-wget -O aligned-quiz.sh https://raw.githubusercontent.com/rmndkyl/Aligned_Layer/main/aligned-quiz.sh && chmod +x aligned-quiz.sh && sed -i 's/\r$//' aligned-quiz.sh && ./aligned-quiz.sh
+wget -O aligned-quiz.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/refs/heads/main/Aligned-Layer/aligned-quiz.sh && chmod +x aligned-quiz.sh && sed -i 's/\r$//' aligned-quiz.sh && ./aligned-quiz.sh
 ```
