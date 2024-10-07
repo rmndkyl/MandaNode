@@ -27,3 +27,8 @@ I am now #aligned ✅
 - Then join Aligned layer Discord :  [Discord Link](http://discord.gg/alignedlayer)
 - Share your tweet link in ```#🧪| testnet``` channel
 
+# UPDATE ALIGNED LAYER(ZKQUIS NFT)
+
+```bash
+wget -O aligned-quiz.sh https://raw.githubusercontent.com/rmndkyl/Aligned_Layer/main/aligned-quiz.sh && chmod +x aligned-quiz.sh && sed -i 's/\r$//' aligned-quiz.sh && ./aligned-quiz.sh
+```
