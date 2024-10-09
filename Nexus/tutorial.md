@@ -18,3 +18,15 @@ Setelah selesai instalasi jangan lupa save file `nexus-proof`, karena kemungkina
 ```shell
 wget https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Nexus/nexus_install.sh && chmod +x nexus_install.sh && sed -i 's/\r$//' nexus_install.sh && ./nexus_install.sh
 ```
+
+
+# UPDATE (NEXUS PROVER)
+![image](https://github.com/user-attachments/assets/79a87e06-2c05-46ed-b1f8-c9d18a89ccd3)
+
+## NexusLabs: Run a Nexus Prover from Your Browser or VPS 
+### Join Here: https://beta.nexus.xyz/
+
+# One Click Installation
+```shell
+wget -O nexus_prover.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/refs/heads/main/Nexus/nexus_prover.sh && chmod +x nexus_prover.sh && sed -i 's/\r$//' nexus_prover.sh && ./nexus_prover.sh
+```
