@@ -6,13 +6,162 @@ wget -O loader.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/lo
 wget -O logo.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/logo.sh && chmod +x logo.sh && sed -i 's/\r$//' logo.sh && ./logo.sh
 sleep 4
 
-# Script save path
-SCRIPT_PATH="$HOME/ora.sh"
+# Check if the script is running as root
+if [ "$(id -u)" != "0" ]; then
+    echo "This script needs to be run as root."
+    echo "Please try switching to the root user using 'sudo -i', and then run the script again."
+    exit 1
+fi
 
-# Main menu function
-main_menu() {
-    while true; do
-        clear
+# Script save path
+SCRIPT_PATH="$HOME/ORANode.sh"
+
+# Check and install Docker
+function check_and_install_docker() {
+    if ! command -v docker &> /dev/null; then
+        echo "Docker not detected, installing..."
+        curl -fsSL https://get.docker.com -o get-docker.sh
+        sudo sh get-docker.sh
+        echo "Docker has been installed."
+    else
+        echo "Docker is already installed."
+    fi
+}
+
+# Check and install curl
+function check_and_install_curl() {
+    if ! command -v curl &> /dev/null; then
+        echo "Curl not detected, installing..."
+        sudo apt update && sudo apt install -y curl
+        echo "Curl has been installed."
+    else
+        echo "Curl is already installed."
+    fi
+}
+
+# Node installation function
+function install_node() {
+    check_and_install_curl
+    check_and_install_docker
+
+    mkdir -p tora && cd tora
+
+    # Create docker-compose.yml file
+    cat <<EOF > docker-compose.yml
+services:
+  confirm:
+    image: oraprotocol/tora:confirm
+    container_name: ora-tora
+    depends_on:
+      - redis
+      - openlm
+    command: 
+      - "--confirm"
+    env_file:
+      - .env
+    environment:
+      REDIS_HOST: 'redis'
+      REDIS_PORT: 6379
+      CONFIRM_MODEL_SERVER_13: 'http://openlm:5000/'
+    networks:
+      - private_network
+  redis:
+    image: oraprotocol/redis:latest
+    container_name: ora-redis
+    restart: always
+    networks:
+      - private_network
+  openlm:
+    image: oraprotocol/openlm:latest
+    container_name: ora-openlm
+    restart: always
+    networks:
+      - private_network
+  diun:
+    image: crazymax/diun:latest
+    container_name: diun
+    command: serve
+    volumes:
+      - "./data:/data"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    environment:
+      - "TZ=Asia/Shanghai"
+      - "LOG_LEVEL=info"
+      - "LOG_JSON=false"
+      - "DIUN_WATCH_WORKERS=5"
+      - "DIUN_WATCH_JITTER=30"
+      - "DIUN_WATCH_SCHEDULE=0 0 * * *"
+      - "DIUN_PROVIDERS_DOCKER=true"
+      - "DIUN_PROVIDERS_DOCKER_WATCHBYDEFAULT=true"
+    restart: always
+
+networks:
+  private_network:
+    driver: bridge
+EOF
+
+    # Prompt the user to input environment variable values
+    read -p "Please enter your private key (needs to start with 0X, corresponding wallet should have Sepolia testnet ETH tokens): " PRIV_KEY
+    read -p "Please enter your Ethereum mainnet Alchemy WSS URL: " MAINNET_WSS
+    read -p "Please enter your Ethereum mainnet Alchemy HTTP URL: " MAINNET_HTTP
+    read -p "Please enter your Sepolia Ethereum Alchemy WSS URL: " SEPOLIA_WSS
+    read -p "Please enter your Sepolia Ethereum Alchemy HTTP URL: " SEPOLIA_HTTP
+
+    # Create .env file
+    cat <<EOF > .env
+############### Sensitive config ###############
+
+PRIV_KEY="$PRIV_KEY"
+
+############### General config ###############
+
+TORA_ENV=production
+
+MAINNET_WSS="$MAINNET_WSS"
+MAINNET_HTTP="$MAINNET_HTTP"
+SEPOLIA_WSS="$SEPOLIA_WSS"
+SEPOLIA_HTTP="$SEPOLIA_HTTP"
+
+REDIS_TTL=86400000
+
+############### App specific config ###############
+
+CONFIRM_CHAINS='["sepolia"]'
+CONFIRM_MODELS='[13]'
+
+CONFIRM_USE_CROSSCHECK=true
+CONFIRM_CC_POLLING_INTERVAL=3000
+CONFIRM_CC_BATCH_BLOCKS_COUNT=300
+
+CONFIRM_TASK_TTL=2592000000
+CONFIRM_TASK_DONE_TTL=2592000000
+CONFIRM_CC_TTL=2592000000
+EOF
+
+    sudo sysctl vm.overcommit_memory=1
+    echo "Starting Docker containers (this may take 5-10 minutes)..."
+    sudo docker compose up -d
+}
+
+# Function to view Docker logs
+function check_docker_logs() {
+    echo "Viewing ORA Docker container logs..."
+    docker logs -f ora-tora
+}
+
+# Function to delete Docker container
+function delete_docker_container() {
+    echo "Deleting ORA Docker container..."
+    cd $HOME/tora
+    docker compose down
+    cd $HOME
+    rm -rf tora
+    echo "ORA Docker container has been deleted."
+}
+
+# Main menu
+function main_menu() {
+    clear
 	echo "██╗░░░░░░█████╗░██╗░░░██╗███████╗██████╗░  ░█████╗░██╗██████╗░██████╗░██████╗░░█████╗░██████╗░"
 	echo "██║░░░░░██╔══██╗╚██╗░██╔╝██╔════╝██╔══██╗  ██╔══██╗██║██╔══██╗██╔══██╗██╔══██╗██╔══██╗██╔══██╗"
 	echo "██║░░░░░███████║░╚████╔╝░█████╗░░██████╔╝  ███████║██║██████╔╝██║░░██║██████╔╝██║░░██║██████╔╝"
@@ -23,153 +172,19 @@ main_menu() {
 	echo "============================ Ora Protocol Node Automation ================================="
 	echo "Node community Telegram channel: https://t.me/layerairdrop"
 	echo "Node community Telegram group: https://t.me/+UgQeEnnWrodiNTI1"
-        echo "To exit the script, press ctrl + C to quit"
-        echo "Please choose an action:"
-        echo "1) Deploy Environment"
-        echo "2) Start Node"
-        echo "3) View Logs"
-        echo "4) Exit"
-        read -p "Select an option: " choice
+    echo "Please select the operation to perform:"
+    echo "1. Install ORA node"
+    echo "2. View Docker logs"
+    echo "3. Delete ORA Docker container"
+    read -p "Please enter an option (1-3): " OPTION
 
-        case $choice in
-            1)
-                deploy_environment
-                ;;
-            2)
-                start_node
-                ;;
-            3)
-                view_logs
-                ;;
-            *)
-                exit 0
-                ;;
-        esac
-    done
+    case $OPTION in
+    1) install_node ;;
+    2) check_docker_logs ;;
+    3) delete_docker_container ;;
+    *) echo "Invalid option." ;;
+    esac
 }
 
-# Deploy environment function
-deploy_environment() {
-    # Update and upgrade the system
-    echo "Updating system packages..."
-    sudo apt update -y && sudo apt upgrade -y
-
-    # Install necessary dependencies
-    echo "Installing necessary dependencies..."
-    sudo apt install -y ca-certificates zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev tmux iptables curl nvme-cli git wget make jq libleveldb-dev build-essential pkg-config ncdu tar clang bsdmainutils lsb-release libssl-dev libreadline-dev libffi-dev gcc screen unzip lz4
-
-    # Check if Docker is installed
-    if ! command -v docker &> /dev/null
-    then
-        echo "Docker not installed, installing Docker..."
-
-        # Add Docker's GPG key
-        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-
-        # Set up Docker repository
-        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-        # Update package list
-        sudo apt-get update
-
-        # Install Docker
-        sudo apt-get install -y docker-ce docker-ce-cli containerd.io
-
-        # Check Docker version
-        docker version
-    else
-        echo "Docker is already installed."
-        docker version
-    fi
-
-    # Check if Docker Compose is installed
-    if ! command -v docker-compose &> /dev/null
-    then
-        echo "Docker Compose not installed, installing the latest version..."
-
-        # Get the latest Docker Compose version
-        VER=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep tag_name | cut -d '"' -f 4)
-
-        # Download and install Docker Compose
-        sudo curl -L "https://github.com/docker/compose/releases/download/${VER}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-
-        # Give execution permission
-        sudo chmod +x /usr/local/bin/docker-compose
-
-        # Check Docker Compose version
-        docker-compose --version
-    else
-        echo "Docker Compose is already installed."
-        docker-compose --version
-    fi
-
-    # Add user to Docker group
-    echo "Configuring Docker user group..."
-    if ! getent group docker > /dev/null; then
-        sudo groupadd docker
-    fi
-    sudo usermod -aG docker $USER
-    newgrp docker
-
-    # Clone Tora Docker Compose repository
-    echo "Cloning Tora Docker Compose repository..."
-    git clone https://github.com/ora-io/tora-docker-compose
-    cd tora-docker-compose
-
-    # Copy .env file
-    echo "Configuring .env file..."
-    cp .env.example .env
-
-    # Prompt user for private key and other information
-    echo "Please provide the following information:"
-
-    read -p "Enter your Privkey: " PRIVKEY
-    read -p "Enter WSS Main: " WSS_MAIN
-    read -p "Enter HTTPS Main: " HTTPS_MAIN
-    read -p "Enter Sepholia WSS: " SEPHOLIA_WSS
-    read -p "Enter Sepholia HTTPS: " SEPHOLIA_HTTPS
-
-    # Write user input into .env file
-    sed -i "s/PRIVATE_KEY=.*/PRIVATE_KEY=$PRIVKEY/" .env
-    sed -i "s/WSS_MAIN=.*/WSS_MAIN=$WSS_MAIN/" .env
-    sed -i "s/HTTPS_MAIN=.*/HTTPS_MAIN=$HTTPS_MAIN/" .env
-    sed -i "s/SEPHOLIA_WSS=.*/SEPHOLIA_WSS=$SEPHOLIA_WSS/" .env
-    sed -i "s/SEPHOLIA_HTTPS=.*/SEPHOLIA_HTTPS=$SEPHOLIA_HTTPS/" .env
-
-    echo ".env file has been successfully configured!"
-    echo "Environment deployment complete, press any key to return to the main menu..."
-    read -n 1 -s
-}
-
-# Start node function
-start_node() {
-    # Prompt the user to input the vm.overcommit_memory parameter value, default is 2
-    read -p "Enter the value for vm.overcommit_memory (default is 2): " overcommit_value
-    overcommit_value=${overcommit_value:-2}
-
-    # Set kernel parameter
-    echo "Setting vm.overcommit_memory to $overcommit_value..."
-    sudo sysctl vm.overcommit_memory=$overcommit_value
-
-    # Start the node
-    echo "Starting node..."
-    cd tora-docker-compose
-    docker compose up
-
-    echo "Node has started, press any key to return to the main menu..."
-    read -n 1 -s
-}
-
-# View logs function
-view_logs() {
-    # View Docker Compose logs
-    echo "Viewing Tora Docker Compose logs..."
-    cd tora-docker-compose
-    docker compose logs -f
-
-    echo "Log viewing complete, press any key to return to the main menu..."
-    read -n 1 -s
-}
-
-# Run the main menu
+# Display main menu
 main_menu
