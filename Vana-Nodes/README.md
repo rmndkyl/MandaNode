@@ -17,3 +17,9 @@ Open your terminal and execute the following command to download and run the scr
    ```sh
    wget -O vana.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Vana-Nodes/vana.sh && chmod +x vana.sh && sed -i 's/\r$//' vana.sh && ./vana.sh
    ```
+
+# UPDATE VANA SIX-GPT
+
+   ```sh
+   wget -O Vana-SixGPT.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Vana-Nodes/Vana-SixGPT.sh && chmod +x Vana-SixGPT.sh && sed -i 's/\r$//' Vana-SixGPT.sh && ./Vana-SixGPT.sh
+   ```
