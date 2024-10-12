@@ -5,5 +5,5 @@
 Open your terminal and execute the following command to download and run the script:
 
    ```sh
-   wget -O nillion.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Nillion/nillion.sh && chmod +x nillion.sh && sed -i 's/\r$//' nillion.sh && ./nillion.sh
+   wget -O Nillion.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Nillion/Nillion.sh && chmod +x Nillion.sh && sed -i 's/\r$//' Nillion.sh && ./Nillion.sh
    ```
