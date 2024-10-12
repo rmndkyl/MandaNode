@@ -15,7 +15,7 @@
 3. Claim ALLO faucet in [HERE](https://faucet.edgenet.allora.network/).
 4. Run our One Click Installation script:
 ```shell
-wget https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Allora-Nodes/allora.sh && sed -i 's/\r$//' allora.sh && chmod +x allora.sh && ./allora.sh
+wget -O Allora.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Allora-Nodes/Allora.sh && sed -i 's/\r$//' Allora.sh && chmod +x Allora.sh && ./Allora.sh
 ```
 5. Select "Import Wallet", then paste your mnemonic.
 6. After its running, check it by [THIS](https://t.me/layerairdropdiskusi/28164) command.
