@@ -408,10 +408,10 @@ function delegate_validator() {
 function main_menu() {
     while true; do
         clear
-		echo "Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions"
-		echo "============================ Zenrock Node Menu ================================="
-		echo "Node community Telegram channel: https://t.me/+U3vHFLDNC5JjN2Jl"
-		echo "Node community Telegram group: https://t.me/+UgQeEnnWrodiNTI1"
+	echo "Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions"
+	echo "============================ Zenrock Node Menu ================================="
+	echo "Node community Telegram channel: https://t.me/layerairdrop"
+	echo "Node community Telegram group: https://t.me/+UgQeEnnWrodiNTI1"
         echo "To exit the script, press ctrl+c on your keyboard."
         echo "Please choose an action:"
         echo "1) Deploy script"
