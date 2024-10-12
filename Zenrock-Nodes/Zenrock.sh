@@ -457,7 +457,7 @@ function main_menu() {
                 delete_node  # Command to delete the node
                 ;;
             10)
-                check_hight_status  # Call the check sync height function
+                check_height_status  # Call the check sync height function
                 ;;
             11)
                 echo "Exiting script."
