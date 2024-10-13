@@ -7,15 +7,15 @@ sleep 2
 
 # Define service name and file path
 SERVICE_NAME="nexus"
-SERVICE_FILE="/etc/systemd/system/nexus.service"  # Update service file path
+SERVICE_FILE="/etc/systemd/system/nexus.service"  # Update the service file path
 
 # Script save path
 SCRIPT_PATH="$HOME/nexus.sh"
 
 # Check if the script is run as root
 if [ "$(id -u)" != "0" ]; then
-    echo "This script needs to be run with root privileges."
-    echo "Please try switching to the root user using the 'sudo -i' command, then run this script again."
+    echo "This script needs to be run as root."
+    echo "Please try using 'sudo -i' to switch to the root user and run this script again."
     exit 1
 fi
 
@@ -27,24 +27,23 @@ function main_menu() {
         echo "============================== Nexus Prover Automation! ===================================="
         echo "Node community Telegram channel: https://t.me/layerairdrop"
         echo "Node community Telegram group: https://t.me/layerairdropdiskusi"
-        echo "To exit the script, please press ctrl + C."
+        echo "To exit the script, press ctrl + C on the keyboard."
         echo "Please choose an operation:"
-        echo "1. Start node"
-        echo "2. Check Prover status"
-        echo "3. View logs"
-        echo "4. Delete node"
-        echo "5. Show ID"  # New option
-        echo "6. Improved status logic"  # New option
-        echo "7. Exit"
+        echo "1. Start Node"
+        echo "2. Check Prover Status"
+        echo "3. View Logs"
+        echo "4. Delete Node"
+        echo "5. Show ID"  # Added option
+        echo "6. Exit"
         
-        read -p "Enter your choice (1-7): " choice
+        read -p "Please enter an option (1-6): " choice
         
         case $choice in
             1)
                 start_node  # Call start node function
                 ;;
             2)
-                check_prover_status  # Call check Prover status function
+                check_prover_status  # Call check prover status function
                 ;;
             3)
                 view_logs  # Call view logs function
@@ -56,10 +55,7 @@ function main_menu() {
                 show_id  # Call show ID function
                 ;;
             6)
-                improved_status_logic  # Call improved status logic function
-                ;;
-            7)
-                echo "Exiting the script."
+                echo "Exiting script."
                 exit 0
                 ;;
             *)
@@ -78,14 +74,30 @@ function show_id() {
         echo "File /root/.nexus/prover-id does not exist."
     fi
 
-    # Wait for user to press any key to return to main menu
+    # Wait for the user to press any key to return to the main menu
     read -p "Press any key to return to the main menu"
 }
 
 # Function to start the node
 function start_node() {
+    # Check if the service is already running
+    if systemctl is-active --quiet nexus.service; then
+        echo "nexus.service is currently running. Stopping and disabling it..."
+        sudo systemctl stop nexus.service
+        sudo systemctl disable nexus.service
+    else
+        echo "nexus.service is not currently running."
+    fi
+
     # Ensure the directory exists
-    mkdir -p /root/.nexus  # Create directory if it doesn't exist
+    mkdir -p /root/.nexus  # Create directory (if it doesn't exist)
+
+    # Update the system and install necessary packages
+    echo "Updating the system and installing necessary packages..."
+    if ! sudo apt update && sudo apt upgrade -y && sudo apt install curl iptables build-essential git wget lz4 jq make gcc nano automake autoconf tmux htop nvme-cli pkg-config libssl-dev libleveldb-dev tar clang bsdmainutils ncdu unzip -y; then
+        echo "Failed to install packages."  # Error message
+        exit 1
+    fi
     
     # Check and install Git
     if ! command -v git &> /dev/null; then
@@ -105,15 +117,22 @@ function start_node() {
         echo "Rust is not installed, installing Rust..."
         # Install Rust using rustup
         curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-        echo "Rust installation complete."
+        echo "Rust installation completed."
         
         # Load Rust environment
         source $HOME/.cargo/env
+        export PATH="$HOME/.cargo/bin:$PATH"
         echo "Rust environment loaded."
     fi
 
+    if [ -d "$HOME/network-api" ]; then
+        echo "Removing existing repository..."
+        rm -rf "$HOME/network-api"
+    fi
+    
     # Clone the specified GitHub repository
-    echo "Cloning the repository..."
+    echo "Cloning repository..."
+    cd
     git clone https://github.com/nexus-xyz/network-api.git
 
     # Install dependencies
@@ -123,10 +142,9 @@ function start_node() {
         echo "Failed to install dependencies."  # Error message
         exit 1
     fi
-
-    # Create systemd service file
+    
+    # Create a systemd service file
     echo "Creating systemd service..." 
-    SERVICE_FILE="/etc/systemd/system/nexus.service"  # Update service file path
     if ! sudo bash -c "cat > $SERVICE_FILE <<EOF
 [Unit]
 Description=Nexus XYZ Prover Service
@@ -136,6 +154,7 @@ After=network.target
 User=$USER
 WorkingDirectory=$HOME/network-api/clients/cli
 Environment=NONINTERACTIVE=1
+Environment=PATH=/root/.cargo/bin:$PATH
 ExecStart=$HOME/.cargo/bin/cargo run --release --bin prover -- beta.orchestrator.nexus.xyz
 Restart=always
 RestartSec=10
@@ -170,13 +189,13 @@ EOF"; then
     read -p "Press any key to return to the main menu"
 }
 
-# Function to check Prover status
+# Function to check the Prover status
 function check_prover_status() {
     echo "Checking Prover status..."
     systemctl status nexus.service
 }
 
-# Function to view logs
+# Function to view the logs
 function view_logs() {
     echo "Viewing Prover logs..."
     journalctl -u nexus.service -f -n 50
@@ -184,24 +203,15 @@ function view_logs() {
 
 # Function to delete the node
 function delete_node() {
-    echo "Deleting node..."
+    echo "Deleting the node..."
     sudo systemctl stop nexus.service
     sudo systemctl disable nexus.service
-    echo "Node deleted successfully, press any key to return to the main menu."
+    rm -rf /root/network-api
+    rm -rf /etc/systemd/system/nexus.service
+    echo "Node successfully deleted. Press any key to return to the main menu."
     
     # Wait for the user to press any key to return to the main menu
     read -p "Press any key to return to the main menu"
-}
-
-# Improved status logic function
-function improved_status_logic() {
-    if sudo systemctl is-active --quiet $SERVICE_NAME.service; then
-        show_status "Service is running." 
-    else
-        show_status "Failed to retrieve service status." 
-    fi
-
-    show_status "Nexus Prover installation and service setup completed!" 
 }
 
 # Function to show status
