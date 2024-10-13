@@ -69,16 +69,29 @@ deploy_token() {
     show_message "Starting ERC-20 token deployment..." "info"
     install_dependencies
 
-    # Collect user input
-    read -p "Enter your private key: " PRIVATE_KEY
-    read -p "Enter token name (e.g., MyToken): " TOKEN_NAME
-    read -p "Enter token symbol (e.g., MTK): " TOKEN_SYMBOL
-    read -p "Enter the initial supply of tokens (e.g., 1000000): " INITIAL_SUPPLY
+    # Collect multiple private keys from user input
+    read -p "Enter your private keys (separate multiple keys with commas): " PRIVATE_KEYS
+
+    # Generate random token name and symbol if not provided
+    RANDOM_TOKEN_NAME="Token_$(openssl rand -hex 3 | tr 'a-f' 'A-F')"
+    RANDOM_TOKEN_SYMBOL="SYM_$(openssl rand -hex 2 | tr 'a-f' 'A-F')"
+    
+    # Ask user for token name and symbol, or use random values if left blank
+    read -p "Enter token name (or leave blank for random): " TOKEN_NAME
+    TOKEN_NAME="${TOKEN_NAME:-$RANDOM_TOKEN_NAME}"
+    
+    read -p "Enter token symbol (or leave blank for random): " TOKEN_SYMBOL
+    TOKEN_SYMBOL="${TOKEN_SYMBOL:-$RANDOM_TOKEN_SYMBOL}"
+    
+    # Default supply if not provided
+    INITIAL_SUPPLY=1000000
+    read -p "Enter the initial supply of tokens (default 1000000): " SUPPLY_INPUT
+    INITIAL_SUPPLY="${SUPPLY_INPUT:-$INITIAL_SUPPLY}"
 
     # Create environment configuration file
     mkdir -p "$SCRIPT_DIR/token_deployment"
     cat <<EOF > "$SCRIPT_DIR/token_deployment/.env"
-PRIVATE_KEY="$PRIVATE_KEY"
+PRIVATE_KEYS="$PRIVATE_KEYS"
 TOKEN_NAME="$TOKEN_NAME"
 TOKEN_SYMBOL="$TOKEN_SYMBOL"
 INITIAL_SUPPLY="$INITIAL_SUPPLY"
@@ -124,25 +137,27 @@ EOF
         exit 1
     fi
 
-    # Deploy the smart contract
-    show_message "Deploying smart contract..." "info"
-
-    # Use the Unichain Sepolia testnet's RPC URL
+    # Deploy the smart contract for each private key
+    IFS=',' read -ra KEY_ARRAY <<< "$PRIVATE_KEYS"
     RPC_URL="https://sepolia.unichain.org"
 
-    DEPLOY_OUTPUT=$(forge create "$SCRIPT_DIR/src/$CONTRACT_NAME.sol:$CONTRACT_NAME" \
-        --rpc-url "$RPC_URL" \
-        --private-key "$PRIVATE_KEY" \
-        --chain-id 1301)
+    for PRIVATE_KEY in "${KEY_ARRAY[@]}"; do
+        show_message "Deploying smart contract with private key $PRIVATE_KEY..." "info"
+        
+        DEPLOY_OUTPUT=$(forge create "$SCRIPT_DIR/src/$CONTRACT_NAME.sol:$CONTRACT_NAME" \
+            --rpc-url "$RPC_URL" \
+            --private-key "$PRIVATE_KEY" \
+            --chain-id 1301)
 
-    if [[ $? -ne 0 ]]; then
-        show_message "Contract deployment failed." "error"
-        exit 1
-    fi
+        if [[ $? -ne 0 ]]; then
+            show_message "Contract deployment failed for private key $PRIVATE_KEY." "error"
+            continue
+        fi
 
-    # Display contract address
-    CONTRACT_ADDRESS=$(echo "$DEPLOY_OUTPUT" | grep -oP 'Deployed to: \K(0x[a-fA-F0-9]{40})')
-    show_message "Token deployed successfully, contract address: https://sepolia.uniscan.xyz/address/$CONTRACT_ADDRESS" "success"
+        # Display contract address
+        CONTRACT_ADDRESS=$(echo "$DEPLOY_OUTPUT" | grep -oP 'Deployed to: \K(0x[a-fA-F0-9]{40})')
+        show_message "Token deployed successfully with private key $PRIVATE_KEY, contract address: https://sepolia.uniscan.xyz/address/$CONTRACT_ADDRESS" "success"
+    done
 
     read -n 1 -s -r -p "Press any key to return to the main menu..."
     main_menu
