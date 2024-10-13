@@ -50,7 +50,17 @@ install_dependencies() {
         curl -L https://foundry.paradigm.xyz | bash
         source ~/.bashrc
         foundryup
+        export PATH="$HOME/.foundry/bin:$PATH"  # Ensure Foundry binaries are in PATH
+        source ~/.bashrc  # Reload bash profile to apply changes
         show_message "Foundry installation completed." "success"
+    fi
+
+    # Verify if forge is installed correctly
+    if ! command -v forge &> /dev/null; then
+        show_message "Forge command not found. Please check Foundry installation." "error"
+        exit 1
+    else
+        show_message "Forge is successfully installed." "success"
     fi
 }
 
@@ -143,9 +153,9 @@ main_menu() {
     while true; do
         clear
         echo -e "${MENU_COLOR}Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions${NORMAL}"
-	echo -e "${MENU_COLOR}${BOLD}============================ Unichain Contract Deployment ====================================${NORMAL}"
-	echo -e "${MENU_COLOR}Node community Telegram channel: https://t.me/layerairdrop${NORMAL}"
-	echo -e "${MENU_COLOR}Node community Telegram group: https://t.me/+UgQeEnnWrodiNTI1${NORMAL}"
+        echo -e "${MENU_COLOR}${BOLD}============================ Unichain Contract Deployment ====================================${NORMAL}"
+        echo -e "${MENU_COLOR}Node community Telegram channel: https://t.me/layerairdrop${NORMAL}"
+        echo -e "${MENU_COLOR}Node community Telegram group: https://t.me/+UgQeEnnWrodiNTI1${NORMAL}"
         echo -e "${MENU_COLOR}1. Deploy ERC-20 Token${NORMAL}"
         echo -e "${MENU_COLOR}2. Exit${NORMAL}"
         read -p "Enter an option (1-2): " OPTION
