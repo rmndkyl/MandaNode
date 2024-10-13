@@ -130,9 +130,9 @@ run_dria_node() {
 main_menu() {
     while true; do
         clear
-		echo -e "${MENU_COLOR}The script and tutorial were written by Telegram user @rmndkyl, free and open source, please do not believe in the paid version${NORMAL}"
+	echo -e "${MENU_COLOR}The script and tutorial were written by Telegram user @rmndkyl, free and open source, please do not believe in the paid version${NORMAL}"
         echo -e "${MENU_COLOR}${BOLD}============================ Dria Node Management Tool ============================${NORMAL}"
-		echo -e "${MENU_COLOR}Node community Telegram channel: https://t.me/layerairdrop${NORMAL}"
+	echo -e "${MENU_COLOR}Node community Telegram channel: https://t.me/layerairdrop${NORMAL}"
         echo -e "${MENU_COLOR}Node community Telegram group: https://t.me/layerairdropdiskusi${NORMAL}"
         echo -e "${MENU_COLOR}Please select an action:${NORMAL}"
         echo -e "${MENU_COLOR}1. Update system and install dependencies${NORMAL}"
