@@ -144,7 +144,7 @@ main_menu() {
         clear
         echo -e "${MENU_COLOR}Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions${NORMAL}"
 	echo -e "${MENU_COLOR}${BOLD}============================ Unichain Contract Deployment ====================================${NORMAL}"
-	echo -e "${MENU_COLOR}Node community Telegram channel: https://t.me/layerairdrop${NORMAL}p"
+	echo -e "${MENU_COLOR}Node community Telegram channel: https://t.me/layerairdrop${NORMAL}"
 	echo -e "${MENU_COLOR}Node community Telegram group: https://t.me/+UgQeEnnWrodiNTI1${NORMAL}"
         echo -e "${MENU_COLOR}1. Deploy ERC-20 Token${NORMAL}"
         echo -e "${MENU_COLOR}2. Exit${NORMAL}"
