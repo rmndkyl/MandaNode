@@ -92,9 +92,9 @@ function start_node() {
     # Ensure the directory exists
     mkdir -p /root/.nexus  # Create directory (if it doesn't exist)
 
-    # Update the system and install necessary packages
+   # Update the system and install necessary packages
     echo "Updating the system and installing necessary packages..."
-    if ! sudo apt update && sudo apt upgrade -y && sudo apt install curl iptables build-essential git wget lz4 jq make gcc nano automake autoconf tmux htop nvme-cli pkg-config libssl-dev libleveldb-dev tar clang bsdmainutils ncdu unzip -y; then
+    if ! sudo apt update && sudo apt upgrade -y && sudo apt install curl iptables build-essential git wget lz4 jq make gcc nano automake autoconf tmux htop nvme-cli pkg-config libssl-dev libleveldb-dev tar clang bsdmainutils ncdu unzip build-essential -y; then
         echo "Failed to install packages."  # Error message
         exit 1
     fi
