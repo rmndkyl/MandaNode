@@ -14,7 +14,7 @@ if [ "$(id -u)" != "0" ]; then
 fi
 
 # Script save path
-SCRIPT_PATH="$HOME/ORANode.sh"
+SCRIPT_PATH="$HOME/ora.sh"
 
 # Check and install Docker
 function check_and_install_docker() {
@@ -166,11 +166,11 @@ function main_menu() {
 	echo "============================ Ora Protocol Node Automation ================================="
 	echo "Node community Telegram channel: https://t.me/layerairdrop"
 	echo "Node community Telegram group: https://t.me/+UgQeEnnWrodiNTI1"
-    echo "Please select the operation to perform:"
-    echo "1. Install ORA node"
-    echo "2. View Docker logs"
-    echo "3. Delete ORA Docker container"
-    read -p "Please enter an option (1-3): " OPTION
+    	echo "Please select the operation to perform:"
+    	echo "1. Install ORA node"
+    	echo "2. View Docker logs"
+    	echo "3. Delete ORA Docker container"
+    	read -p "Please enter an option (1-3): " OPTION
 
     case $OPTION in
     1) install_node ;;
