@@ -18,14 +18,63 @@ SCRIPT_PATH="$HOME/ora.sh"
 
 # Check and install Docker
 function check_and_install_docker() {
+    # Update package list and upgrade installed packages
+    sudo apt update -y && sudo apt upgrade -y
+
+    # Install required dependencies
+    sudo apt install -y ca-certificates zlib1g-dev libncurses5-dev libgdbm-dev \
+    libnss3-dev tmux iptables curl nvme-cli git wget make jq libleveldb-dev \
+    build-essential pkg-config ncdu tar clang bsdmainutils lsb-release \
+    libssl-dev libreadline-dev libffi-dev jq gcc screen unzip lz4
+
+    # Check if Docker is installed
     if ! command -v docker &> /dev/null; then
-        echo "Docker not detected, installing..."
-        curl -fsSL https://get.docker.com -o get-docker.sh
-        sudo sh get-docker.sh
-        echo "Docker has been installed."
+        echo "Docker is not installed, installing Docker..."
+        
+        # Install Docker
+        sudo apt install -y apt-transport-https ca-certificates curl software-properties-common
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+        sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+        sudo apt update -y
+        sudo apt install -y docker-ce
+
+        # Start Docker service
+        sudo systemctl start docker
+        sudo systemctl enable docker
+
+        echo "Docker installation complete!"
     else
-        echo "Docker is already installed."
+        echo "Docker is already installed, skipping installation."
     fi
+
+    # Check if Docker Compose is installed
+    if ! command -v docker-compose &> /dev/null; then
+        echo "Docker Compose is not installed, installing Docker Compose..."
+        
+        # Get the latest version number and install Docker Compose
+        VER=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep tag_name | cut -d '"' -f 4)
+        curl -L "https://github.com/docker/compose/releases/download/$VER/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        chmod +x /usr/local/bin/docker-compose
+
+        echo "Docker Compose installation complete!"
+    else
+        echo "Docker Compose is already installed, skipping installation."
+    fi
+
+    # Display Docker Compose version
+    docker-compose --version
+
+    # Add the current user to the Docker group
+    if ! getent group docker > /dev/null; then
+        echo "Creating Docker group..."
+        sudo groupadd docker
+    fi
+
+    echo "Adding user $USER to the Docker group..."
+    sudo usermod -aG docker $USER
+
+    # Notify user to restart shell for Docker group changes to take effect
+    echo "Please log out and log back in to apply Docker group changes."
 }
 
 # Check and install curl
