@@ -10,7 +10,7 @@ sleep 4
 
 show_menu() {
     clear
-	echo -e "${GREEN}Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions${RESET}"
+echo -e "${GREEN}Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions${RESET}"
     echo -e "${GREEN}${BOLD}============================ Unichain Node Automation ====================================${RESET}"
     echo -e "${GREEN}Node community Telegram channel: https://t.me/layerairdrop${RESET}"
     echo -e "${GREEN}Node community Telegram group: https://t.me/+UgQeEnnWrodiNTI1${RESET}"
