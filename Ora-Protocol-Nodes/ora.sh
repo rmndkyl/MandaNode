@@ -72,6 +72,8 @@ function check_and_install_docker() {
 
     echo "Adding user $USER to the Docker group..."
     sudo usermod -aG docker $USER
+    sudo systemctl start docker
+    sudo systemctl enable docker
 
     # Notify user to restart shell for Docker group changes to take effect
     echo "Please log out and log back in to apply Docker group changes."
