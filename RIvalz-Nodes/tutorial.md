@@ -24,5 +24,5 @@ screen -S rivalz-node
 
 # One-Click Installation
 ```shell
-wget https://raw.githubusercontent.com/rmndkyl/MandaNode/main/RIvalz-Nodes/Rivalz.sh && chmod +x Rivalz.sh && sed -i 's/\r$//' Rivalz.sh && ./Rivalz.sh
+wget -O Rivalz.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/RIvalz-Nodes/Rivalz.sh && chmod +x Rivalz.sh && sed -i 's/\r$//' Rivalz.sh && ./Rivalz.sh
 ```
