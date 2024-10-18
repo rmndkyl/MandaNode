@@ -18,10 +18,10 @@ fi
 function main_menu() {
     while true; do
         clear
-		    echo "Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions"
-		    echo "============================ Quai Node Installation ===================================="
-		    echo "Node community Telegram channel: https://t.me/layerairdrop"
-		    echo "Node community Telegram group: https://t.me/layerairdropdiskusi"
+	echo "Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions"
+	echo "============================ Quai Node Installation ===================================="
+	echo "Node community Telegram channel: https://t.me/layerairdrop"
+	echo "Node community Telegram group: https://t.me/layerairdropdiskusi"
         echo "To exit the script, press ctrl + C on the keyboard."
         echo "Please choose an option to execute:"
         echo "1) Deploy node"
