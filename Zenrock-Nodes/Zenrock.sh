@@ -242,8 +242,15 @@ function create_validator() {
     echo "Creating validator..."
     cd $HOME
 
-    # Get the user's input for Moniker
+    # Get the user's input for Moniker, Identity, Website, Security Contact, and Details
     read -p "Please enter your Moniker: " MONIKER  # Let the user input their Moniker
+    read -p "Please enter your Identity (optional): " IDENTITY  # Let the user input their Identity (optional)
+    read -p "Please enter your Website (optional): " WEBSITE  # Let the user input their Website (optional)
+    read -p "Please enter your Security Contact (optional): " SECURITY_CONTACT  # Let the user input their Security Contact (optional)
+    read -p "Please enter your Validator Details (or press enter to use default): " DETAILS  # Let the user input custom Details (optional)
+
+    # Set default value for Details if no input is provided
+    DETAILS=${DETAILS:-"I love blockchain ❤️"}
 
     # Create validator
     zenrockd tx validation create-validator <(cat <<EOF
@@ -251,7 +258,10 @@ function create_validator() {
   "pubkey": $(zenrockd comet show-validator),
   "amount": "1000000urock",
   "moniker": "$MONIKER",
-  "details": "I love blockchain ❤️",
+  "identity": "$IDENTITY",
+  "website": "$WEBSITE",
+  "security_contact": "$SECURITY_CONTACT",
+  "details": "$DETAILS",
   "commission-rate": "0.05",
   "commission-max-rate": "0.20",
   "commission-max-change-rate": "0.05",
