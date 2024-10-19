@@ -351,6 +351,10 @@ RestartSec=30
 LimitNOFILE=65535
 Environment="OPERATOR_BLS_KEY_PASSWORD=$key_pass"
 Environment="OPERATOR_ECDSA_KEY_PASSWORD=$key_pass"
+Environment="SIDECAR_CONFIG_FILE=$HOME/.zrchain/sidecar/config.yaml"
+
+[Install]
+WantedBy=multi-user.target
 EOF
     sudo systemctl daemon-reload
     sudo systemctl enable zenrock-testnet-sidecar.service
