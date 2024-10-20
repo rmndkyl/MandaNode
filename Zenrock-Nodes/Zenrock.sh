@@ -279,6 +279,46 @@ EOF
     echo "Validator creation completed!"
 }
 
+# Function to export validator configuration to a JSON file
+function export_validator() {
+    echo "Exporting validator configuration..."
+    
+    # Get the user's input for Moniker
+    read -p "Please enter your Moniker: " MONIKER
+
+    # Export the validator configuration
+    zenrockd comet show-validator > "${MONIKER}_validator.json"
+
+    echo "Validator configuration exported to ${MONIKER}_validator.json!"
+}
+
+# Function to import validator configuration from a JSON file
+function import_validator() {
+    echo "Importing validator configuration..."
+
+    # Get the file name of the validator configuration
+    read -p "Please enter the name of the JSON file to import (e.g., validator.json): " FILE_NAME
+
+    if [[ -f "$FILE_NAME" ]]; then
+        # Display the validator configuration
+        echo "Validator configuration from $FILE_NAME:"
+        cat "$FILE_NAME"
+
+        # Use the imported JSON to create a validator
+        zenrockd tx validation create-validator < "$FILE_NAME" \
+        --chain-id gardia-2 \
+        --from wallet \
+        --gas-adjustment 1.4 \
+        --gas auto \
+        --gas-prices 30urock \
+        -y
+
+        echo "Validator imported and created!"
+    else
+        echo "Error: File $FILE_NAME not found!"
+    fi
+}
+
 # Function to check balance
 function check_balance() {
     echo "Checking balance..."
@@ -428,17 +468,19 @@ function main_menu() {
 	echo "Node community Telegram group: https://t.me/+UgQeEnnWrodiNTI1"
         echo "To exit the script, press ctrl+c on your keyboard."
         echo "Please choose an action:"
-        echo "1) Deploy script"
+        echo "1) Deploy Node"
         echo "2) Create wallet"
         echo "3) Import wallet"
         echo "4) Check node sync status"  # Keep the original command
         echo "5) Create validator"
         echo "6) Delegate to validator"
-        echo "7) Check balance"
-        echo "8) Setup operator functions"
-        echo "9) Delete node"  # Command to delete the node
-        echo "10) Check sync height"  # New command for checking sync height
-        echo "11) Exit script"
+        echo "7) Export validator"
+        echo "8) Import validator"
+        echo "9) Check balance"
+        echo "10) Setup operator functions"
+        echo "11) Delete node"  # Command to delete the node
+        echo "12) Check sync height"  # New command for checking sync height
+        echo "13) Exit script"
 
         read -p "Enter your choice: " choice
 
@@ -459,21 +501,27 @@ function main_menu() {
                 create_validator
                 ;;
             6)
-                delegate_validator 
+                delegate_validator
                 ;;
-            7)
+	    7)
+            	export_validator
+            	;;
+            8)
+            	import_validator
+            	;;
+            9)
                 check_balance
                 ;;
-            8)
+            10)
                 setup_operator
                 ;;
-            9)
+            11)
                 delete_node  # Command to delete the node
                 ;;
-            10)
+            12)
                 check_height_status  # Call the check sync height function
                 ;;
-            11)
+            13)
                 echo "Exiting script."
                 exit 0
                 ;;
