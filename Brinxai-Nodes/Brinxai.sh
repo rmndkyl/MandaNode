@@ -223,34 +223,42 @@ main_menu() {
         1)
             cleanup_containers
 			read -n 1 -s -r -p "Press any key to continue..."
+   			main_menu
             ;;
         2)
             setup_firewall
 			read -n 1 -s -r -p "Press any key to continue..."
+   			main_menu
             ;;
         3)
             install_docker
 			read -n 1 -s -r -p "Press any key to continue..."
+   			main_menu
             ;;
         4)
             check_gpu
 			read -n 1 -s -r -p "Press any key to continue..."
+   			main_menu
             ;;
         5)
             clone_repository
 			read -n 1 -s -r -p "Press any key to continue..."
+   			main_menu
             ;;
         6)
             run_additional_containers
 			read -n 1 -s -r -p "Press any key to continue..."
+   			main_menu
             ;;
         7)
             run_brinxai_relay
 			read -n 1 -s -r -p "Press any key to continue..."
+			main_menu
             ;;
 	8)
             delete_and_stop
 			read -n 1 -s -r -p "Press any key to continue..."
+   			main_menu
             ;;
         9)
             log "INFO" "Exiting BrinxAI Worker Nodes Manager."
