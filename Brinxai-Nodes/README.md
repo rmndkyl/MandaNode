@@ -13,25 +13,24 @@ To ensure basic functionality of the Worker Node, your system should meet the fo
 | **Port**| 5011 needs to be open (Can be changed to any Port)
 
 
-**Register Acount**
-https://workers.brinxai.com/register.php
 
 
-# Useful command
 
-Delete and Stop
-```sh
-pattern="admier/brinxai_nodes"
-echo "Mencari kontainer dengan pola: ${pattern}"
-containers=$(docker ps --format "{{.ID}} {{.Image}} {{.Names}}" | grep "${pattern}")
-if [ -z "$containers" ]; then
-    echo "Tidak ada kontainer yang sesuai ditemukan."
-    exit 0
-fi
-echo "Kontainer yang ditemukan:"
-echo "$containers"
-container_ids=$(echo "$containers" | awk '{print $1}')
-echo "ID kontainer yang ditemukan:"
-echo "$container_ids"
-docker stop $container_ids && docker rm $container_ids
+# Run the Script
+## Instructions
+
+1. Create your own VPS, you can buy from **[Contabo](https://contabo.com/)** or **[DigitalOcean](https://m.do.co/c/5423032133fa)**.
+
+2. **[Register Acount](https://workers.brinxai.com/register.php)**
+
+2. After that, run on Screen:
+```python
+screen -S brinxai-nodes
 ```
+3. **Download and run the setup script:**
+
+Open your terminal and execute the following command to download and run the script:
+
+   ```sh
+   wget -O Brinxai.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Brinxai-Nodes/Brinxai.sh && chmod +x Brinxai.sh && sed -i 's/\r$//' Brinxai.sh && ./Brinxai.sh
+   ```
