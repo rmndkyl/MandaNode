@@ -225,10 +225,6 @@ cleanup_container() {
     fi
 }
 
-# Now you can call run_docker_menu to trigger the interactive menu
-run_docker_menu
-
-
 run_brinxai_relay() {
     log "INFO" "Running BrinxAI Relay..."
 
