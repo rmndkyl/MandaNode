@@ -136,37 +136,97 @@ clone_repository() {
     sudo docker pull admier/brinxai_nodes-worker:latest
 }
 
-run_additional_containers() {
-    log "INFO" "Running additional Docker containers..."
+run_docker_menu() {
+    while true; do
+        echo "--------------------------------------------"
+        echo "Docker Menu"
+        echo "--------------------------------------------"
+        echo "1. Run Docker Text-UI (4vCPU/4GB)"
+        echo "2. Run Docker stable-diffusion (8vCPU/8GB)"
+        echo "3. Run Docker rembg (2vCPU/2GB)"
+        echo "4. Run Docker upscaler (2vCPU/2GB)"
+        echo "5. Run All of the Dockers."
+        echo "6. Exit to main menu"
+        echo "--------------------------------------------"
+        read -rp "Choose an option [1-6]: " choice
 
+        case $choice in
+            1) 
+                run_text_ui
+                ;;
+            2) 
+                run_stable_diffusion
+                ;;
+            3) 
+                run_rembg
+                ;;
+            4) 
+                run_upscaler
+                ;;
+            5) 
+                run_all_dockers
+                ;;
+            6) 
+                echo "Returning to main menu..."
+                break
+                ;;
+            *) 
+                echo "Invalid option. Please choose a valid number [1-6]."
+                ;;
+        esac
+    done
+}
+
+run_text_ui() {
+    log "INFO" "Running Docker Text-UI..."
     local text_ui_port=$(find_available_port 5000)
-    local stable_diffusion_port=$(find_available_port 5050)
-    local rembg_port=$(find_available_port 7000)
-    local upscaler_port=$(find_available_port 3000)
-
-    cleanup_container() {
-        local container_name=$1
-        if sudo docker ps -q -f name="$container_name" | grep -q .; then
-            log "INFO" "Stopping and removing container $container_name..."
-            sudo docker stop "$container_name" && sudo docker rm "$container_name"
-        elif sudo docker ps -aq -f name="$container_name" | grep -q .; then
-            log "INFO" "Removing stopped container $container_name..."
-            sudo docker rm "$container_name"
-        fi
-    }
-
     cleanup_container "text-ui"
-    cleanup_container "stable-diffusion"
-    cleanup_container "rembg"
-    cleanup_container "upscaler"
-
-    log "INFO" "Running new containers..."
-
     sudo docker run -d --name text-ui --network brinxai-network --cpus=4 --memory=4096m -p 127.0.0.1:"$text_ui_port":5000 admier/brinxai_nodes-text-ui:latest
+}
+
+run_stable_diffusion() {
+    log "INFO" "Running Docker stable-diffusion..."
+    local stable_diffusion_port=$(find_available_port 5050)
+    cleanup_container "stable-diffusion"
     sudo docker run -d --name stable-diffusion --network brinxai-network --cpus=8 --memory=8192m -p 127.0.0.1:"$stable_diffusion_port":5050 admier/brinxai_nodes-stabled:latest
+}
+
+run_rembg() {
+    log "INFO" "Running Docker rembg..."
+    local rembg_port=$(find_available_port 7000)
+    cleanup_container "rembg"
     sudo docker run -d --name rembg --network brinxai-network --cpus=2 --memory=2048m -p 127.0.0.1:"$rembg_port":7000 admier/brinxai_nodes-rembg:latest
+}
+
+run_upscaler() {
+    log "INFO" "Running Docker upscaler..."
+    local upscaler_port=$(find_available_port 3000)
+    cleanup_container "upscaler"
     sudo docker run -d --name upscaler --network brinxai-network --cpus=2 --memory=2048m -p 127.0.0.1:"$upscaler_port":3000 admier/brinxai_nodes-upscaler:latest
 }
+
+run_all_dockers() {
+    log "INFO" "Running all Docker containers..."
+    run_text_ui
+    run_stable_diffusion
+    run_rembg
+    run_upscaler
+}
+
+cleanup_container() {
+    local container_name=$1
+    if sudo docker ps -q -f name="$container_name" | grep -q .; then
+        log "INFO" "Stopping and removing container $container_name..."
+        sudo docker stop "$container_name" && sudo docker rm "$container_name"
+    elif sudo docker ps -aq -f name="$container_name" | grep -q .; then
+        log "INFO" "Removing stopped container $container_name..."
+        sudo docker rm "$container_name"
+    fi
+}
+
+# Now you can call run_docker_menu to trigger the interactive menu
+run_docker_menu
+
 
 run_brinxai_relay() {
     log "INFO" "Running BrinxAI Relay..."
@@ -186,27 +246,8 @@ run_brinxai_relay() {
     fi
 }
 
-delete_and_stop() {
-	pattern="admier/brinxai_nodes"
-		echo "Mencari kontainer dengan pola: ${pattern}"
-		containers=$(docker ps --format "{{.ID}} {{.Image}} {{.Names}}" | grep "${pattern}")
-	if [ -z "$containers" ]; then
-    		echo "Tidak ada kontainer yang sesuai ditemukan."
-    		exit 0
-	fi
-		echo "Kontainer yang ditemukan:"
-		echo "$containers"
-		container_ids=$(echo "$containers" | awk '{print $1}')
-		echo "ID kontainer yang ditemukan:"
-		echo "$container_ids"
-		docker stop $container_ids && docker rm $container_ids
-  }
-
 main_menu() {
-    echo -e "Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions"
-    echo -e "============================ BrinxAI Worker Nodes Manager ================================="
-    echo -e "Node community Telegram channel: https://t.me/+U3vHFLDNC5JjN2Jl"
-    echo -e "Node community Telegram group: https://t.me/+UgQeEnnWrodiNTI1"
+    echo -e "${CYAN}Welcome to BrinxAI Worker Nodes Manager${NC}"
     echo -e "Please select an option:"
     echo -e "1) Cleanup Docker containers"
     echo -e "2) Setup Firewall"
@@ -215,52 +256,39 @@ main_menu() {
     echo -e "5) Clone BrinxAI Worker Nodes repository"
     echo -e "6) Run additional Docker containers"
     echo -e "7) Run BrinxAI Relay"
-    echo -e "8) Delete and Stop Node"
-    echo -e "9) Exit"
+    echo -e "8) Exit"
 
     read -rp "Enter your choice: " choice
     case $choice in
         1)
             cleanup_containers
 			read -n 1 -s -r -p "Press any key to continue..."
-   			main_menu
             ;;
         2)
             setup_firewall
 			read -n 1 -s -r -p "Press any key to continue..."
-   			main_menu
             ;;
         3)
             install_docker
 			read -n 1 -s -r -p "Press any key to continue..."
-   			main_menu
             ;;
         4)
             check_gpu
 			read -n 1 -s -r -p "Press any key to continue..."
-   			main_menu
             ;;
         5)
             clone_repository
 			read -n 1 -s -r -p "Press any key to continue..."
-   			main_menu
             ;;
         6)
             run_additional_containers
 			read -n 1 -s -r -p "Press any key to continue..."
-   			main_menu
             ;;
         7)
             run_brinxai_relay
 			read -n 1 -s -r -p "Press any key to continue..."
-			main_menu
             ;;
-	8)
-            delete_and_stop
-			read -n 1 -s -r -p "Press any key to continue..."
-   			main_menu
-            ;;
-        9)
+        8)
             log "INFO" "Exiting BrinxAI Worker Nodes Manager."
             exit 0
             ;;
