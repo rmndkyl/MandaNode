@@ -21,7 +21,7 @@ To ensure basic functionality of the Worker Node, your system should meet the fo
 
 1. Create your own VPS, you can buy from **[Contabo](https://contabo.com/)** or **[DigitalOcean](https://m.do.co/c/5423032133fa)**.
 
-2. **[Register Acount](https://workers.brinxai.com/register.php)**
+2. **[Register Brinxai Account](https://workers.brinxai.com/register.php)**
 
 2. After that, run on Screen:
 ```python
