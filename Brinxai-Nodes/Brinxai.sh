@@ -183,6 +183,7 @@ run_text_ui() {
     local text_ui_port=$(find_available_port 5000)
     cleanup_container "text-ui"
     sudo docker run -d --name text-ui --network brinxai-network --cpus=4 --memory=4096m -p 127.0.0.1:"$text_ui_port":5000 admier/brinxai_nodes-text-ui:latest
+    run_docker_menu
 }
 
 run_stable_diffusion() {
@@ -190,6 +191,7 @@ run_stable_diffusion() {
     local stable_diffusion_port=$(find_available_port 5050)
     cleanup_container "stable-diffusion"
     sudo docker run -d --name stable-diffusion --network brinxai-network --cpus=8 --memory=8192m -p 127.0.0.1:"$stable_diffusion_port":5050 admier/brinxai_nodes-stabled:latest
+    run_docker_menu
 }
 
 run_rembg() {
@@ -197,6 +199,7 @@ run_rembg() {
     local rembg_port=$(find_available_port 7000)
     cleanup_container "rembg"
     sudo docker run -d --name rembg --network brinxai-network --cpus=2 --memory=2048m -p 127.0.0.1:"$rembg_port":7000 admier/brinxai_nodes-rembg:latest
+    run_docker_menu
 }
 
 run_upscaler() {
@@ -204,6 +207,7 @@ run_upscaler() {
     local upscaler_port=$(find_available_port 3000)
     cleanup_container "upscaler"
     sudo docker run -d --name upscaler --network brinxai-network --cpus=2 --memory=2048m -p 127.0.0.1:"$upscaler_port":3000 admier/brinxai_nodes-upscaler:latest
+    run_docker_menu
 }
 
 run_all_dockers() {
@@ -212,6 +216,7 @@ run_all_dockers() {
     run_stable_diffusion
     run_rembg
     run_upscaler
+    run_docker_menu
 }
 
 cleanup_container() {
