@@ -123,7 +123,7 @@ find_available_port() {
 clone_repository() {
     if [ ! -d "BrinxAI-Worker-Nodes" ]; then
         log "INFO" "Cloning BrinxAI Worker Nodes repository..."
-        git clone https://github.com/admier1/BrinxAI-Worker-Nodes
+        git clone https://github.com/rmndkyl/BrinxAI-Worker-Nodes.git
     else
         log "INFO" "BrinxAI Worker Nodes repository is already cloned."
     fi
