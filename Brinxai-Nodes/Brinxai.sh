@@ -18,7 +18,7 @@ log() {
     local message=$2
     local timestamp=$(date +"%Y-%m-%d %H:%M:%S")
     local border="-----------------------------------------------------"
-    
+
     echo -e "${border}"
     case $level in
         "INFO")
@@ -42,7 +42,7 @@ common() {
     local message=$2
     local end=$((SECONDS + duration))
     local spinner="⣷⣯⣟⡿⣿⡿⣟⣯⣷"
-    
+
     echo -n -e "${YELLOW}${message}...${NC} "
     while [ $SECONDS -lt $end ]; do
         printf "\b${spinner:((SECONDS % ${#spinner}))%${#spinner}:1}"
@@ -246,8 +246,27 @@ run_brinxai_relay() {
     fi
 }
 
+delete_and_stop() {
+	pattern="admier/brinxai_nodes"
+		echo "Mencari kontainer dengan pola: ${pattern}"
+		containers=$(docker ps --format "{{.ID}} {{.Image}} {{.Names}}" | grep "${pattern}")
+	if [ -z "$containers" ]; then
+    		echo "Tidak ada kontainer yang sesuai ditemukan."
+    		exit 0
+	fi
+		echo "Kontainer yang ditemukan:"
+		echo "$containers"
+		container_ids=$(echo "$containers" | awk '{print $1}')
+		echo "ID kontainer yang ditemukan:"
+		echo "$container_ids"
+		docker stop $container_ids && docker rm $container_ids
+  }
+
 main_menu() {
-    echo -e "${CYAN}Welcome to BrinxAI Worker Nodes Manager${NC}"
+    echo -e "Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions"
+    echo -e "============================ BrinxAI Worker Nodes Manager ================================="
+    echo -e "Node community Telegram channel: https://t.me/+U3vHFLDNC5JjN2Jl"
+    echo -e "Node community Telegram group: https://t.me/+UgQeEnnWrodiNTI1"
     echo -e "Please select an option:"
     echo -e "1) Cleanup Docker containers"
     echo -e "2) Setup Firewall"
@@ -256,39 +275,52 @@ main_menu() {
     echo -e "5) Clone BrinxAI Worker Nodes repository"
     echo -e "6) Run additional Docker containers"
     echo -e "7) Run BrinxAI Relay"
-    echo -e "8) Exit"
+    echo -e "8) Delete and Stop Node"
+    echo -e "9) Exit"
 
     read -rp "Enter your choice: " choice
     case $choice in
         1)
             cleanup_containers
 			read -n 1 -s -r -p "Press any key to continue..."
+   			main_menu
             ;;
         2)
             setup_firewall
 			read -n 1 -s -r -p "Press any key to continue..."
+   			main_menu
             ;;
         3)
             install_docker
 			read -n 1 -s -r -p "Press any key to continue..."
+   			main_menu
             ;;
         4)
             check_gpu
 			read -n 1 -s -r -p "Press any key to continue..."
+   			main_menu
             ;;
         5)
             clone_repository
 			read -n 1 -s -r -p "Press any key to continue..."
+   			main_menu
             ;;
         6)
-            run_additional_containers
+            run_docker_menu
 			read -n 1 -s -r -p "Press any key to continue..."
+   			main_menu
             ;;
         7)
             run_brinxai_relay
 			read -n 1 -s -r -p "Press any key to continue..."
+			main_menu
             ;;
-        8)
+	8)
+            delete_and_stop
+			read -n 1 -s -r -p "Press any key to continue..."
+   			main_menu
+            ;;
+        9)
             log "INFO" "Exiting BrinxAI Worker Nodes Manager."
             exit 0
             ;;
