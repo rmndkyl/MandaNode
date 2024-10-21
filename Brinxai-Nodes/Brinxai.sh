@@ -169,7 +169,7 @@ run_docker_menu() {
                 ;;
             6) 
                 echo "Returning to main menu..."
-                break
+                main_menu
                 ;;
             *) 
                 echo "Invalid option. Please choose a valid number [1-6]."
