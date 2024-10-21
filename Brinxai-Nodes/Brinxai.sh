@@ -67,6 +67,7 @@ cleanup_containers() {
         echo "$container_ids"
         docker stop $container_ids && docker rm $container_ids
     fi
+    read -n 1 -s -r -p "Press any key to continue..." && main_menu
 }
 
 setup_firewall() {
@@ -139,7 +140,7 @@ clone_repository() {
 run_docker_menu() {
     while true; do
         echo "--------------------------------------------"
-        echo "Docker Menu"
+        echo "Additional Brinxai Node Docker Menu"
         echo "--------------------------------------------"
         echo "1. Run Docker Text-UI (4vCPU/4GB)"
         echo "2. Run Docker stable-diffusion (8vCPU/8GB)"
