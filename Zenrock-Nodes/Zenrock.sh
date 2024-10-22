@@ -466,6 +466,23 @@ function delegate_validator() {
     echo "Delegation complete!"
 }
 
+# Function to delegate to another validator
+function delegate_to_other_validator() {
+    echo "Delegating to another validator..."
+
+    # Prompt the user to input the validator address with an example
+    read -p "Enter the validator address (e.g: zenvaloper1xxx): " validator_address
+
+    # Prompt the user to input the delegation amount, default is 100000000
+    read -p "Enter the delegation amount (default 100000000): " amount
+    amount=${amount:-100000000}  # Use default value if the user doesn't input one
+
+    # Execute the delegation transaction
+    zenrockd tx validation delegate "$validator_address" "${amount}urock" --from wallet --chain-id gardia-2 --gas-adjustment 1.4 --gas auto --gas-prices 30urock -y
+    
+    echo "Delegation to validator $validator_address complete!"
+}
+
 # Main menu function
 function main_menu() {
     while true; do
@@ -482,13 +499,14 @@ function main_menu() {
         echo "4) Check node sync status"  # Keep the original command
         echo "5) Create validator"
         echo "6) Delegate to validator"
-        echo "7) Export validator"
-        echo "8) Import validator"
-        echo "9) Check balance"
-        echo "10) Setup operator functions"
-        echo "11) Delete node"  # Command to delete the node
-        echo "12) Check sync height"  # New command for checking sync height
-        echo "13) Exit script"
+	echo "7) Delegate to other validator"
+        echo "8) Export validator"
+        echo "9) Import validator"
+        echo "10) Check balance"
+        echo "11) Setup operator functions"
+        echo "12) Delete node"  # Command to delete the node
+        echo "13) Check sync height"  # New command for checking sync height
+        echo "14) Exit script"
 
         read -p "Enter your choice: " choice
 
@@ -512,24 +530,27 @@ function main_menu() {
                 delegate_validator
                 ;;
 	    7)
+                delegate_to_other_validator
+                ;;
+	    8)
             	export_validator
             	;;
-            8)
+            9)
             	import_validator
             	;;
-            9)
+            10)
                 check_balance
                 ;;
-            10)
+            11)
                 setup_operator
                 ;;
-            11)
+            12)
                 delete_node  # Command to delete the node
                 ;;
-            12)
+            13)
                 check_height_status  # Call the check sync height function
                 ;;
-            13)
+            14)
                 echo "Exiting script."
                 exit 0
                 ;;
