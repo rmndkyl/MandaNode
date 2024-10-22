@@ -362,30 +362,34 @@ function output_ecdsa_address() {
 # Function to set the configuration
 function set_operator_config() {
     echo "Setting configuration..."
-    echo "Please deposit Holesky $ETH to the wallet, then type 'yes' to continue"
-    read -p "Have you completed the deposit? (yes/no): " confirm
+    echo "Please top up Holesky $ETH to the wallet, then enter 'yes' to continue."
+    read -p "Have you completed the top-up? (yes/no): " confirm
     if [ "$confirm" != "yes" ]; then
-        echo "Please try again after completing the deposit."
+        echo "Please try again after topping up."
         return
     fi
 
-    read -p "Enter the Holesky testnet endpoint: " TESTNET_HOLESKY_ENDPOINT
-    read -p "Enter the mainnet endpoint: " MAINNET_ENDPOINT
-    read -p "Enter the Holesky testnet RPC URL: " ETH_RPC_URL
-    read -p "Enter the Holesky testnet WebSocket URL: " ETH_WS_URL
-
+    # Set variables
+    EIGEN_OPERATOR_CONFIG="$HOME/.zrchain/sidecar/eigen_operator_config.yaml"
+    read -p "Enter the testnet Holesky endpoint: " TESTNET_HOLESKY_ENDPOINT
+    MAINNET_ENDPOINT="YOUR_ETH_MAINNET_ENDPOINT"  # Set as needed
     OPERATOR_VALIDATOR_ADDRESS_TBD=$(zenrockd keys show wallet --bech val -a)
     OPERATOR_ADDRESS_TBU=$ecdsa_address
-    EIGEN_OPERATOR_CONFIG="$HOME/.zrchain/sidecar/eigen_operator_config.yaml"
+    ETH_RPC_URL=$TESTNET_HOLESKY_ENDPOINT  # Set to match TESTNET_HOLESKY_ENDPOINT
+    read -p "Enter the testnet Holesky WebSocket URL: " ETH_WS_URL
     ECDSA_KEY_PATH=$ecdsa_output_file
     BLS_KEY_PATH=$bls_output_file
 
+    # Copy initial configuration files
     cp $HOME/zenrock-validators/configs/eigen_operator_config.yaml $HOME/.zrchain/sidecar/
     cp $HOME/zenrock-validators/configs/config.yaml $HOME/.zrchain/sidecar/
 
+    # Replace variables in config.yaml
     sed -i "s|EIGEN_OPERATOR_CONFIG|$EIGEN_OPERATOR_CONFIG|g" "$HOME/.zrchain/sidecar/config.yaml"
     sed -i "s|TESTNET_HOLESKY_ENDPOINT|$TESTNET_HOLESKY_ENDPOINT|g" "$HOME/.zrchain/sidecar/config.yaml"
     sed -i "s|MAINNET_ENDPOINT|$MAINNET_ENDPOINT|g" "$HOME/.zrchain/sidecar/config.yaml"
+    
+    # Replace variables in eigen_operator_config.yaml
     sed -i "s|OPERATOR_VALIDATOR_ADDRESS_TBD|$OPERATOR_VALIDATOR_ADDRESS_TBD|g" "$HOME/.zrchain/sidecar/eigen_operator_config.yaml"
     sed -i "s|OPERATOR_ADDRESS_TBU|$OPERATOR_ADDRESS_TBU|g" "$HOME/.zrchain/sidecar/eigen_operator_config.yaml"
     sed -i "s|ETH_RPC_URL|$ETH_RPC_URL|g" "$HOME/.zrchain/sidecar/eigen_operator_config.yaml"
@@ -393,14 +397,15 @@ function set_operator_config() {
     sed -i "s|ECDSA_KEY_PATH|$ECDSA_KEY_PATH|g" "$HOME/.zrchain/sidecar/eigen_operator_config.yaml"
     sed -i "s|BLS_KEY_PATH|$BLS_KEY_PATH|g" "$HOME/.zrchain/sidecar/eigen_operator_config.yaml"
 
+    # Download and set permissions for the validator sidecar binary
     wget -O $HOME/.zrchain/sidecar/bin/validator_sidecar https://releases.gardia.zenrocklabs.io/validator_sidecar-1.2.3
     chmod +x $HOME/.zrchain/sidecar/bin/validator_sidecar
 
+    # Create the systemd service for the validator sidecar
     sudo tee /etc/systemd/system/zenrock-testnet-sidecar.service > /dev/null <<EOF
 [Unit]
 Description=Validator Sidecar
 After=network-online.target
-
 [Service]
 User=$USER
 ExecStart=$HOME/.zrchain/sidecar/bin/validator_sidecar
@@ -414,6 +419,8 @@ Environment="SIDECAR_CONFIG_FILE=$HOME/.zrchain/sidecar/config.yaml"
 [Install]
 WantedBy=multi-user.target
 EOF
+
+    # Reload systemd, enable, and start the service
     sudo systemctl daemon-reload
     sudo systemctl enable zenrock-testnet-sidecar.service
     sudo systemctl start zenrock-testnet-sidecar.service
