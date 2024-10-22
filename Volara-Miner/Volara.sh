@@ -55,10 +55,22 @@ update_system() {
 
 # Function: Install Docker
 install_docker() {
-  log_info "Installing Docker and its dependencies..."
+  log_info "Checking if Docker is already installed..."
+
+  if docker --version &> /dev/null; then
+    docker_version=$(docker --version | awk '{print $3}' | sed 's/,//')
+    log_info "Docker is already installed. Version: $docker_version"
+    return 0
+  fi
+
+  log_info "Docker not found. Proceeding with installation..."
+
+  log_info "Removing conflicting packages..."
   for pkg in docker.io docker-doc docker-compose podman-docker containerd runc; do sudo apt-get remove -y $pkg; done
+
   sudo apt-get update
   sudo apt-get install -y ca-certificates curl gnupg
+
   sudo install -m 0755 -d /etc/apt/keyrings
   curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
   sudo chmod a+r /etc/apt/keyrings/docker.gpg
@@ -70,6 +82,7 @@ install_docker() {
 
   sudo apt update -y && sudo apt upgrade -y
   sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
   sudo chmod +x /usr/local/bin/docker-compose
 
   docker --version &> /dev/null
