@@ -227,6 +227,14 @@ function check_height_status() {
 
 # Function to delete the node
 function delete_node() {
+    echo "Are you sure you want to delete this Zenrock node? (y/n)"
+    read -r confirmation
+
+    if [[ "$confirmation" != "y" && "$confirmation" != "Y" ]]; then
+        echo "Node deletion aborted."
+        return
+    fi
+
     echo "Deleting node..."
     sudo systemctl stop zenrockd
     sudo systemctl disable zenrockd
