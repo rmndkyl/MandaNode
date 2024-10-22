@@ -144,7 +144,7 @@ show_menu() {
   echo -e "${BOLD}${BLUE}==================== Volara-Miner Menu Setup ====================${RESET}"
   echo -e "${BOLD}${BLUE}Node community Telegram channel: https://t.me/layerairdrop${RESET}"
   echo -e "${BOLD}${BLUE}Node community Telegram group: https://t.me/+UgQeEnnWrodiNTI1${RESET}"
-  echo -e "${BOLD}${BLUE}To exit the script, press ctrl+c on your keyboard.${RESET}"
+  echo -e "To exit the script, press ctrl+c on your keyboard."
   echo "1. Update and upgrade the system"
   echo "2. Install Docker"
   echo "3. Start Volara-Miner"
