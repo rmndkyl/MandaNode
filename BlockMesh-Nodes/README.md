@@ -8,7 +8,7 @@ To ensure basic functionality of the Blockmesh BlockMesh Node, your system shoul
 
 | **Hardware** | **Minimum Requirement** |
 |--------------|-------------------------|
-| **CPU**      | 2 VCPU Cores                 |
+| **CPU**      | 2 vCPU Cores                 |
 | **RAM**      | 4 GB RAM                   |
 | **Disk**     | 50 GB SSD                 |
 
