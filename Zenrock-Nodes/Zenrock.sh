@@ -290,14 +290,21 @@ EOF
 # Function to export validator configuration to a JSON file
 function export_validator() {
     echo "Exporting validator configuration..."
-    
+
     # Get the user's input for Moniker
     read -p "Please enter your Moniker: " MONIKER
 
-    # Export the validator configuration
-    zenrockd comet show-validator > "${MONIKER}_validator.json"
+    # Define the path to the private validator key file
+    PRIV_VALIDATOR_KEY_PATH="$HOME/.zrchain/config/priv_validator_key.json"
 
-    echo "Validator configuration exported to ${MONIKER}_validator.json!"
+    # Check if the file exists
+    if [ -f "$PRIV_VALIDATOR_KEY_PATH" ]; then
+        # Export the file to the current directory with the Moniker in the filename
+        cp "$PRIV_VALIDATOR_KEY_PATH" "${MONIKER}_priv_validator_key.json"
+        echo "Validator configuration exported to ${MONIKER}_priv_validator_key.json!"
+    else
+        echo "Error: Validator key file not found at $PRIV_VALIDATOR_KEY_PATH"
+    fi
 }
 
 # Function to import validator configuration from a JSON file
@@ -305,23 +312,31 @@ function import_validator() {
     echo "Importing validator configuration..."
 
     # Get the file name of the validator configuration
-    read -p "Please enter the name of the JSON file to import (e.g., validator.json): " FILE_NAME
+    read -p "Please enter the name of the JSON file to import (e.g., priv_validator_key.json): " FILE_NAME
+
+    # Define the target path where the validator configuration should be placed
+    PRIV_VALIDATOR_KEY_PATH="$HOME/.zrchain/config/priv_validator_key.json"
 
     if [[ -f "$FILE_NAME" ]]; then
         # Display the validator configuration
         echo "Validator configuration from $FILE_NAME:"
         cat "$FILE_NAME"
 
-        # Use the imported JSON to create a validator
-        zenrockd tx validation create-validator < "$FILE_NAME" \
-        --chain-id gardia-2 \
-        --from wallet \
-        --gas-adjustment 1.4 \
-        --gas auto \
-        --gas-prices 30urock \
-        -y
+        # Backup existing priv_validator_key.json file if it exists
+        if [[ -f "$PRIV_VALIDATOR_KEY_PATH" ]]; then
+            cp "$PRIV_VALIDATOR_KEY_PATH" "${PRIV_VALIDATOR_KEY_PATH}.backup"
+            echo "Existing priv_validator_key.json has been backed up to ${PRIV_VALIDATOR_KEY_PATH}.backup"
+        fi
 
-        echo "Validator imported and created!"
+        # Copy the imported file to the validator configuration path
+        cp "$FILE_NAME" "$PRIV_VALIDATOR_KEY_PATH"
+
+        echo "Validator configuration imported to $PRIV_VALIDATOR_KEY_PATH!"
+
+        # Restart the validator service to apply the new configuration
+        sudo systemctl restart zenrock-testnet.service
+
+        echo "Validator service restarted with the new configuration!"
     else
         echo "Error: File $FILE_NAME not found!"
     fi
