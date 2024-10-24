@@ -21,7 +21,7 @@ To ensure basic functionality of the Blockmesh Worker Node, your system should m
 
 2. After that, run on Screen:
 ```python
-screen -S blockhmesh-nodes
+screen -S blockmesh-nodes
 ```
 3. **Download and run the setup script:**
 
