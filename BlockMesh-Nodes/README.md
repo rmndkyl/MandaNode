@@ -1,10 +1,10 @@
 
-# Worker Nodes Setup
+# BlockMesh Nodes Setup
 
 ## System Requirements for Worker Nodes
 
 ## Minimum Requirements
-To ensure basic functionality of the Blockmesh Worker Node, your system should meet the following minimum specifications:
+To ensure basic functionality of the Blockmesh BlockMesh Node, your system should meet the following minimum specifications:
 
 | **Hardware** | **Minimum Requirement** |
 |--------------|-------------------------|
