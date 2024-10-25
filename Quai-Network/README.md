@@ -15,7 +15,7 @@ Network Bandwidth | 10MB/s
 Open your terminal and execute the following command to download and run the script:
 
    ```sh
-   wget -O Quai.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Quai-Network/Quai.sh && chmod +x Quai.sh && sed -i 's/\r$//' Quai.sh && ./Quai.sh
+   wget -O Quai.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/refs/heads/main/Quai-Network/Quai.sh && chmod +x Quai.sh && sed -i 's/\r$//' Quai.sh && ./Quai.sh
    ```
    
    
