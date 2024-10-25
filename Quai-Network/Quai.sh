@@ -3,227 +3,242 @@
 echo "Showing Animation.."
 wget -O loader.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/loader.sh && chmod +x loader.sh && sed -i 's/\r$//' loader.sh && ./loader.sh
 wget -O logo.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/logo.sh && chmod +x logo.sh && sed -i 's/\r$//' logo.sh && ./logo.sh
-sleep 2
+sleep 4
 
-# Script save path
-SCRIPT_PATH="$HOME/Quai.sh"
+# Define colors and styles
+RED="\033[0;31m"
+GREEN="\033[0;32m"
+YELLOW="\033[0;33m"
+BLUE="\033[0;34m"
+BOLD="\033[1m"
+RESET="\033[0m"
 
-# Ensure the script is run as root
-if [ "$(id -u)" -ne "0" ]; then
-  echo "Please run this script as root or using sudo"
-  exit 1
-fi
+# Log file path
+LOG_FILE="$HOME/quai_script.log"
 
-# Main menu function
-function main_menu() {
+# Log writing function
+write_log() {
+    local message="$1"
+    local log_type="$2"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [$log_type] $message" >> "$LOG_FILE"
+}
+
+log_info() {
+    local message="$1"
+    echo -e "${BLUE}ℹ ${BOLD}[INFO]${RESET} $message"
+    write_log "$message" "INFO"
+}
+
+log_success() {
+    local message="$1"
+    echo -e "${GREEN}✅ ${BOLD}[SUCCESS]${RESET} $message"
+    write_log "$message" "SUCCESS"
+}
+
+log_error() {
+    local message="$1"
+    echo -e "${RED}❌ ${BOLD}[ERROR]${RESET} $message"
+    write_log "$message" "ERROR"
+}
+
+# Choose operating system
+choose_os() {
     while true; do
-        clear
-	echo "Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions"
-	echo "============================ Quai Node Installation ===================================="
-	echo "Node community Telegram channel: https://t.me/layerairdrop"
-	echo "Node community Telegram group: https://t.me/layerairdropdiskusi"
-        echo "To exit the script, press ctrl + C on the keyboard."
-        echo "Please choose an option to execute:"
-        echo "1) Deploy node"
-        echo "2) View logs"
-        echo "3) Deploy Stratum Proxy"
-        echo "4) Start miner"
-        echo "5) View mining logs"
-        echo "6) Exit"
+        echo -e "${BOLD}Please select your operating system:${RESET}"
+        echo "1) macOS"
+        echo "2) Windows (WSL)"
+        echo "=============================================="
+        read -p "Enter option (1 or 2): " os_choice
 
-        read -p "Enter your choice: " choice
-
-        case $choice in
+        case $os_choice in
             1)
-                deploy_node
+                OS="macOS"
+                log_info "User selected macOS"
+                break
                 ;;
             2)
-                view_logs
-                ;;
-            3)
-                deploy_stratum_proxy
-                ;;
-            4)
-                start_miner
-                ;;
-            5)
-                view_mining_logs
-                ;;
-            6)
-                echo "Exiting script..."
-                exit 0
+                OS="Windows"
+                log_info "User selected Windows (WSL)"
+                break
                 ;;
             *)
                 echo "Invalid option, please try again."
                 ;;
         esac
     done
+
+    # After choosing OS, call the main menu
+    main_menu
 }
 
-# Check and install Docker
-function check_docker() {
-    if ! command -v docker &> /dev/null; then
-        echo "Docker is not installed, installing Docker..."
-        sudo apt update
-        sudo apt install -y docker.io
-        sudo systemctl start docker
-        sudo systemctl enable docker
-        echo "Docker installation complete!"
-    else
-        echo "Docker is already installed, version as follows:"
-        docker --version
-    fi
+# Main menu function
+main_menu() {
+    while true; do
+        clear
+		echo -e "${BOLD}Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions${RESET}"
+		echo -e "${BOLD}============================ Quai Node Installation ====================================${RESET}"
+		echo -e "${BOLD}Node community Telegram channel: https://t.me/layerairdrop${RESET}"
+		echo -e "${BOLD}Node community Telegram group: https://t.me/layerairdropdiskusi${RESET}"
+        echo "=================================================================================================="
+        echo "Please select an operation to perform:"
+        echo "1) Install system dependencies"
+        echo "2) Deploy Quai node"
+        echo "3) Load snapshot"
+        echo "4) View Quai node logs"
+        echo "5) Deploy Stratum Proxy"
+        echo "6) Start miner"
+        echo "7) View mining logs"
+        echo "8) Exit"
+        echo "=============================================="
+
+        read -p "Enter option: " choice
+
+        case $choice in
+            1) install_dependencies ;;
+            2) deploy_node ;;
+            3) add_snapshots ;;
+            4) view_logs ;;
+            5) deploy_stratum_proxy ;;
+            6) start_miner ;;
+            7) view_mining_logs ;;
+            8) echo "Exiting script..." && exit 0 ;;
+            *) echo "Invalid option, please try again." ;;
+        esac
+    done
 }
 
-# Check if CUDA is installed
-function check_cuda() {
-    if ! dpkg -l | grep -q "cuda-12-6"; then
-        echo "CUDA 12.6 is not installed, installing..."
-        # Add commands to install CUDA here
-        echo "Please manually install CUDA 12.6 or ensure it is installed."
-    else
-        echo "CUDA 12.6 is installed."
+# Install system dependencies
+install_dependencies() {
+    log_info "Installing system dependencies..."
+    if [[ "$OS" == "macOS" ]]; then
+        if ! command -v brew &> /dev/null; then
+            echo "Installing Homebrew..."
+            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        fi
+        brew install git wget curl screen
+    elif [[ "$OS" == "Windows" ]]; then
+        if grep -qEi "(Microsoft|WSL)" /proc/version &> /dev/null; then
+            log_info "WSL environment detected, using apt package manager..."
+            sudo apt update
+            sudo apt install -y git wget curl screen
+        else
+            log_error "Unable to detect WSL environment, please check configuration."
+            exit 1
+        fi
     fi
+    log_success "System dependencies installed successfully."
+    pause "Press any key to return to the main menu..."
 }
 
-# Deploy node function
-function deploy_node() {
-    # Install necessary dependencies
-    echo "Installing necessary dependencies..."
-    sudo apt update
-    sudo apt install -y git make g++
+# Deploy Quai node
+deploy_node() {
+    log_info "Deploying Quai node..."
+    check_go
 
-    # Check Docker
-    check_docker
+    # Use user directory data path
+    mkdir -p ~/data/ && cd ~/data/
 
-    # Create directory and navigate to it
-    mkdir -p /data/ && cd /data/
-
-    # Check if Go is installed
-    if ! command -v go &> /dev/null; then
-        echo "Go is not installed, downloading and installing the latest version..."
-
-        # Download and install the latest version of Go
-        wget -q https://golang.org/dl/go1.23.2.linux-amd64.tar.gz -O go.tar.gz
-        sudo tar -C /usr/local -xzf go.tar.gz
-        rm go.tar.gz
-
-        # Update PATH
-        echo "export PATH=\$PATH:/usr/local/go/bin" >> ~/.bashrc
-        source ~/.bashrc
-
-        echo "Go installation complete!"
-    else
-        echo "Go is already installed, version as follows:"
-    fi
-
-    # Finally, check Go version
-    go version
-
-    # Clone Git repository
-    echo "Cloning Git repository..."
+    log_info "Cloning Quai node repository..."
     git clone https://github.com/dominant-strategies/go-quai
 
-    # Switch to go-quai directory
     cd go-quai
-
-    # Checkout to the specified version
-    git checkout vX.XX.X
-
-    # Build the project
+    git checkout v0.38.0
     make go-quai
 
-    # Prompt the user to input addresses
     read -p 'Enter Quai address: ' quai_address
     read -p 'Enter Qi address: ' qi_address
 
-    # Start Docker container
-    docker run -d --name quai-node \
-        -e QUAI_ADDRESS="$quai_address" \
-        -e QI_ADDRESS="$qi_address" \
-        -v /data/go-quai:/data/go-quai \
-        -w /data/go-quai \
-        golang:latest \
-        ./build/bin/go-quai start --node.slices '[0 0]' --node.coinbases "$quai_address,$qi_address"
+    screen -dmS node bash -c "./build/bin/go-quai start --node.slices '[0 0]' \
+    --node.genesis-nonce 6224362036655375007 \
+    --node.quai-coinbases '$quai_address' \
+    --node.qi-coinbases '$qi_address' \
+    --node.miner-preference '0.5'; exec bash"
+
+    log_success "Quai node has started. Use 'screen -r node' to view logs."
+    pause "Press any key to return to the main menu..."
 }
 
-# View logs function
-function view_logs() {
-    echo "Viewing node logs..."
-    tail -f /data/go-quai/nodelogs/global.log
+# Load snapshot
+add_snapshots() {
+    log_info "Loading node snapshot..."
+    
+    sudo apt install unzip -y
+    
+    # Adjust for macOS user directory path
+    if [ ! -d "$HOME/data/go-quai/.config/store" ]; then
+        mkdir -p "$HOME/data/go-quai/.config/store"
+        log_info "Created storage directory: $HOME/data/go-quai/.config/store"
+    fi
+
+    wget -qO- https://snapshots.cherryservers.com/quilibrium/store.zip > /tmp/store.zip
+    unzip -j -o /tmp/store.zip -d "$HOME/data/go-quai/.config/store"
+    rm /tmp/store.zip
+
+    screen -dmS node bash -c './build/bin/go-quai start'
+    log_success "Snapshot loaded and node restarted."
+    pause "Press any key to return to the main menu..."
 }
 
-# Deploy Stratum Proxy function
-function deploy_stratum_proxy() {
-    echo "Deploying Stratum Proxy..."
-    cd /data/
+# Deploy Stratum Proxy
+deploy_stratum_proxy() {
+    log_info "Deploying Stratum Proxy..."
+    cd ~/data/
     git clone https://github.com/dominant-strategies/go-quai-stratum
     cd go-quai-stratum
-
-    # Checkout to the specified version
-    git checkout v0.XX.X
-
-    # Copy configuration file
+    git checkout v0.16.0
     cp config/config.example.json config/config.json
-
-    # Switch to go-quai-stratum directory
-    cd /data/go-quai-stratum
-
-    # Build Stratum Proxy
     make go-quai-stratum
-
-    # Run Stratum Proxy
-    docker run -d --name quai-stratum \
-        -v /data/go-quai-stratum:/data/go-quai-stratum \
-        -w /data/go-quai-stratum \
-        golang:latest \
-        ./build/bin/go-quai-stratum --region=cyprus --zone=cyprus1 --stratum=6666
-
-    echo "Stratum Proxy deployed successfully!"
+    screen -dmS stratum bash -c "./build/bin/go-quai-stratum --region=cyprus --zone=cyprus1 --stratum=3333; exec bash"
+    log_success "Stratum Proxy has started."
+    pause "Press any key to return to the main menu..."
 }
 
-# Start miner function
-function start_miner() {
-    # Update package manager and install NVIDIA drivers
-    echo "Updating package manager and installing NVIDIA drivers..."
-    sudo apt update
-    sudo apt install nvidia-driver-560 -y
-
-    # Verify successful installation
-    echo "Verifying NVIDIA driver installation..."
-    nvidia-smi
-
-    check_cuda
-
-    # Prompt the user to input node IP address
-    read -p 'Enter the IP address of the node: ' node_ip
-
-    # Download and install miner
-    echo "Downloading miner deployment script..."
+# Start miner
+start_miner() {
+    log_info "Starting miner..."
+    read -p 'Enter node IP address: ' node_ip
     wget https://raw.githubusercontent.com/dominant-strategies/quai-gpu-miner/refs/heads/main/deploy_miner.sh
+    chmod +x deploy_miner.sh
+    ./deploy_miner.sh
 
-    # Change permissions and execute
-    sudo chmod +x deploy_miner.sh
-    sudo ./deploy_miner.sh
-
-    # Download and set executable permissions for the miner
     wget -P /usr/local/bin/ https://github.com/dominant-strategies/quai-gpu-miner/releases/download/v0.2.0/quai-gpu-miner
     chmod +x /usr/local/bin/quai-gpu-miner
-
-    # Run miner using Docker
-    echo "Starting miner..."
-    docker run -d --name quai-gpu-miner \
-        -v /var/log:/var/log \
-        quai-gpu-miner -U -P stratum://$node_ip:3333 2>&1 | tee /var/log/miner.log
-
-    echo "Miner started successfully!"
+    screen -dmS miner bash -c "quai-gpu-miner -U -P stratum://$node_ip:3333 2>&1 | tee /var/log/miner.log"
+    log_success "Miner has started! Use 'screen -r miner' to view logs."
+    pause "Press any key to return to the main menu..."
 }
 
-# View mining logs function
-function view_mining_logs() {
-    echo "Viewing mining logs..."
+# View node logs
+view_logs() {
+    log_info "Viewing node logs..."
+    tail -f ~/data/go-quai/nodelogs/global.log
+}
+
+# View mining logs
+view_mining_logs() {
+    log_info "Viewing mining logs..."
     grep Accepted /var/log/miner.log
 }
 
-# Start main menu
-main_menu
+# Pause function, wait for user to press any key to continue
+pause() {
+    read -rsp "$*" -n1
+}
+
+# Check and install Go
+check_go() {
+    if ! command -v go &> /dev/null || ! go version | grep -q "go1.23"; then
+        log_info "Go is not installed, installing Go 1.23..."
+        if [[ "$OS" == "macOS" ]]; then
+            brew install go
+        elif [[ "$OS" == "Windows" ]]; then
+            sudo apt install golang -y
+        fi
+    else
+        log_info "Go is already installed, version as follows:"
+        go version
+    fi
+}
+
+# Choose OS and start main menu
+choose_os
