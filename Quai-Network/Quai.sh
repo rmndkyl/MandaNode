@@ -47,8 +47,9 @@ choose_os() {
         echo -e "${BOLD}Please select your operating system:${RESET}"
         echo "1) macOS"
         echo "2) Windows (WSL)"
+        echo "3) Linux (Ubuntu/Debian)"
         echo "=============================================="
-        read -p "Enter option (1 or 2): " os_choice
+        read -p "Enter option (1, 2, or 3): " os_choice
 
         case $os_choice in
             1)
@@ -59,6 +60,11 @@ choose_os() {
             2)
                 OS="Windows"
                 log_info "User selected Windows (WSL)"
+                break
+                ;;
+            3)
+                OS="Linux"
+                log_info "User selected Linux (Ubuntu/Debian)"
                 break
                 ;;
             *)
@@ -125,6 +131,10 @@ install_dependencies() {
             log_error "Unable to detect WSL environment, please check configuration."
             exit 1
         fi
+    elif [[ "$OS" == "Linux" ]]; then
+        log_info "Linux (Ubuntu/Debian) environment detected, using apt package manager..."
+        sudo apt update
+        sudo apt install -y git wget curl screen
     fi
     log_success "System dependencies installed successfully."
     pause "Press any key to return to the main menu..."
