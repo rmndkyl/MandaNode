@@ -20,5 +20,5 @@ Network Bandwidth | 10MB/s
 Open your terminal and execute the following command to download and run the script:
 
    ```sh
-   wget -O covalent.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Network3-Nodes/network3.sh && chmod +x covalent.sh && sed -i 's/\r$//' covalent.sh && ./covalent.sh
+   wget -O covalent.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/refs/heads/main/Covalent-Nodes/covalent.sh && chmod +x covalent.sh && sed -i 's/\r$//' covalent.sh && ./covalent.sh
    ```
