@@ -126,8 +126,8 @@ function start_node() {
 
     # Select network
     echo "Please select a network (enter number 1 or 2):"
-    echo "1) satori"
-    echo "2) moksha"
+    echo "1) satori(DONT USE, UNAVAILABLE!)"
+    echo "2) moksha(CHOOSE THIS!)" 
     read -p "Please enter the number of your choice: " NETWORK_CHOICE
 
     case $NETWORK_CHOICE in
