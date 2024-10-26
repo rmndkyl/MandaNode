@@ -20,10 +20,10 @@ fi
 function main_menu() {
     while true; do
         clear
-	      echo "Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions"
-	      echo "============================ Vana SixGPT Installation ===================================="
-	      echo "Node community Telegram channel: https://t.me/layerairdrop"
-	      echo "Node community Telegram group: https://t.me/+UgQeEnnWrodiNTI1"
+	echo "Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions"
+	echo "============================ Vana SixGPT Installation ===================================="
+	echo "Node community Telegram channel: https://t.me/layerairdrop"
+	echo "Node community Telegram group: https://t.me/+UgQeEnnWrodiNTI1"
         echo "To exit the script, press ctrl + C."
         echo "Please choose the operation you want to perform:"
         echo "1) Start Node"
@@ -149,7 +149,7 @@ services:
   ollama:
     image: ollama/ollama:0.3.12
     ports:
-      - "11435:11434"
+      - "11439:11434"
     volumes:
       - ollama:/root/.ollama
     restart: unless-stopped
@@ -157,7 +157,7 @@ services:
   sixgpt3:
     image: sixgpt/miner:latest
     ports:
-      - "3015:3000"
+      - "3000:3000"
     depends_on:
       - ollama
     environment:
@@ -181,7 +181,7 @@ EOL
 # Function to view logs
 function view_logs() {
     echo "Viewing Docker Compose logs..."
-    docker logs -f sixgpt-ollama-1
+    cd $HOME/sixgpt && docker-compose logs -f
     read -p "Press any key to return to the main menu..."
 }
 
