@@ -28,8 +28,9 @@ function main_menu() {
         echo "Please choose the operation you want to perform:"
         echo "1) Start Node"
         echo "2) View Logs"
-        echo "3) Delete Node"
-        echo "4) Exit"
+	echo "3) Restart Node"
+        echo "4) Delete Node"
+        echo "5) Exit"
         
         read -p "Please enter the number of your choice: " choice
         
@@ -40,10 +41,13 @@ function main_menu() {
             2)
                 view_logs
                 ;;
-            3)
+	    3) 
+     		restart_node
+       		;;
+            4)
                 delete_node
                 ;;
-            4)
+            5)
                 echo "Exiting the script."
                 exit 0
                 ;;
@@ -182,6 +186,18 @@ EOL
 function view_logs() {
     echo "Viewing Docker Compose logs..."
     cd $HOME/sixgpt && docker-compose logs -f
+    read -p "Press any key to return to the main menu..."
+}
+
+# Function to restart the node
+function restart_node() {
+    echo "Entering /root/sixgpt directory..."
+    cd /root/sixgpt || { echo "Directory does not exist!"; return; }
+
+    echo "Restarting all Docker Compose services..."
+    docker-compose restart
+    echo "All Docker Compose services have been restarted!"
+    
     read -p "Press any key to return to the main menu..."
 }
 
