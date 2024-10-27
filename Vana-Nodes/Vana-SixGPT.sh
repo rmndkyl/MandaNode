@@ -138,8 +138,8 @@ function start_node() {
             export VANA_NETWORK="moksha"
             ;;
         *)
-            echo "Invalid choice, defaulting to satori."
-            export VANA_NETWORK="satori"
+            echo "Invalid choice, defaulting to moksha."
+            export VANA_NETWORK="moksha"
             ;;
     esac
 
