@@ -19,10 +19,11 @@ function main_menu() {
 	echo "Node community Telegram group: https://t.me/layerairdropdiskusi"
         echo "To exit the script, press ctrl+c on your keyboard."
         echo "Please choose an action to perform:"
-        echo "1) Install node"
-        echo "2) Get node status URL"
-        echo "3) Get node information (Private Key)"
-        echo "4) Exit"
+        echo "1) Install Nesa Node"
+        echo "2) Get Nesa Node status URL"
+        echo "3) Get Node Information (You'll see your Private Key)"
+        echo "4) Delete Nesa Node"
+        echo "5) Exit"
         read -p "Please enter an option [1-4]: " choice
 
         case $choice in
@@ -36,6 +37,9 @@ function main_menu() {
                 get_node_info
                 ;;
             4)
+                delete_node
+                ;;
+            5)
                 echo "Exiting the script."
                 exit 0
                 ;;
@@ -72,6 +76,32 @@ function get_node_info() {
     else
         echo "Environment file not found. Please check if $ENV_FILE exists."
     fi
+
+    # Wait for the user to press any key to return to the main menu
+    read -p "Press any key to return to the main menu..."
+}
+
+# Delete node function
+function delete_node() {
+    echo "Deleting the Nesa node..."
+
+    # Stop Docker Compose if running
+    cd /root/.nesa/docker
+    if sudo docker-compose down; then
+        echo "Docker Compose containers stopped."
+    else
+        echo "Failed to stop Docker Compose containers or no containers are running."
+    fi
+
+    # Remove Docker images and volumes related to Nesa node
+    echo "Removing Docker images and volumes..."
+    sudo docker system prune -af --volumes
+
+    # Remove Nesa node files
+    echo "Removing Nesa node configuration files..."
+    rm -rf /root/.nesa
+
+    echo "Nesa node has been deleted successfully."
 
     # Wait for the user to press any key to return to the main menu
     read -p "Press any key to return to the main menu..."
