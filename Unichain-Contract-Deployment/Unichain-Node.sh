@@ -21,7 +21,8 @@ echo -e "${GREEN}Script and tutorial written by Telegram user @rmndkyl, free and
     echo -e "${GREEN}3.${RESET} Check node"
     echo -e "${GREEN}4.${RESET} View operational node logs"
     echo -e "${GREEN}5.${RESET} View execution client logs"
-    echo -e "${GREEN}6.${RESET} Disconnect node"
+    echo -e "${GREEN}6.${RESET} View Both Logs (Client+Node)"
+    echo -e "${GREEN}7.${RESET} Disconnect node"
     echo -e "${GREEN}0.${RESET} Exit"
     echo
     echo -e "${GREEN}Enter your choice [0-6]: ${RESET}"
@@ -93,6 +94,13 @@ check_logs_execution_client() {
     read -p "Press Enter to return to the main menu..."
 }
 
+check_all_logs() {
+    echo -e "${GREEN}6. Checking Logs from all Unichain Docker...${RESET}"
+    cd $HOME/unichain-node && docker-compose logs -f
+    echo
+    read -p "Press Enter to return to the main menu..."
+}
+
 disable_node() {
     echo -e "${GREEN}6. Disconnecting node...${RESET}"
     HOMEDIR="$HOME"
@@ -120,7 +128,10 @@ while true; do
         5)
             check_logs_execution_client
             ;;
-        6)
+        6) 
+            check_all_logs
+            ;;
+        7)
             disable_node
             ;;
         0)
