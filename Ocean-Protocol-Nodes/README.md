@@ -21,5 +21,5 @@ screen -S ocean-nodes
 Open your terminal and execute the following command to download and run the script:
 
    ```sh
-   wget -O Ocean.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Ocean-Protocol-Nodes/Ocean.sh && chmod +x Ocean.sh && sed -i 's/\r$//' Ocean.sh && ./Ocean.sh
+   wget -O Ocean.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/refs/heads/main/Ocean-Protocol-Nodes/Ocean.sh && chmod +x Ocean.sh && sed -i 's/\r$//' Ocean.sh && ./Ocean.sh
    ```
