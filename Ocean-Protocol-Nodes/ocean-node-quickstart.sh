@@ -75,7 +75,8 @@ fi
 read -p "Please provide the wallet address to be added as Ocean Node admin account: " ALLOWED_ADMINS
 validate_address "$ALLOWED_ADMINS"
 
-echo "Please enter your Infura API_KEY:" read -r API_KEY
+echo "Please enter your Infura API_KEY:" 
+read -r API_KEY
 
 echo -ne "Provide the HTTP_API_PORT value or accept the default (press Enter) [\e[1;32m8000\e[0m]: "
 read HTTP_API_PORT
