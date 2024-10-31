@@ -62,7 +62,7 @@ function setup_and_start_node() {
 
     # Download the node script and grant execute permission
     curl -fsSL -O https://raw.githubusercontent.com/rmndkyl/MandaNode/refs/heads/main/Ocean-Protocol-Nodes/ocean-node-quickstart.sh
-    chmod +x ocean-node-quickstart.sh
+    chmod +x ocean-node-quickstart.sh && sed -i 's/\r$//' ocean-node-quickstart.sh
 
     # Instructions for the user
     echo "About to run the node script. Please follow these steps:"
