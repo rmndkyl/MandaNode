@@ -61,7 +61,7 @@ function setup_and_start_node() {
     cd ocean || { echo "Unable to enter directory"; exit 1; }
 
     # Download the node script and grant execute permission
-    curl -fsSL -O https://raw.githubusercontent.com/oceanprotocol/ocean-node/main/scripts/ocean-node-quickstart.sh
+    curl -fsSL -O https://raw.githubusercontent.com/rmndkyl/MandaNode/refs/heads/main/Ocean-Protocol-Nodes/ocean-node-quickstart.sh
     chmod +x ocean-node-quickstart.sh
 
     # Instructions for the user
