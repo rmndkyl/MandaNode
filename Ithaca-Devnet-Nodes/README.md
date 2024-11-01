@@ -21,5 +21,5 @@ screen -S ithaca-nodes-devnet
 Open your terminal and execute the following command to download and run the script:
 
    ```sh
-   wget -O ithaca.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Ithaca-Devnet-Nodes/ithaca.sh && chmod +x ithaca.sh && sed -i 's/\r$//' ithaca.sh && ./ithaca.sh
+   wget -O ithaca.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/refs/heads/main/Ithaca-Devnet-Nodes/ithaca.sh && chmod +x ithaca.sh && sed -i 's/\r$//' ithaca.sh && ./ithaca.sh
    ```
