@@ -131,8 +131,9 @@ clone_repository() {
 
     cd BrinxAI-Worker-Nodes || exit
     log "INFO" "Running installation script..."
-    chmod +x install_ubuntu.sh
-    ./install_ubuntu.sh
+    wget -O install.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/refs/heads/main/Brinxai-Nodes/install.sh
+    chmod +x install.sh
+    ./install.sh
 
     log "INFO" "Pulling the latest Docker image for BrinxAI Worker..."
     sudo docker pull admier/brinxai_nodes-worker:latest
