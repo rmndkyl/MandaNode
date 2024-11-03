@@ -3,20 +3,26 @@
 # Exit immediately if a command exits with a non-zero status
 set -e
 
+# Define log function
+log() {
+    local level="$1"
+    local message="$2"
+    echo "[$level] $message"
+}
+
 # Update package list and install dependencies
-echo "Updating package list and installing dependencies..."
+log "INFO" "Updating package list and installing dependencies..."
 sudo apt-get update
 sudo apt-get install -y curl gnupg lsb-release wget
 
 # Check if GPU is available
-echo "Checking GPU availability..."
+log "INFO" "Checking GPU availability..."
 GPU_AVAILABLE=false
-if command -v nvidia-smi &> /dev/null
-then
-    echo "GPU detected. NVIDIA driver is installed."
+if command -v nvidia-smi &> /dev/null; then
+    log "INFO" "GPU detected. NVIDIA driver is installed."
     GPU_AVAILABLE=true
 else
-    echo "No GPU detected or NVIDIA driver not installed."
+    log "INFO" "No GPU detected or NVIDIA driver not installed."
 fi
 
 # Prompt user for WORKER_PORT
@@ -24,13 +30,13 @@ read -p "Enter the port number for WORKER_PORT (default is 5011): " USER_PORT
 USER_PORT=${USER_PORT:-5011}
 
 # Create .env file with user-defined WORKER_PORT
-echo "Creating .env file..."
+log "INFO" "Creating .env file..."
 cat <<EOF > .env
 WORKER_PORT=$USER_PORT
 EOF
 
 # Create docker-compose.yml file
-echo "Creating docker-compose.yml..."
+log "INFO" "Creating docker-compose.yml..."
 if [ "$GPU_AVAILABLE" = true ]; then
     cat <<EOF > docker-compose.yml
 version: '3.8'
@@ -83,18 +89,21 @@ networks:
 EOF
 fi
 
-# Try `docker compose up -d` first
-if sudo docker compose up -d; then
-    log "INFO" "Started Docker containers with 'docker compose up -d'."
-else
-    log "WARN" "'docker compose up -d' failed. Trying 'docker-compose up -d'..."
-    
-    # Fallback to `docker-compose up -d` if the first command fails
+# Check if `docker compose` or `docker-compose` is available and run accordingly
+if command -v docker-compose &> /dev/null; then
     if sudo docker-compose up -d; then
         log "INFO" "Started Docker containers with 'docker-compose up -d'."
     else
-        log "ERROR" "Failed to start Docker containers with both 'docker compose up -d' and 'docker-compose up -d'. Please check your Docker setup."
+        log "ERROR" "Failed to start Docker containers with 'docker-compose up -d'. Please check your Docker setup."
     fi
+elif command -v docker &> /dev/null && docker compose version &> /dev/null; then
+    if sudo docker compose up -d; then
+        log "INFO" "Started Docker containers with 'docker compose up -d'."
+    else
+        log "ERROR" "Failed to start Docker containers with 'docker compose up -d'. Please check your Docker setup."
+    fi
+else
+    log "ERROR" "Neither 'docker-compose' nor 'docker compose' is available. Please install Docker Compose."
 fi
 
-echo "Installation and setup completed successfully."
+log "INFO" "Installation and setup completed successfully."
