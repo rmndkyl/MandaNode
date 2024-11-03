@@ -108,8 +108,8 @@ After=network.target
 
 [Service]
 User=$USER
-WorkingDirectory=$HOME/odyssey
-ExecStart=$(which odyssey) node --chain etc/odyssey-genesis.json --rollup.sequencer-http https://odyssey.ithaca.xyz --http --http.port 8548 --ws --ws.port 8547 --authrpc.port 9551 --port 30304 --authrpc.jwtsecret $HOME/odyssey/keys/jwt.hex
+WorkingDirectory=/root/odyssey
+ExecStart=/root/.cargo/bin/odyssey node --chain etc/odyssey-genesis.json --rollup.sequencer-http https://odyssey.ithaca.xyz --http --http.port 8548 --ws --ws.port 8547 --authrpc.port 9551 --port 30304 --authrpc.jwtsecret /root/odyssey/keys/jwt.hex
 Restart=on-failure
 RestartSec=3
 LimitNOFILE=65535
