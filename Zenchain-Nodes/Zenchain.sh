@@ -105,8 +105,18 @@ generate_session_keys() {
 
 # Main menu
 show_menu() {
-    echo "ZenChain Node Management Tool"
-    echo "============================"
+    echo "██╗░░░░░░█████╗░██╗░░░██╗███████╗██████╗░  ░█████╗░██╗██████╗░██████╗░██████╗░░█████╗░██████╗░"
+    echo "██║░░░░░██╔══██╗╚██╗░██╔╝██╔════╝██╔══██╗  ██╔══██╗██║██╔══██╗██╔══██╗██╔══██╗██╔══██╗██╔══██╗"
+    echo "██║░░░░░███████║░╚████╔╝░█████╗░░██████╔╝  ███████║██║██████╔╝██║░░██║██████╔╝██║░░██║██████╔╝"
+    echo "██║░░░░░██╔══██║░░╚██╔╝░░██╔══╝░░██╔══██╗  ██╔══██║██║██╔══██╗██║░░██║██╔══██╗██║░░██║██╔═══╝░"
+    echo "███████╗██║░░██║░░░██║░░░███████╗██║░░██║  ██║░░██║██║██║░░██║██████╔╝██║░░██║╚█████╔╝██║░░░░░"
+    echo "╚══════╝╚═╝░░╚═╝░░░╚═╝░░░╚══════╝╚═╝░░╚═╝  ╚═╝░░╚═╝╚═╝╚═╝░░╚═╝╚═════╝░╚═╝░░╚═╝░╚════╝░╚═╝░░░░░"
+    echo "Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions"
+    echo "============================ ZenChain Node Management Tool ===================================="
+    echo "Node community Telegram channel: https://t.me/layerairdrop"
+    echo "Node community Telegram group: https://t.me/+UgQeEnnWrodiNTI1"
+    echo "To exit the script, press ctrl + C on the keyboard."
+    echo "Please select an action:"
     echo "1) Run Zenchain Node"
     echo "2) Monitor Node Logs"
     echo "3) Restart Zenchain Node"
