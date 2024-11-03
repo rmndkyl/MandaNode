@@ -25,6 +25,7 @@ function update_system() {
 function install_dependencies() {
     echo -e "${CYAN}Installing dependencies...${RESET}"
     sudo apt-get install -y git clang
+    sudo apt-get install -y clang
 }
 
 # Function to set LIBCLANG_PATH
