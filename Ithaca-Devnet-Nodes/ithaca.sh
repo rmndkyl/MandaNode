@@ -21,10 +21,24 @@ function update_system() {
     sudo apt-get update && sudo apt-get upgrade -y
 }
 
-# Function to install Git
-function install_git() {
-    echo -e "${CYAN}Installing Git...${RESET}"
-    sudo apt install -y git
+# Function to install dependencies
+function install_dependencies() {
+    echo -e "${CYAN}Installing dependencies...${RESET}"
+    sudo apt-get install -y git clang
+}
+
+# Function to set LIBCLANG_PATH
+function set_libclang_path() {
+    echo -e "${BLUE}Locating libclang.so...${RESET}"
+    libclang_path=$(find /usr -name "libclang.so*" | head -n 1 | xargs dirname)
+    
+    if [[ -n "$libclang_path" ]]; then
+        export LIBCLANG_PATH=$libclang_path
+        echo -e "${GREEN}LIBCLANG_PATH set to $LIBCLANG_PATH${RESET}"
+    else
+        echo -e "${RED}libclang.so not found. Please ensure clang is installed.${RESET}"
+        exit 1
+    fi
 }
 
 # Function to install Rustup
@@ -152,7 +166,7 @@ function main_menu() {
         echo -e "${GREEN}1) Install Ithaca${RESET}"
         echo -e "${GREEN}2) Check Ithaca Status${RESET}"
         echo -e "${GREEN}3) View Ithaca Logs${RESET}"
-		echo -e "${GREEN}4) Export PrivateKeys${RESET}"
+        echo -e "${GREEN}4) Export PrivateKeys${RESET}"
         echo -e "${GREEN}5) Delete Ithaca Node${RESET}"
         echo -e "${GREEN}6) Exit${RESET}"
         
@@ -161,8 +175,10 @@ function main_menu() {
         case $choice in
             1)
                 update_system
+                install_dependencies
                 install_git
                 install_rustup
+                set_libclang_path
                 clone_repository
                 install_odyssey
                 generate_jwt
@@ -171,7 +187,7 @@ function main_menu() {
                 ;;
             2) check_status ;;
             3) check_logs ;;
-			4) export_jwt ;;
+            4) export_jwt ;;
             5) delete_node ;;
             6)
                 echo -e "${RED}Exiting...${RESET}"
