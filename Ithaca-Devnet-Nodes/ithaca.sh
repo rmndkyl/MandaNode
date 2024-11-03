@@ -63,13 +63,43 @@ function install_odyssey() {
     cargo install --path bin/odyssey
 }
 
-# Function to generate jwt.hex file
+# Function to generate or import jwt.hex file
 function generate_jwt() {
     echo -e "${YELLOW}Creating keys folder...${RESET}"
     mkdir -p "$HOME/odyssey/keys"
-    echo -e "${CYAN}Generating jwt.hex file...${RESET}"
-    openssl rand -hex 32 > "$HOME/odyssey/keys/jwt.hex"
-    echo -e "${GREEN}Secret key saved in jwt.hex.${RESET}"
+    local pvkey_path="$HOME/odyssey/keys/jwt.hex"
+
+    # Prompt user to choose between generating a new key or importing one
+    echo -e "${CYAN}Would you like to:${RESET}"
+    echo -e "${GREEN}1) Generate a new private key${RESET}"
+    echo -e "${GREEN}2) Import an existing private key${RESET}"
+    read -p "Enter your choice (1 or 2): " choice
+
+    case $choice in
+        1)
+            echo -e "${CYAN}Generating a new jwt.hex file...${RESET}"
+            openssl rand -hex 32 > "$pvkey_path"
+            echo -e "${GREEN}New secret key saved in jwt.hex.${RESET}"
+            ;;
+        2)
+            # Check if jwt.hex file already exists, delete if it does
+            if [[ -f "$pvkey_path" ]]; then
+                echo -e "${YELLOW}Existing jwt.hex file found. Deleting it...${RESET}"
+                rm "$pvkey_path"
+                echo -e "${GREEN}Old jwt.hex file deleted.${RESET}"
+            fi
+
+            # Prompt for the new private key
+            echo -e "${YELLOW}Importing a private key...${RESET}"
+            read -sp "Enter your private key: " private_key
+            echo
+            echo "$private_key" > "$pvkey_path"
+            echo -e "${GREEN}Private key saved in jwt.hex.${RESET}"
+            ;;
+        *)
+            echo -e "${RED}Invalid option. Please choose 1 or 2.${RESET}"
+            ;;
+    esac
 }
 
 # Function to export the generated jwt.hex file
