@@ -36,19 +36,37 @@ run_zenchain_node() {
     create_data_directory
 
     read -p "Enter a name for your Zenchain node: " NODE_NAME
-    echo "Running Zenchain node '$NODE_NAME' in detached mode..."
-    docker run -d \
-      --name $CONTAINER_NAME \
-      -p 9944:9944 \
-      -v $DATA_DIR:/chain-data \
-      $ZCHAIN_IMAGE \
-      ./usr/bin/zenchain-node \
-      --base-path=/chain-data \
-      --rpc-cors=all \
-      --validator \
-      --name="$NODE_NAME" \
-      --bootnodes="$BOOTNODES" \
-      --chain=$CHAIN_NAME
+    echo "Choose mode: 1) Development 2) Production"
+    read -p "Enter mode number: " mode
+
+    if [[ $mode -eq 1 ]]; then
+        echo "Running Zenchain node '$NODE_NAME' in development mode..."
+        docker run -d \
+          --name $CONTAINER_NAME \
+          -p 9944:9944 \
+          -v $DATA_DIR:/chain-data \
+          $ZCHAIN_IMAGE \
+          ./usr/bin/zenchain-node \
+          --dev
+    elif [[ $mode -eq 2 ]]; then
+        echo "Running Zenchain node '$NODE_NAME' in production mode..."
+        docker run -d \
+          --name $CONTAINER_NAME \
+          -p 9944:9944 \
+          -v $DATA_DIR:/chain-data \
+          $ZCHAIN_IMAGE \
+          ./usr/bin/zenchain-node \
+          --base-path=/chain-data \
+          --rpc-cors=all \
+          --unsafe-rpc-external \
+          --validator \
+          --name="$NODE_NAME" \
+          --bootnodes="$BOOTNODES" \
+          --chain=$CHAIN_NAME
+    else
+        echo "Invalid mode selected!"
+    fi
+
     echo "Zenchain node '$NODE_NAME' is now running."
     read -n 1 -s -r -p "Press any key to return to the main menu..."
 }
@@ -77,25 +95,24 @@ delete_zenchain_node() {
     read -n 1 -s -r -p "Press any key to return to the main menu..."
 }
 
+# Function to generate and configure session keys
+generate_session_keys() {
+    echo "To generate session keys, you need to make an RPC call to 'author_rotateKeys'."
+    echo "Use the output of this call to configure session keys for your Ethereum account."
+    echo "Refer to the documentation for instructions on using polkadotjs-apps with MetaMask."
+    echo "After configuring, restart the node with a secure setup."
+}
+
 # Main menu
 show_menu() {
-    echo "██╗░░░░░░█████╗░██╗░░░██╗███████╗██████╗░  ░█████╗░██╗██████╗░██████╗░██████╗░░█████╗░██████╗░"
-    echo "██║░░░░░██╔══██╗╚██╗░██╔╝██╔════╝██╔══██╗  ██╔══██╗██║██╔══██╗██╔══██╗██╔══██╗██╔══██╗██╔══██╗"
-    echo "██║░░░░░███████║░╚████╔╝░█████╗░░██████╔╝  ███████║██║██████╔╝██║░░██║██████╔╝██║░░██║██████╔╝"
-    echo "██║░░░░░██╔══██║░░╚██╔╝░░██╔══╝░░██╔══██╗  ██╔══██║██║██╔══██╗██║░░██║██╔══██╗██║░░██║██╔═══╝░"
-    echo "███████╗██║░░██║░░░██║░░░███████╗██║░░██║  ██║░░██║██║██║░░██║██████╔╝██║░░██║╚█████╔╝██║░░░░░"
-    echo "╚══════╝╚═╝░░╚═╝░░░╚═╝░░░╚══════╝╚═╝░░╚═╝  ╚═╝░░╚═╝╚═╝╚═╝░░╚═╝╚═════╝░╚═╝░░╚═╝░╚════╝░╚═╝░░░░░"
-    echo "Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions"
-    echo "============================ ZenChain Node Management Tool ===================================="
-    echo "Node community Telegram channel: https://t.me/layerairdrop"
-    echo "Node community Telegram group: https://t.me/+UgQeEnnWrodiNTI1"
-    echo "To exit the script, press ctrl + C on the keyboard."
-    echo "Please select an action:"
+    echo "ZenChain Node Management Tool"
+    echo "============================"
     echo "1) Run Zenchain Node"
     echo "2) Monitor Node Logs"
     echo "3) Restart Zenchain Node"
     echo "4) Delete Zenchain Node"
-    echo "5) Exit"
+    echo "5) Generate Session Keys"
+    echo "6) Exit"
     echo "----------------------------------------"
     read -p "Enter your choice: " choice
     case $choice in
@@ -103,7 +120,8 @@ show_menu() {
         2) monitor_node_logs ;;
         3) restart_zenchain_node ;;
         4) delete_zenchain_node ;;
-        5) exit 0 ;;
+        5) generate_session_keys ;;
+        6) exit 0 ;;
         *) echo "Invalid choice!" ;;
     esac
 }
