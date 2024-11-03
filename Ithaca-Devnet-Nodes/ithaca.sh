@@ -156,6 +156,33 @@ function delete_node() {
     echo -e "${GREEN}Ithaca node has been removed.${RESET}"
 }
 
+# Function to import private key
+function import_private_key() {
+    local pvkey_path="$HOME/odyssey/keys/jwt.hex"
+
+    # Check if jwt.hex file already exists
+    if [[ -f "$pvkey_path" ]]; then
+        echo -e "${YELLOW}Existing jwt.hex file found. Deleting it...${RESET}"
+        rm "$pvkey_path"
+        echo -e "${GREEN}Old jwt.hex file deleted.${RESET}"
+    fi
+
+    # Prompt for new private key
+    echo -e "${YELLOW}Importing a new private key...${RESET}"
+    read -sp "Enter your private key: " private_key
+    echo
+    echo "$private_key" > "$pvkey_path"
+    echo -e "${GREEN}Private key saved at $pvkey_path${RESET}"
+}
+
+# Function to restart the Ithaca node
+function restart_service() {
+    echo -e "${CYAN}Restarting Ithaca node service...${RESET}"
+    sudo systemctl restart ithaca
+    echo -e "${GREEN}Ithaca node restarted.${RESET}"
+}
+
+
 # Main menu function
 function main_menu() {
     while true; do
@@ -166,10 +193,12 @@ function main_menu() {
         echo -e "${GREEN}1) Install Ithaca${RESET}"
         echo -e "${GREEN}2) Check Ithaca Status${RESET}"
         echo -e "${GREEN}3) View Ithaca Logs${RESET}"
-        echo -e "${GREEN}4) Export PrivateKeys${RESET}"
-        echo -e "${GREEN}5) Delete Ithaca Node${RESET}"
-        echo -e "${GREEN}6) Exit${RESET}"
-        
+        echo -e "${GREEN}4) Export PrivateKey${RESET}"
+        echo -e "${GREEN}5) Import PrivateKey${RESET}"
+        echo -e "${GREEN}6) Restart Ithaca Node${RESET}"
+        echo -e "${GREEN}7) Delete Ithaca Node${RESET}"
+        echo -e "${GREEN}8) Exit${RESET}"
+
         read -p "Enter your choice: " choice
 
         case $choice in
@@ -188,8 +217,10 @@ function main_menu() {
             2) check_status ;;
             3) check_logs ;;
             4) export_jwt ;;
-            5) delete_node ;;
-            6)
+            5) import_private_key ;;
+            6) restart_service ;;
+            7) delete_node ;;
+            8)
                 echo -e "${RED}Exiting...${RESET}"
                 exit 0
                 ;;
