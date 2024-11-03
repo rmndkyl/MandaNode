@@ -133,8 +133,25 @@ clone_repository() {
     log "INFO" "Running installation script..."
     chmod +x install_ubuntu.sh
     ./install_ubuntu.sh
+
     log "INFO" "Pulling the latest Docker image for BrinxAI Worker..."
     sudo docker pull admier/brinxai_nodes-worker:latest
+
+    log "INFO" "Starting Docker containers..."
+    
+    # Try `docker compose up -d` first
+    if sudo docker compose up -d; then
+        log "INFO" "Started Docker containers with 'docker compose up -d'."
+    else
+        log "WARN" "'docker compose up -d' failed. Trying 'docker-compose up -d'..."
+        
+        # Fallback to `docker-compose up -d` if the first command fails
+        if sudo docker-compose up -d; then
+            log "INFO" "Started Docker containers with 'docker-compose up -d'."
+        else
+            log "ERROR" "Failed to start Docker containers with both 'docker compose up -d' and 'docker-compose up -d'. Please check your Docker setup."
+        fi
+    fi
 }
 
 run_docker_menu() {
