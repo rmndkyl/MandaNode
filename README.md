@@ -10,6 +10,11 @@ A shell script collection for running nodes in Web3 is essentially a set of auto
 
 **SOLANA : `4DMvckFnSrm7fymVaPrXULrCq4h1yvfTWq5aHXLpLKsn`**
 
+## ☕️ Traktir kopinya & Thanks for Supporting us :
+- https://sociabuzz.com/layerairdrop/tribe
+- https://saweria.co/LayerAirdrop
+- https://trakteer.id/layerairdrop/tip
+
 # Credited By Layer Airdrop
 [Telegram Channel](https://t.me/+U3vHFLDNC5JjN2Jl)
 
