@@ -28,5 +28,11 @@ wget https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Nexus/nexus_instal
 
 # One Click Installation
 ```shell
-wget -O nexus.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/refs/heads/main/Nexus/nexus.sh && chmod +x nexus.sh && sed -i 's/\r$//' nexus.sh && ./nexus.sh
+wget -O nexus_prover.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/refs/heads/main/Nexus/nexus_prover.sh && chmod +x nexus_prover.sh && sed -i 's/\r$//' nexus_prover.sh && ./nexus_prover.sh
 ```
+
+# SUPPORT
+## ☕️ Traktir kopinya & Thanks for Supporting us :
+- https://sociabuzz.com/layerairdrop/tribe
+- https://saweria.co/LayerAirdrop
+- https://trakteer.id/layerairdrop/tip
