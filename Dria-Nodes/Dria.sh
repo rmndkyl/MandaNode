@@ -147,11 +147,17 @@ run_dria_node() {
     display_status "Dria node started successfully." "success"
 }
 
-# Uninstall Dria node
+# Uninstall Dria node and Ollama
 uninstall_dria_node() {
-    display_status "Removing Dria node files..." "info"
+    display_status "Removing Dria node files and Ollama..." "info"
+    
+    # Remove Dria node files
     rm -rf $HOME/dkn-compute-node* || { display_status "Failed to remove Dria node files." "error"; return; }
-    display_status "Dria node files removed successfully." "success"
+    
+    # Remove Ollama files
+    rm -rf $HOME/.ollama* || { display_status "Failed to remove Ollama files." "error"; return; }
+    
+    display_status "Dria node and Ollama files removed successfully." "success"
 }
 
 # Main menu functionality
