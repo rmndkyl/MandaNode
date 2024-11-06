@@ -2,17 +2,20 @@
 
 echo "Showing Animation.."
 wget -O loader.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/loader.sh && chmod +x loader.sh && sed -i 's/\r$//' loader.sh && ./loader.sh
+rm -rf loader.sh
 wget -O logo.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/logo.sh && chmod +x logo.sh && sed -i 's/\r$//' logo.sh && ./logo.sh
+rm -rf logo.sh
 sleep 4
 
 # Automation script: Volara-Miner installation and startup
 
 # Define color codes
 RED='\033[0;31m'
-GREEN='\033[0;32m'
+GREEN='\033[1;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 CYAN='\033[0;36m'
+MAGENTA='\033[1;35m'
 BOLD='\033[1m'
 UNDERLINE='\033[4m'
 RESET='\033[0m'
@@ -45,7 +48,22 @@ log_warning() {
 log_error() {
   echo -e "${RED}${ERROR_ICON} ${1}${RESET}"
   echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] ${1}" >> "${LOG_FILE}"
+  echo "Please refer to the logs for more details or contact support if needed."
 }
+
+# Function to check dependencies
+check_dependency() {
+  command -v "$1" &> /dev/null
+  if [ $? -ne 0 ]; then
+    log_error "$1 is not installed. Please install it before proceeding."
+    exit 1
+  fi
+}
+
+# Check required dependencies
+check_dependency "curl"
+check_dependency "docker"
+check_dependency "screen"
 
 # Function: Update and upgrade system
 update_system() {
@@ -99,7 +117,8 @@ start_miner() {
   log_info "Please ensure your Vana network wallet has enough test tokens. Visit the faucet: https://faucet.vana.org/moksha to receive test tokens."
   echo -e "${YELLOW}Tip: Please check your Vana network balance. Continue after receiving Moksha test tokens.${RESET}"
   
-  read -sp "$(echo -e "${YELLOW}Enter your Metamask private key (will not be displayed on screen):${RESET}")" VANA_PRIVATE_KEY
+  echo -e "${MAGENTA}Enter your Metamask private key (it will not be shown):${RESET}"
+  read -sp "Private Key: " VANA_PRIVATE_KEY
   export VANA_PRIVATE_KEY
 
   if [[ -z "$VANA_PRIVATE_KEY" ]]; then
@@ -108,11 +127,11 @@ start_miner() {
   fi
 
   log_info "Pulling Volara-Miner Docker image..."
-  docker pull volara/miner &> /dev/null
+  timeout 300 docker pull volara/miner
   if [[ $? -eq 0 ]]; then
     log_success "Volara-Miner Docker image pulled successfully."
   else
-    log_error "Failed to pull Volara-Miner Docker image."
+    log_error "Failed to pull Volara-Miner Docker image. Check your network connection."
     exit 1
   fi
 
@@ -137,21 +156,30 @@ view_miner_logs() {
   done
 }
 
+# Function to rotate log files
+log_file_rotate() {
+  if [ -f "$LOG_FILE" ]; then
+    mv "$LOG_FILE" "$LOG_FILE.bak"
+  fi
+}
+
+log_file_rotate
+
 # Main menu function
 show_menu() {
   clear
   echo -e "${BOLD}${BLUE}Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions${RESET}"
-  echo -e "${BOLD}${BLUE}==================== Volara-Miner Menu Setup ====================${RESET}"
+  echo -e "${BOLD}${BLUE}==================== Volara-Miner Setup ====================${RESET}"
   echo -e "${BOLD}${BLUE}Node community Telegram channel: https://t.me/layerairdrop${RESET}"
   echo -e "${BOLD}${BLUE}Node community Telegram group: https://t.me/+UgQeEnnWrodiNTI1${RESET}"
   echo -e "To exit the script, press ctrl+c on your keyboard."
-  echo "1. Update and upgrade the system"
-  echo "2. Install Docker"
-  echo "3. Start Volara-Miner"
-  echo "4. View Volara-Miner logs"  # Added option to view logs
+  echo "1. Update system and upgrade packages"
+  echo "2. Install Docker and its dependencies"
+  echo "3. Start the Volara-Miner with your wallet credentials"
+  echo "4. View the most recent Volara-Miner logs"
   echo "5. Exit"
   echo -e "${BOLD}===========================================================${RESET}"
-  echo -n "Please select an option [1-5]: "
+  echo -n "Select an option [1-5]: "
 }
 
 # Main loop
@@ -169,7 +197,7 @@ while true; do
       start_miner
       ;;
     4)
-      view_miner_logs  # Call the function to view logs
+      view_miner_logs
       ;;
     5)
       log_info "Exiting the script, goodbye!"
