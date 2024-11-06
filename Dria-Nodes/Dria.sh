@@ -149,10 +149,9 @@ run_dria_node() {
 
 # Uninstall Dria node
 uninstall_dria_node() {
-    display_status "Removing Dria node files and Docker environment..." "info"
-    rm -rf $HOME/dkn-compute-node*
-    sudo apt-get remove -y docker-ce docker-ce-cli containerd.io docker-compose-plugin || display_status "Uninstallation failed." "error"
-    display_status "Dria node uninstalled successfully." "success"
+    display_status "Removing Dria node files..." "info"
+    rm -rf $HOME/dkn-compute-node* || { display_status "Failed to remove Dria node files." "error"; return; }
+    display_status "Dria node files removed successfully." "success"
 }
 
 # Main menu functionality
@@ -162,9 +161,9 @@ main_menu() {
 
     while true; do
         clear
-		echo -e "${MENU_COLOR}The script and tutorial were written by Telegram user @rmndkyl, free and open source, please do not believe in the paid version${NORMAL}"
+	echo -e "${MENU_COLOR}The script and tutorial were written by Telegram user @rmndkyl, free and open source, please do not believe in the paid version${NORMAL}"
         echo -e "${MENU_COLOR}${BOLD}============================ Dria Node Management Tool ============================${NORMAL}"
-		echo -e "${MENU_COLOR}Node community Telegram channel: https://t.me/layerairdrop${NORMAL}"
+	echo -e "${MENU_COLOR}Node community Telegram channel: https://t.me/layerairdrop${NORMAL}"
         echo -e "${MENU_COLOR}Node community Telegram group: https://t.me/layerairdropdiskusi${NORMAL}"
         echo -e "${MENU_COLOR}Please select an action:${NORMAL}"
         echo -e "${MENU_COLOR}1. Update system and install dependencies${NORMAL}"
