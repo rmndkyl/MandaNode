@@ -452,13 +452,33 @@ function backup_sidecar_config() {
     echo "Backup completed. Backup path: $backup_dir"
 }
 
+# Import sidecar configuration and keys
+function import_sidecar_config() {
+    echo "Importing sidecar configuration and keys..."
+    
+    # Prompt user to enter the path of the backup to restore
+    read -p "Enter the path of the backup to import: " backup_dir
+
+    # Check if the specified backup directory exists
+    if [ ! -d "$backup_dir" ]; then
+        echo "Backup directory not found: $backup_dir"
+        return 1
+    fi
+
+    # Clear the existing sidecar directory and restore backup
+    rm -rf $HOME/.zrchain/sidecar/*
+    cp -r "$backup_dir"/* $HOME/.zrchain/sidecar/
+
+    echo "Import completed from: $backup_dir"
+}
+
 # Check logs
 function check_logs() {
     echo "Checking logs..."
     journalctl -fu zenrock-testnet-sidecar.service -o cat
 }
 
-# Main menu
+# Main Menu
 function setup_operator() {
     echo "You can perform the following validator operations:"
     echo "1. Generate keys"
@@ -466,7 +486,8 @@ function setup_operator() {
     echo "3. Set configuration"
     echo "4. Check logs"
     echo "5. Backup sidecar configuration and keys"
-    read -p "Please choose an option (1-5): " OPTION
+    echo "6. Import sidecar configuration and keys"
+    read -p "Please choose an option (1-6): " OPTION
 
     case $OPTION in
         1) generate_keys ;;
@@ -474,6 +495,7 @@ function setup_operator() {
         3) set_operator_config ;;
         4) check_logs ;;
         5) backup_sidecar_config ;;
+        6) import_sidecar_config ;;
         *) echo "Invalid option, please try again." ;;
     esac
 }
