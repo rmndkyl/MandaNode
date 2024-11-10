@@ -448,7 +448,23 @@ function backup_sidecar_config() {
     echo "Backing up sidecar configuration and keys..."
     backup_dir="$HOME/.zrchain/sidecar_backup_$(date +%Y%m%d_%H%M%S)"
     mkdir -p $backup_dir
+
+    # Check if key files exist before backing up
+    if [[ -f "$HOME/.zrchain/sidecar/keys/ecdsa.key.json" ]]; then
+        cp "$HOME/.zrchain/sidecar/keys/ecdsa.key.json" "$backup_dir"
+    else
+        echo "ecdsa.key.json not found, skipping backup for this key."
+    fi
+
+    if [[ -f "$HOME/.zrchain/sidecar/keys/bls.key.json" ]]; then
+        cp "$HOME/.zrchain/sidecar/keys/bls.key.json" "$backup_dir"
+    else
+        echo "bls.key.json not found, skipping backup for this key."
+    fi
+
+    # Backup other configuration files
     cp -r $HOME/.zrchain/sidecar/* $backup_dir
+
     echo "Backup completed. Backup path: $backup_dir"
 }
 
@@ -484,6 +500,12 @@ function import_sidecar_config() {
 
     # Apply executable permissions to validator_sidecar
     chmod +x "$dest_dir/bin/validator_sidecar"
+
+    # Ensure the key files are present before proceeding with the restart
+    if [[ ! -f "$HOME/.zrchain/sidecar/keys/ecdsa.key.json" || ! -f "$HOME/.zrchain/sidecar/keys/bls.key.json" ]]; then
+        echo "One or both key files are missing. Please ensure both ecdsa.key.json and bls.key.json are present."
+        return 1
+    fi
 
     # Restart the service
     sudo systemctl daemon-reload
