@@ -452,24 +452,45 @@ function backup_sidecar_config() {
     echo "Backup completed. Backup path: $backup_dir"
 }
 
-# Import sidecar configuration and keys
+# Import sidecar configuration and keys function
 function import_sidecar_config() {
     echo "Importing sidecar configuration and keys..."
-    
-    # Prompt user to enter the path of the backup to restore
-    read -p "Enter the path of the backup to import: " backup_dir
 
-    # Check if the specified backup directory exists
-    if [ ! -d "$backup_dir" ]; then
-        echo "Backup directory not found: $backup_dir"
+    # Define source and destination paths
+    src_dir="/root/zenrock-validators/configs"
+    dest_dir="$HOME/.zrchain/sidecar"
+
+    # Check if source config files exist before copying
+    if [[ ! -f "$src_dir/eigen_operator_config.yaml" || ! -f "$src_dir/config.yaml" ]]; then
+        echo "Configuration files not found in $src_dir. Please verify the path."
         return 1
     fi
 
-    # Clear the existing sidecar directory and restore backup
-    rm -rf $HOME/.zrchain/sidecar/*
-    cp -r "$backup_dir"/* $HOME/.zrchain/sidecar/
+    # Copy configuration files to the destination
+    cp "$src_dir/eigen_operator_config.yaml" "$dest_dir/" || { echo "Failed to copy eigen_operator_config.yaml"; return 1; }
+    cp "$src_dir/config.yaml" "$dest_dir/" || { echo "Failed to copy config.yaml"; return 1; }
 
-    echo "Import completed from: $backup_dir"
+    # Ensure validator_sidecar is not running before modifying it
+    if pgrep -f "validator_sidecar" > /dev/null; then
+        echo "validator_sidecar is currently running. Stopping it before proceeding..."
+        sudo systemctl stop zenrock-testnet-sidecar.service
+    fi
+
+    # Download validator_sidecar binary if it doesn't exist, and set permissions
+    if [[ ! -f "$dest_dir/bin/validator_sidecar" ]]; then
+        echo "Downloading validator_sidecar binary..."
+        wget -O "$dest_dir/bin/validator_sidecar" https://releases.gardia.zenrocklabs.io/validator_sidecar-1.2.3
+    fi
+
+    # Apply executable permissions to validator_sidecar
+    chmod +x "$dest_dir/bin/validator_sidecar"
+
+    # Restart the service
+    sudo systemctl daemon-reload
+    sudo systemctl enable zenrock-testnet-sidecar.service
+    sudo systemctl start zenrock-testnet-sidecar.service
+
+    echo "Import completed successfully."
 }
 
 # Check logs
