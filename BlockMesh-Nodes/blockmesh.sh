@@ -74,7 +74,7 @@ case $choice in
 
         # Download and extract the BlockMesh binary
         mkdir -p target/release
-        wget -qO- https://github.com/block-mesh/block-mesh-monorepo/releases/download/v0.0.348/blockmesh-cli-x86_64-unknown-linux-gnu.tar.gz | tar -xz -C target/release
+        wget -qO- https://github.com/block-mesh/block-mesh-monorepo/releases/download/v0.0.358/blockmesh-cli-x86_64-unknown-linux-gnu.tar.gz | tar -xz -C target/release
         sleep 1
 
         # Request user data with validation and secure password handling
