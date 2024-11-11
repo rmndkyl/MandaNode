@@ -37,7 +37,7 @@ rm -rf logo.sh
 sleep 4
 
 # Script save path
-SCRIPT_PATH="$HOME/Waku.sh"
+SCRIPT_PATH="$HOME/waku.sh"
 
 # Main menu function
 function main_menu() {
@@ -53,7 +53,8 @@ function main_menu() {
         echo "1. Install Node"
         echo "2. Fix Errors (currently unavailable, official script has issues)"
         echo "3. Update Script"
-        echo "4. Exit"
+        echo "4. Install Multiple Nodes"
+        echo "5. Exit"
         read -rp "Please enter your choice: " choice
 
         case $choice in
@@ -67,6 +68,9 @@ function main_menu() {
                 update_script
                 ;;
             4)
+                install_multiple_nodes
+                ;;
+            5)
                 echo -e "${GREEN}Exiting the script, thank you for using it!${NC}"
                 exit 0
                 ;;
@@ -76,6 +80,72 @@ function main_menu() {
                 ;;
         esac
     done
+}
+
+# Function to install multiple nodes
+function install_multiple_nodes() {
+    # Check nwaku-compose directory and create a new one if necessary
+    base_dir="$HOME/nwaku-compose"
+    new_dir="$base_dir"
+    counter=1
+
+    while [ -d "$new_dir" ]; do
+        new_dir="${base_dir}${counter}"
+        ((counter++))
+    done
+
+    echo "Cloning nwaku-compose project into $new_dir ..."
+    git clone https://github.com/waku-org/nwaku-compose "$new_dir" || {
+        echo "Failed to clone nwaku-compose, please check the error."
+        exit 1
+    }
+
+    # Enter the newly created nwaku-compose directory
+    cd "$new_dir" || {
+        echo "Failed to enter the nwaku-compose directory, please check the error."
+        exit 1
+    }
+
+    echo "Successfully entered the nwaku-compose directory."
+
+    # Copy .env.example to .env
+    cp .env.example .env
+    echo "Successfully copied .env.example to .env."
+
+    # Get user input and update the .env file
+    read -rp "Enter your Infura project key: " infura_key
+    read -rp "Enter your testnet private key (without 0x at the start): " testnet_private_key
+    read -rp "Enter your keystore password: " keystore_password
+
+    # Use sed to replace placeholders in .env file
+    sed -i "s|<key>|$infura_key|g" .env
+    sed -i "s|<YOUR_TESTNET_PRIVATE_KEY_HERE>|$testnet_private_key|g" .env
+    sed -i "s|my_secure_keystore_password|$keystore_password|g" .env
+
+    echo ".env file has been updated."
+
+    # Get user input for ports
+    read -rp "Enter the first port: " port1
+    read -rp "Enter the second port: " port2
+
+    # Update ports in docker-compose.yml
+    sed -i "s|^\s*- [0-9]*:|  - $port1:|g" docker-compose.yml
+    sed -i "s|^\s*- [0-9]*:|  - $port2:|g" docker-compose.yml
+
+    echo "Ports in docker-compose.yml have been updated."
+
+    # Run the register_rln.sh script
+    echo "Running the register_rln.sh script..."
+    ./register_rln.sh
+
+    echo "register_rln.sh script completed."
+
+    # Start Docker Compose services
+    echo "Starting Docker Compose services..."
+    docker-compose up -d || { echo "Failed to start Docker Compose services, please check the error."; exit 1; }
+
+    echo "Docker Compose services started successfully."
+    read -rp "Press Enter to return to the menu."
 }
 
 # Function to install node tools
