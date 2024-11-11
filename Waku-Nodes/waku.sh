@@ -82,6 +82,26 @@ function main_menu() {
     done
 }
 
+# Function to check if a port is available and prompt for a new port if needed
+function check_port_and_update_grafana() {
+    local default_port=3000
+
+    # Check if port 3000 is already in use
+    if lsof -i:"$default_port" >/dev/null; then
+        echo -e "${YELLOW}Port $default_port is already in use.${NC}"
+
+        # Prompt for an alternate port
+        read -rp "Enter an alternative port for Grafana: " new_port
+
+        # Update the port in docker-compose.yml
+        sed -i "s|$default_port:3000|$new_port:3000|g" docker-compose.yml
+
+        echo -e "${GREEN}Updated Grafana to use port $new_port instead of $default_port.${NC}"
+    else
+        echo -e "${GREEN}Port $default_port is available. Proceeding with the default port.${NC}"
+    fi
+}
+
 # Function to install multiple nodes
 function install_multiple_nodes() {
     # Check nwaku-compose directory and create a new one if necessary
@@ -139,6 +159,9 @@ function install_multiple_nodes() {
     ./register_rln.sh
 
     echo "register_rln.sh script completed."
+	
+	# Check Port
+	check_port_and_update_grafana
 
     # Start Docker Compose services
     echo "Starting Docker Compose services..."
@@ -222,6 +245,9 @@ function install_node() {
     echo -e "${BLUE}Running the register_rln.sh script...${NC}"
     ./register_rln.sh
     echo -e "${GREEN}register_rln.sh script completed.${NC}"
+	
+	# Check Port
+	check_port_and_update_grafana
 
     # Start Docker Compose services
     echo -e "${BLUE}Starting Docker Compose services...${NC}"
