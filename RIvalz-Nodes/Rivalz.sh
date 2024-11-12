@@ -1,44 +1,23 @@
 #!/bin/bash
 
-# Exit on any error
-set -e
-
-# Define log file
-LOGFILE="rivalz_installation.log"
-exec > >(tee -i $LOGFILE) 2>&1
-
-# Check if script is run as root
-if [[ $EUID -ne 0 ]]; then
-    echo "This script must be run as root. Exiting."
-    exit 1
-fi
-
-# Trap to handle unexpected exits
-trap 'echo "Exiting script due to an error." ; exit 1' ERR
-
 echo "Showing Animation.."
-wget -O loader.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/loader.sh && chmod +x loader.sh
-wget -O logo.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/logo.sh && chmod +x logo.sh
-
-# Verify downloaded files' checksums (Optional: replace with actual checksum)
-# echo "expected-checksum  loader.sh" | sha256sum -c -
-# echo "expected-checksum  logo.sh" | sha256sum -c -
-
-./loader.sh
-./logo.sh
-sleep 2
-
-rm -rf loader.sh
+wget -O loader.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/loader.sh && chmod +x loader.sh && sed -i 's/\r$//' loader.sh && ./loader.sh
+rm -rf lodaer.sh
+wget -O logo.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/logo.sh && chmod +x logo.sh && sed -i 's/\r$//' logo.sh && ./logo.sh
 rm -rf logo.sh
+sleep 2
 
 # Install dependencies and RivalZ function
 function install_all() {
+    # Update package list and upgrade system
     echo "Updating package list and upgrading the system..."
-    sudo apt update && sudo apt upgrade -y || { echo "Failed to update system"; exit 1; }
+    sudo apt update && sudo apt upgrade -y
 
+    # Attempt to fix any broken packages
     echo "Fixing broken packages..."
     sudo apt --fix-broken install -y
 
+    # Clean up any leftover package information
     echo "Cleaning up package cache..."
     sudo apt clean
 
@@ -60,6 +39,7 @@ function install_all() {
         curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
         sudo apt install -y nodejs
 
+        # Verify Node.js and npm installation
         if command -v node &>/dev/null && command -v npm &>/dev/null; then
             echo "Node.js and npm installed successfully!"
         else
@@ -72,6 +52,7 @@ function install_all() {
         npm -v
     fi
 
+    # Install Rivalz
     echo "Installing Rivalz..."
     if npm list -g rivalz-node-cli &>/dev/null; then
         echo "Rivalz is already installed."
@@ -90,32 +71,70 @@ function install_all() {
     # Create screen session and run Rivalz
     echo "Creating screen session and running Rivalz..."
     screen -dmS rivalz bash -c "rivalz run; exec bash"
+
+    # Prompt the user to enter the screen session and monitor the process
     echo "Rivalz is running in a screen session."
-    echo "Please use 'screen -r rivalz' to enter the session. Press any key to return to the main menu..."
+    echo "Please use 'screen -r rivalz' to enter the screen session. After completing the setup, press any key to return to the main menu..."
     read -n 1 -s
 }
 
 # Remove Rivalz
 function remove_rivalz() {
     echo "Removing Rivalz..."
+    
+    # Check and remove rivalz command
+    if command -v rivalz &>/dev/null; then
+        echo "Rivalz found, removing..."
+        sudo rm $(which rivalz)
+        echo "Rivalz removed."
+    else
+        echo "Rivalz does not exist, cannot remove."
+    fi
 
-    paths_to_remove=(
-        "/root/.rivalz"
-        "/usr/bin/rivalz"
-        "/root/.npm/rivalz-node-cli"
-        "/root/.nvm/versions/node/v20.0.0/bin/rivalz"
-        "/usr/lib/node_modules/rivalz-node-cli"
-    )
+    # Remove /root/.rivalz folder
+    if [ -d /root/.rivalz ]; then
+        echo "Found /root/.rivalz folder, removing..."
+        sudo rm -rf /root/.rivalz
+        echo "/root/.rivalz folder removed."
+    else
+        echo "/root/.rivalz folder does not exist."
+    fi
 
-    for path in "${paths_to_remove[@]}"; do
-        if [[ -e $path ]]; then
-            echo "Removing $path..."
-            sudo rm -rf "$path"
-            echo "$path removed."
-        else
-            echo "$path does not exist, skipping..."
-        fi
-    done
+    # Remove /usr/bin/rivalz folder
+    if [ -d /usr/bin/rivalz ]; then
+        echo "Found /usr/bin/rivalz folder, removing..."
+        sudo rm -rf /usr/bin/rivalz
+        echo "/usr/bin/rivalz folder removed."
+    else
+        echo "/usr/bin/rivalz folder does not exist."
+    fi
+
+    # Remove /root/.npm/rivalz-node-cli directory
+    if [ -d /root/.npm/rivalz-node-cli ]; then
+        echo "Found /root/.npm/rivalz-node-cli directory, removing..."
+        sudo rm -rf /root/.npm/rivalz-node-cli
+        echo "/root/.npm/rivalz-node-cli directory removed."
+    else
+        echo "/root/.npm/rivalz-node-cli directory does not exist."
+    fi
+    
+    # Remove /root/.nvm/versions/node/v20.0.0/bin/rivalz file
+    if [ -f /root/.nvm/versions/node/v20.0.0/bin/rivalz ]; then
+        echo "Found /root/.nvm/versions/node/v20.0.0/bin/rivalz file, removing..."
+        sudo rm /root/.nvm/versions/node/v20.0.0/bin/rivalz
+        echo "/root/.nvm/versions/node/v20.0.0/bin/rivalz file removed."
+    else
+        echo "/root/.nvm/versions/node/v20.0.0/bin/rivalz file does not exist."
+    fi
+
+    # Remove /usr/lib/node_modules/rivalz-node-cli
+    if [ -d /usr/lib/node_modules/rivalz-node-cli ]; then
+        echo "Found /usr/lib/node_modules/rivalz-node-cli, removing..."
+        sudo rm -rf /usr/lib/node_modules/rivalz-node-cli
+        echo "/usr/lib/node_modules/rivalz-node-cli removed."
+    else
+        echo "/usr/lib/node_modules/rivalz-node-cli does not exist."
+    fi
 }
 
 # Fix errors and restart
@@ -155,12 +174,7 @@ function main_menu() {
         echo "2) Remove Rivalz"
         echo "3) Fix errors and restart (Please open a new screen session)"
         echo "0) Exit"
-        
         read -p "Enter your choice (0-3): " choice
-        if [[ ! "$choice" =~ ^[0-3]$ ]]; then
-            echo "Invalid option, please enter a number from 0 to 3."
-            continue
-        fi
 
         case $choice in
             1)
@@ -176,8 +190,12 @@ function main_menu() {
                 echo "Exiting script..."
                 exit 0
                 ;;
+            *)
+                echo "Invalid option, please try again."
+                ;;
         esac
 
+        # Prompt the user to press any key to return to the main menu
         read -p "Operation completed, press any key to return to the main menu..."
     done
 }
