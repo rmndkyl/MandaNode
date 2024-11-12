@@ -3,9 +3,7 @@
 # Show animation
 echo "Showing Animation.."
 wget -O loader.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/loader.sh && chmod +x loader.sh && sed -i 's/\r$//' loader.sh && ./loader.sh
-rm -rf loader.sh
 wget -O logo.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/logo.sh && chmod +x logo.sh && sed -i 's/\r$//' logo.sh && ./logo.sh
-rm -rf logo.sh
 sleep 4
 
 # Define text formats
@@ -63,9 +61,10 @@ install_dependencies() {
         show_message "Foundry not found, installing..." "info"
         curl -L https://foundry.paradigm.xyz | bash
         source "$HOME/.bashrc"  # Reload bash profile to apply changes
+
+        # Ensure foundryup is in PATH
+        export PATH="$HOME/.foundry/bin:$PATH"
         foundryup  # Run foundryup to install Foundry and Forge
-        export PATH="$HOME/.foundry/bin:$PATH"  # Ensure Foundry binaries are in PATH
-        source "$HOME/.bashrc"  # Reload bash profile again to apply changes
         show_message "Foundry installation completed." "success"
     fi
 
