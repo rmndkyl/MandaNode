@@ -1,8 +1,11 @@
 #!/bin/bash
 
+# Show animation
 echo "Showing Animation.."
 wget -O loader.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/loader.sh && chmod +x loader.sh && sed -i 's/\r$//' loader.sh && ./loader.sh
+rm -rf loader.sh
 wget -O logo.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/logo.sh && chmod +x logo.sh && sed -i 's/\r$//' logo.sh && ./logo.sh
+rm -rf logo.sh
 sleep 4
 
 # Define text formats
@@ -12,26 +15,37 @@ SUCCESS_COLOR='\033[1;32m'
 ERROR_COLOR='\033[1;31m'
 INFO_COLOR='\033[1;36m'
 MENU_COLOR='\033[1;34m'
+HEADER_COLOR='\033[1;35m'
+PROMPT_COLOR='\033[1;33m'
+RESET_COLOR='\033[0m'
 
-# Custom status display function
+# Custom status display function with colorful borders
 show_message() {
     local message="$1"
     local status="$2"
+    local border="====================================================="
     case $status in
         "error")
-            echo -e "${ERROR_COLOR}${BOLD}❌ Error: ${message}${NORMAL}"
+            echo -e "${ERROR_COLOR}${BOLD}$border\n❌ Error: ${message}\n$border${RESET_COLOR}"
             ;;
         "info")
-            echo -e "${INFO_COLOR}${BOLD}ℹ️ Info: ${message}${NORMAL}"
+            echo -e "${INFO_COLOR}${BOLD}$border\nℹ️ Info: ${message}\n$border${RESET_COLOR}"
             ;;
         "success")
-            echo -e "${SUCCESS_COLOR}${BOLD}✅ Success: ${message}${NORMAL}"
+            echo -e "${SUCCESS_COLOR}${BOLD}$border\n✅ Success: ${message}\n$border${RESET_COLOR}"
             ;;
         *)
             echo -e "${message}"
             ;;
     esac
 }
+
+# Display header
+echo -e "${HEADER_COLOR}"
+echo "===================================="
+echo "       Unichain Deployment Script   "
+echo "===================================="
+echo -e "${RESET_COLOR}"
 
 # Locate script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -40,7 +54,7 @@ cd "$SCRIPT_DIR" || exit 1
 # Install necessary dependencies
 install_dependencies() {
     show_message "Checking and installing necessary dependencies..." "info"
-    apt update -y && apt install -y curl wget git
+    sudo apt update -y && sudo apt install -y curl wget git sudo
 
     # Check and install Foundry
     if command -v forge &> /dev/null; then
@@ -48,10 +62,10 @@ install_dependencies() {
     else
         show_message "Foundry not found, installing..." "info"
         curl -L https://foundry.paradigm.xyz | bash
-        source ~/.bashrc
-        foundryup
+        source "$HOME/.bashrc"  # Reload bash profile to apply changes
+        foundryup  # Run foundryup to install Foundry and Forge
         export PATH="$HOME/.foundry/bin:$PATH"  # Ensure Foundry binaries are in PATH
-        source ~/.bashrc  # Reload bash profile to apply changes
+        source "$HOME/.bashrc"  # Reload bash profile again to apply changes
         show_message "Foundry installation completed." "success"
     fi
 
@@ -167,12 +181,12 @@ EOF
 main_menu() {
     while true; do
         clear
-        echo -e "${MENU_COLOR}Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions${NORMAL}"
-        echo -e "${MENU_COLOR}${BOLD}============================ Unichain Contract Deployment ====================================${NORMAL}"
-        echo -e "${MENU_COLOR}Node community Telegram channel: https://t.me/layerairdrop${NORMAL}"
-        echo -e "${MENU_COLOR}Node community Telegram group: https://t.me/+UgQeEnnWrodiNTI1${NORMAL}"
-        echo -e "${MENU_COLOR}1. Deploy ERC-20 Token${NORMAL}"
-        echo -e "${MENU_COLOR}2. Exit${NORMAL}"
+        echo -e "${MENU_COLOR}Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions${RESET_COLOR}"
+        echo -e "${HEADER_COLOR}${BOLD}================ Unichain Contract Deployment =================${RESET_COLOR}"
+        echo -e "${MENU_COLOR}Node community Telegram channel: https://t.me/layerairdrop${RESET_COLOR}"
+        echo -e "${MENU_COLOR}Node community Telegram group: https://t.me/+UgQeEnnWrodiNTI1${RESET_COLOR}"
+        echo -e "${PROMPT_COLOR}1. Deploy ERC-20 Token${RESET_COLOR}"
+        echo -e "${PROMPT_COLOR}2. Exit${RESET_COLOR}"
         read -p "Enter an option (1-2): " OPTION
 
         case $OPTION in
