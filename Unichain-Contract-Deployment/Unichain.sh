@@ -60,7 +60,7 @@ install_dependencies() {
     else
         show_message "Foundry not found, installing..." "info"
         curl -L https://foundry.paradigm.xyz | bash
-        source "$HOME/.bashrc"  # Reload bash profile to apply changes
+        source "source /root/.bashrc"  # Reload bash profile to apply changes
 
         # Ensure foundryup is in PATH
         export PATH="$HOME/.foundry/bin:$PATH"
