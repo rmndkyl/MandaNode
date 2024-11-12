@@ -1,16 +1,25 @@
 #!/bin/bash
 
-echo "Showing Animation.."
-wget -O loader.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/loader.sh && chmod +x loader.sh && sed -i 's/\r$//' loader.sh && ./loader.sh
-wget -O logo.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/logo.sh && chmod +x logo.sh && sed -i 's/\r$//' logo.sh && ./logo.sh
-sleep 4
+# Define colors for better readability
+GREEN="\033[0;32m"
+RED="\033[0;31m"
+BLUE="\033[0;34m"
+YELLOW="\033[1;33m"
+NC="\033[0m"  # No Color
 
 # Script save path
 SCRIPT_PATH="$HOME/Nillion.sh"
 
-# Ensure the script is run with root privileges
+echo -e "${BLUE}Showing Animation...${NC}"
+wget -O loader.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/loader.sh && chmod +x loader.sh && sed -i 's/\r$//' loader.sh && ./loader.sh
+rm -rf loader.sh
+wget -O logo.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/logo.sh && chmod +x logo.sh && sed -i 's/\r$//' logo.sh && ./logo.sh
+rm -rf logo.sh
+sleep 4
+
+# Ensure the script is run as root
 if [ "$(id -u)" -ne "0" ]; then
-  echo "Please run this script as root or using sudo"
+  echo -e "${RED}Please run this script as root or with sudo${NC}"
   exit 1
 fi
 
@@ -18,28 +27,21 @@ fi
 function main_menu() {
     while true; do
         clear
-        echo "██╗░░░░░░█████╗░██╗░░░██╗███████╗██████╗░  ░█████╗░██╗██████╗░██████╗░██████╗░░█████╗░██████╗░"
-        echo "██║░░░░░██╔══██╗╚██╗░██╔╝██╔════╝██╔══██╗  ██╔══██╗██║██╔══██╗██╔══██╗██╔══██╗██╔══██╗██╔══██╗"
-        echo "██║░░░░░███████║░╚████╔╝░█████╗░░██████╔╝  ███████║██║██████╔╝██║░░██║██████╔╝██║░░██║██████╔╝"
-        echo "██║░░░░░██╔══██║░░╚██╔╝░░██╔══╝░░██╔══██╗  ██╔══██║██║██╔══██╗██║░░██║██╔══██╗██║░░██║██╔═══╝░"
-        echo "███████╗██║░░██║░░░██║░░░███████╗██║░░██║  ██║░░██║██║██║░░██║██████╔╝██║░░██║╚█████╔╝██║░░░░░"
-        echo "╚══════╝╚═╝░░╚═╝░░░╚═╝░░░╚══════╝╚═╝░░╚═╝  ╚═╝░░╚═╝╚═╝╚═╝░░╚═╝╚═════╝░╚═╝░░╚═╝░╚════╝░╚═╝░░░░░"
-        echo "Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions"
-        echo "============================ Nillion Verifier Setup ==================================="
-        echo "Node community Telegram channel: https://t.me/layerairdrop"
-        echo "Node community Telegram group: https://t.me/+UgQeEnnWrodiNTI1"
-        echo "To exit the script, press Ctrl+C"
-        echo "Please select an action:"
-        echo "1) Install node"
-        echo "2) View logs"
-        echo "3) Remove node"
-        echo "4) Change RPC and restart node"
-        echo "5) View public_key and account_id"
-        echo "6) Update node script"
-        echo "7) Migrate validator (for users before 9.24)"
-        echo "8) Exit"
+        echo -e "${YELLOW}Script and tutorial by @rmndkyl on Telegram. Open-source; do not pay for this!${NC}"
+        echo -e "${BLUE}====================== Nillion Verifier Setup ======================${NC}"
+        echo -e "${GREEN}Node community channel: https://t.me/layerairdrop${NC}"
+        echo -e "${GREEN}Node community group: https://t.me/+UgQeEnnWrodiNTI1${NC}"
+        echo -e "${YELLOW}To exit the script, press Ctrl+C.${NC}"
+        echo -e "${GREEN}Select an option:${NC}"
+        echo -e "1) Install Node"
+        echo -e "2) Query Logs (use docker ps to check ID first)"
+        echo -e "3) Delete Node"
+        echo -e "4) Change RPC and Restart Node"
+        echo -e "5) View public_key and account_id"
+        echo -e "6) Migrate Validator (for users before 9.24)"
+        echo -e "7) Exit"
 
-        read -p "Enter your choice (1, 2, 3, 4, 5, 6, 7, 8): " choice
+        read -p "Enter an option (1-7): " choice
 
         case $choice in
             1) install_node ;;
@@ -47,185 +49,151 @@ function main_menu() {
             3) delete_node ;;
             4) change_rpc ;;
             5) view_credentials ;;
-            6) update_script ;;
-            7) migrate_validator ;;
-            8) echo "Exiting script."; exit 0 ;;
-            *) echo "Invalid option, please enter 1, 2, 3, 4, 5, 6, 7, or 8." ;;
+            6) migrate_validator ;;
+            7) echo -e "${BLUE}Exiting script.${NC}"; exit 0 ;;
+            *) echo -e "${RED}Invalid option, please enter a number between 1 and 7.${NC}" ;;
         esac
     done
 }
 
-# Migrate validator function
+# Migrate Validator function
 function migrate_validator() {
-    echo "Stopping and removing Docker container nillion_verifier..."
-    docker stop nillion_verifier
-    docker rm nillion_verifier
+    echo -e "${YELLOW}Stopping and removing Docker container nillion_verifier...${NC}"
+    docker stop nillion_verifier && docker rm nillion_verifier
 
-    echo "Migrating validator..."
-    docker run -v ./nillion/accuser:/var/tmp nillion/verifier:v1.0.1 verify --rpc-endpoint "https://nillion-testnet-rpc.polkachu.com"
+    echo -e "${BLUE}Migrating Validator...${NC}"
+    
+    # Create a new screen session and run the Docker command inside it
+    screen -S Nillion -dm bash -c "docker run -v ./nillion/accuser:/var/tmp nillion/verifier:v1.0.1 verify --rpc-endpoint 'https://nillion-testnet-rpc.polkachu.com'"
+
+    echo -e "${GREEN}Validator is running in screen session 'Nillion'. Use Ctrl+A+D to detach, and 'screen -r Nillion' to view.${NC}"
 }
 
-# Install node function
+# Install Node function
 function install_node() {
-    # Check if Docker is installed
     if command -v docker &> /dev/null; then
-        echo "Docker is already installed."
+        echo -e "${GREEN}Docker is already installed.${NC}"
     else
-        echo "Docker is not installed, installing..."
-
-        # Update the package list
+        echo -e "${YELLOW}Docker not found, installing...${NC}"
         apt-get update
-
-        # Install necessary packages to allow apt to use repositories over HTTPS
         apt-get install -y apt-transport-https ca-certificates curl software-properties-common
-
-        # Add Docker's official GPG key
         curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
-
-        # Add Docker repository
         add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-
-        # Update the package list
         apt-get update
-
-        # Install Docker
         apt-get install -y docker-ce
-
-        # Start and enable Docker service
         systemctl start docker
         systemctl enable docker
-
-        echo "Docker installation complete."
+        echo -e "${GREEN}Docker installation completed.${NC}"
     fi
 
-    # Pull the specified Docker image
-    echo "Pulling image nillion/verifier:v1.0.1..."
+    echo -e "${YELLOW}Pulling Docker image nillion/verifier:v1.0.1...${NC}"
     docker pull nillion/verifier:v1.0.1
 
-    # Install jq
-    echo "Installing jq..."
+    echo -e "${YELLOW}Installing jq...${NC}"
     apt-get install -y jq
-    echo "jq installation complete."
+    echo -e "${GREEN}jq installed.${NC}"
 
-    # Initialize the directory and run Docker container
-    echo "Initializing configuration..."
+    echo -e "${BLUE}Initializing configuration...${NC}"
     mkdir -p nillion/verifier
     docker run -v ./nillion/verifier:/var/tmp nillion/verifier:v1.0.1 initialise
-    echo "Initialization complete."
+    echo -e "${GREEN}Initialization completed.${NC}"
 
-    # Prompt user to save important information
-    echo "Initialization complete. Please check the following files for important information:"
-    echo "account_id and public_key are saved in the ~/nillion/verifier directory."
-    echo "Make sure to save this information as it is important for future operations."
-
-    echo "You can view the saved file contents with these commands:"
-    echo "cat ~/nillion/verifier/account_id"
-    echo "cat ~/nillion/verifier/public_key"
-
-    echo "Make sure to securely save this information and avoid sharing it."
-
-    # Wait for user to press any key to continue
+    echo -e "${YELLOW}Please save the account_id and public_key located in ~/nillion/verifier for future use.${NC}"
     read -p "Press any key to continue..."
 
-    # Use a fixed RPC link
     selected_rpc_url="https://nillion-testnet-rpc.polkachu.com"
-
-    # Query sync information
-    echo "Querying sync information from $selected_rpc_url..."
+    echo -e "${BLUE}Checking sync status from $selected_rpc_url...${NC}"
     sync_info=$(curl -s "$selected_rpc_url/status" | jq .result.sync_info)
-
-    # Display sync information
-    echo "Sync information:"
+    echo -e "${YELLOW}Sync status:${NC}"
     echo "$sync_info"
 
-    # Prompt user if the node is synced
-    read -p "Is the node synced? (Enter 'yes' if synced, 'no' if not): " sync_status
-
+    read -p "Is the node synchronized? (yes/no): " sync_status
     if [ "$sync_status" = "yes" ]; then
-        # Run the node
-        echo "Running the node..."
-        docker run -v ./nillion/verifier:/var/tmp nillion/verifier:v1.0.1 verify --rpc-endpoint "https://nillion-testnet-rpc.polkachu.com"
-        echo "Node is running."
+        echo -e "${GREEN}Starting node...${NC}"
+        docker run -v ./nillion/verifier:/var/tmp nillion/verifier:v1.0.1 verify --rpc-endpoint "$selected_rpc_url"
+        echo -e "${GREEN}Node is running.${NC}"
     else
-        echo "Node not synced. The script will exit."
+        echo -e "${RED}Node is not synchronized. Exiting.${NC}"
         exit 1
     fi
-    
-    # Wait for user to press any key to return to the main menu
+
     read -p "Press any key to return to the main menu..."
 }
 
-# Function to query logs
+# Query Logs function
 function query_logs() {
-    # View Docker container logs
-    echo "Fetching logs for nillion_verifier container..."
+    echo -e "${YELLOW}Please enter the container ID for log query (use 'docker ps' to check ID):${NC}"
+    read -p "Container ID: " container_id
 
-    # Check if the container exists
-    if [ "$(docker ps -q -f name=nillion_verifier)" ]; then
-        docker logs -f nillion_verifier --tail 100
+    if [ "$(docker ps -q -f id=$container_id)" ]; then
+        echo -e "${BLUE}Querying logs for container ID $container_id...${NC}"
+        docker logs -f $container_id --tail 100
     else
-        echo "No running nillion_verifier container found."
+        echo -e "${RED}No running container found with ID $container_id.${NC}"
     fi
 
-    # Wait for the user to press any key to return to the main menu
     read -p "Press any key to return to the main menu..."
 }
 
-# Function to delete the node
+# Delete Node function
 function delete_node() {
-    echo "Backing up the /root/nillion/verifier directory..."
-    tar -czf /root/nillion/verifier_backup_$(date +%F).tar.gz /root/nillion/verifier
-    echo "Backup complete."
+    echo -e "${YELLOW}Backing up /root/nillion/verifier directory...${NC}"
+    tar -czf /root/nillion/verifier_backup_$(date +%F).tar.gz /root/nillion/verifier && echo -e "${GREEN}Backup completed.${NC}"
 
-    echo "Stopping and removing Docker container nillion_verifier..."
-    docker stop nillion_verifier
-    docker rm nillion_verifier
-    echo "Node has been deleted."
+    echo -e "${YELLOW}Stopping and removing Docker container nillion_verifier...${NC}"
+    docker stop nillion_verifier && docker rm nillion_verifier && echo -e "${GREEN}Node has been deleted successfully.${NC}"
 
-    # Wait for the user to press any key to return to the main menu
     read -p "Press any key to return to the main menu..."
 }
 
-# Function to change RPC
+# Change RPC function
 function change_rpc() {
-    # Use a fixed RPC link
-    new_rpc_url="https://nillion-testnet-rpc.polkachu.com"
+    echo -e "${BLUE}Select the RPC link to use:${NC}"
+    echo -e "1) ${YELLOW}https://testnet-nillion-rpc.lavenderfive.com${NC}"
+    echo -e "2) ${YELLOW}https://nillion-testnet-rpc.polkachu.com${NC}"
+    echo -e "3) ${YELLOW}https://nillion-testnet.rpc.kjnodes.com${NC}"
 
-    echo "Stopping and removing the existing Docker container nillion_verifier..."
-    docker stop nillion_verifier
-    docker rm nillion_verifier
+    read -p "Enter a number (1-3): " choice
 
-    echo "Running the new Docker container..."
-    docker run -v ./nillion/verifier:/var/tmp nillion/verifier:v1.0.1 verify --rpc-endpoint "$new_rpc_url"
+    case $choice in
+        1)
+            new_rpc_url="https://testnet-nillion-rpc.lavenderfive.com"
+            ;;
+        2)
+            new_rpc_url="https://nillion-testnet-rpc.polkachu.com"
+            ;;
+        3)
+            new_rpc_url="https://nillion-testnet.rpc.kjnodes.com"
+            ;;
+        *)
+            echo -e "${RED}Invalid choice, please try again.${NC}"
+            return
+            ;;
+    esac
 
-    echo "Node has been updated to the new RPC."
+    echo -e "${YELLOW}Stopping and removing existing Docker container nillion_verifier...${NC}"
+    docker stop nillion_verifier && docker rm nillion_verifier
 
-    # Wait for the user to press any key to return to the main menu
+    echo -e "${BLUE}Starting a new Docker container with the updated RPC URL...${NC}"
+    docker run -v ./nillion/verifier:/var/tmp nillion/verifier:v1.0.1 verify --rpc-endpoint "$new_rpc_url" && echo -e "${GREEN}Node has been updated to use RPC: $new_rpc_url.${NC}"
+    
     read -p "Press any key to return to the main menu..."
 }
 
-# Function to update the script
-function update_script() {
-    # Pull the image
-    echo "Pulling image nillion/verifier:v1.0.1..."
-    docker pull nillion/verifier:v1.0.1
-
-    echo "Update complete."
-
-    # Wait for the user to press any key to return to the main menu
-    read -p "Press any key to return to the main menu..."
-}
-
-# Function to view credentials
+# View Credentials function
 function view_credentials() {
-    echo "account_id and public_key are saved in the ~/nillion/accuser directory."
-    echo "You can view the saved files using the following commands:"
-    echo "cat ~/nillion/verifier/account_id"
-    echo "cat ~/nillion/verifier/public_key"
+    echo -e "${BLUE}Credentials are saved in the /root/nillion/verifier/credentials.json file.${NC}"
+    
+    if [ -f /root/nillion/verifier/credentials.json ]; then
+        echo -e "${YELLOW}Credential Information:${NC}"
+        cat /root/nillion/verifier/credentials.json
+        echo -e "${YELLOW}--------------------------${NC}"
+    else
+        echo -e "${RED}Credentials file not found! Ensure that the node is properly initialized.${NC}"
+    fi
 
-    # Wait for the user to press any key to return to the main menu
     read -p "Press any key to return to the main menu..."
 }
 
-# Start the main menu
+# Start Main Menu
 main_menu
