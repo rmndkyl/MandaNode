@@ -183,7 +183,7 @@ main_menu() {
                 ;;
             7) 
                 echo -e "${CYAN}Checking logs for node-op-node...${NC}"
-                docker logs -f node-op-node
+                docker logs -f node-op-node-1
                 ;;
             8) 
                 echo -e "${CYAN}Displaying generated wallet backup...${NC}"
