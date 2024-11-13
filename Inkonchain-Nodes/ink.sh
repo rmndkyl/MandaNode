@@ -139,13 +139,13 @@ node_maintenance() {
 # Main menu function
 main_menu() {
     while true; do
-		echo -e "${GREEN}Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions${RESET}"
+	echo -e "${GREEN}Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions${RESET}"
         echo -e "${CYAN}----------------------------------${NC}"
         echo -e "${CYAN}       Ink Node Setup Menu        ${NC}"
         echo -e "${CYAN}----------------------------------${NC}"
-		echo -e "${GREEN}Node community Telegram channel: https://t.me/layerairdrop${RESET}"
-		echo -e "${GREEN}Node community Telegram group: https://t.me/+UgQeEnnWrodiNTI1${RESET}"
-		echo -e "${GREEN}Please select an option:${RESET}"
+	echo -e "${GREEN}Node community Telegram channel: https://t.me/layerairdrop${RESET}"
+	echo -e "${GREEN}Node community Telegram group: https://t.me/+UgQeEnnWrodiNTI1${RESET}"
+	echo -e "${GREEN}Please select an option:${RESET}"
         echo -e "1. Check Port Availability"
         echo -e "2. Install Dependencies (Prerequisites and Docker)"
         echo -e "3. Install and Configure Ink Node"
