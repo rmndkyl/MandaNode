@@ -135,7 +135,7 @@ node_maintenance() {
             ;;
         2)
             echo -e "${CYAN}Shutting down the node...${NC}"
-            sudo docker-compose -f "$HOME/unichain-node/docker-compose.yml" down
+            sudo docker-compose -f "$HOME/InkNode/node/docker-compose.yml" down
             echo -e "${GREEN}Node shut down.${NC}"
             ;;
         3)
@@ -164,7 +164,10 @@ main_menu() {
         echo -e "3. Install and Configure Ink Node"
         echo -e "4. Run and Manage Ink Node"
         echo -e "5. Node Maintenance (Restart, Shutdown, Delete)"
-        echo -e "6. Exit"
+        echo -e "6. Check Logs for node-op-geth"
+        echo -e "7. Check Logs for node-op-node"
+        echo -e "8. Backup Your Generated Wallet"
+        echo -e "9. Exit"
         echo -e "${CYAN}----------------------------------${NC}"
         read -p "Choose an option: " choice
 
@@ -174,7 +177,19 @@ main_menu() {
             3) setup_ink_node ;;
             4) manage_ink_node ;;
             5) node_maintenance ;;
-            6) exit 0 ;;
+            6) 
+                echo -e "${CYAN}Checking logs for node-op-geth...${NC}"
+                docker logs -f node-op-geth-1
+                ;;
+            7) 
+                echo -e "${CYAN}Checking logs for node-op-node...${NC}"
+                docker logs -f node-op-node
+                ;;
+            8) 
+                echo -e "${CYAN}Displaying generated wallet backup...${NC}"
+                cat ~/InkNode/node/var/secrets/jwt.txt
+                ;;
+            9) exit 0 ;;
             *) echo -e "${RED}Invalid option. Please try again.${NC}" ;;
         esac
     done
