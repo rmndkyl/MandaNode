@@ -1,10 +1,11 @@
 #!/bin/bash
 
-# Define Colors for Better Output
+# Define Colors and Bold
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
+BOLD='\033[1m'
 RESET='\033[0m'
 
 echo "Showing Animation.."
@@ -17,22 +18,22 @@ sleep 4
 # Function to show the menu
 show_menu() {
     clear
-    echo -e "${GREEN}Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions${RESET}"
     echo -e "${GREEN}${BOLD}============================ Unichain Node Automation ====================================${RESET}"
+    echo -e "${GREEN}Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions${RESET}"
     echo -e "${GREEN}Node community Telegram channel: https://t.me/layerairdrop${RESET}"
     echo -e "${GREEN}Node community Telegram group: https://t.me/+UgQeEnnWrodiNTI1${RESET}"
     echo -e "${GREEN}Please select an option:${RESET}"
     echo
-    echo -e "${GREEN}1.${RESET} Install node"
-    echo -e "${GREEN}2.${RESET} Restart node"
-    echo -e "${GREEN}3.${RESET} Check node"
-    echo -e "${GREEN}4.${RESET} View operational node logs"
-    echo -e "${GREEN}5.${RESET} View execution client logs"
-    echo -e "${GREEN}6.${RESET} View Both Logs (Client+Node)"
-    echo -e "${GREEN}7.${RESET} Disconnect node"
-    echo -e "${GREEN}0.${RESET} Exit"
+    echo -e "${BLUE}1.${RESET} Install node"
+    echo -e "${BLUE}2.${RESET} Restart node"
+    echo -e "${BLUE}3.${RESET} Check node"
+    echo -e "${BLUE}4.${RESET} View operational node logs"
+    echo -e "${BLUE}5.${RESET} View execution client logs"
+    echo -e "${BLUE}6.${RESET} View Both Logs (Client+Node)"
+    echo -e "${BLUE}7.${RESET} Disconnect node"
+    echo -e "${RED}0.${RESET} Exit"
     echo
-    echo -e "${GREEN}Enter your choice [0-7]: ${RESET}"
+    echo -ne "${YELLOW}Enter your choice [0-7]: ${RESET}"
     read -p " " choice
 }
 
@@ -65,6 +66,11 @@ install_node() {
         fi
 
         # Clone repository and configure
+        if ! command -v git &> /dev/null; then
+            echo -e "${RED}Git is not installed. Please install git to continue.${RESET}"
+            return
+        fi
+
         git clone https://github.com/Uniswap/unichain-node
         cd unichain-node || { echo -e "${RED}Failed to enter unichain-node directory.${RESET}"; return; }
 
@@ -77,10 +83,9 @@ install_node() {
         fi
 
         sudo docker-compose up -d
-
         echo -e "${GREEN}Node successfully installed.${RESET}"
     fi
-    read -p "Press Enter to return to the main menu..."
+    sleep 2
 }
 
 # Restart node
@@ -90,7 +95,7 @@ restart_node() {
     sudo docker-compose -f "${HOMEDIR}/unichain-node/docker-compose.yml" down
     sudo docker-compose -f "${HOMEDIR}/unichain-node/docker-compose.yml" up -d
     echo -e "${GREEN}Node restarted.${RESET}"
-    read -p "Press Enter to return to the main menu..."
+    sleep 2
 }
 
 # Check node status
@@ -103,28 +108,28 @@ check_node() {
     else
         echo -e "${GREEN}Node response:${RESET} $response"
     fi
-    read -p "Press Enter to return to the main menu..."
+    sleep 2
 }
 
 # Check logs for operational node
 check_logs_op_node() {
     echo -e "${YELLOW}Retrieving logs for unichain-node-op-node-1...${RESET}"
     sudo docker logs unichain-node-op-node-1
-    read -p "Press Enter to return to the main menu..."
+    sleep 2
 }
 
 # Check logs for execution client
 check_logs_execution_client() {
     echo -e "${YELLOW}Retrieving logs for unichain-node-execution-client-1...${RESET}"
     sudo docker logs unichain-node-execution-client-1
-    read -p "Press Enter to return to the main menu..."
+    sleep 2
 }
 
 # Check both logs
 check_all_logs() {
     echo -e "${YELLOW}Checking Logs from all Unichain Docker...${RESET}"
     cd $HOME/unichain-node && docker-compose logs -f
-    read -p "Press Enter to return to the main menu..."
+    sleep 2
 }
 
 # Disable or disconnect node
@@ -133,12 +138,12 @@ disable_node() {
     HOMEDIR="$HOME"
     sudo docker-compose -f "${HOMEDIR}/unichain-node/docker-compose.yml" down
     echo -e "${GREEN}Node disconnected.${RESET}"
-    read -p "Press Enter to return to the main menu..."
+    sleep 2
 }
 
 # Exit confirmation
 exit_script() {
-    echo -e "${YELLOW}Are you sure you want to exit? [y/n]${RESET}"
+    echo -ne "${YELLOW}Are you sure you want to exit? [y/n]${RESET} "
     read -p " " confirm
     if [[ "$confirm" =~ ^[Yy]$ ]]; then
         echo -e "${GREEN}Exiting script...${RESET}"
@@ -158,6 +163,6 @@ while true; do
         6) check_all_logs ;;
         7) disable_node ;;
         0) exit_script ;;
-        *) echo -e "${RED}Invalid choice. Please try again.${RESET}"; read -p "Press Enter to continue..." ;;
+        *) echo -e "${RED}Invalid choice. Please try again.${RESET}"; sleep 2 ;;
     esac
 done
