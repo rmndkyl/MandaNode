@@ -129,7 +129,7 @@ EOF
            $HOME/.zrchain/config/app.toml
 
     # Download the latest snapshot and extract it
-    curl -L https://snapshot.node9x.com/zenrock_testnet.tar.lz4 | tar -Ilz4 -xf - -C $HOME/.zrchain
+    curl -L https://snapshots.kjnodes.com/zenrock-testnet/snapshot_latest.tar.lz4 | tar -Ilz4 -xf - -C $HOME/.zrchain
     [[ -f $HOME/.zrchain/data/upgrade-info.json ]] && cp $HOME/.zrchain/data/upgrade-info.json $HOME/.zrchain/cosmovisor/genesis/upgrade-info.json
 
     # Start the service
