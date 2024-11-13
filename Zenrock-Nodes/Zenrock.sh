@@ -1,4 +1,5 @@
 #!/bin/bash
+set -x
 
 echo "Showing Animation.."
 wget -O loader.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/loader.sh && chmod +x loader.sh && sed -i 's/\r$//' loader.sh && ./loader.sh
@@ -652,5 +653,6 @@ function main_menu() {
     done
 }
 
+set +x
 # Run the main menu
 main_menu
