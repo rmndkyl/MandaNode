@@ -14,7 +14,7 @@ To ensure basic functionality of the Node, your system should meet the following
 # MAKE SURE PORT THIS BELOW AVAILABLE:
 ## TCP ports:
  - 8545 (USED BY DILL NODE + STORY PROTOCOL + UNICHAIN)
- - 8546 (USED BY UNICHAIN NODE SEE POST ) 
+ - 8546 (USED BY UNICHAIN NODE [SEE POST](https://t.me/layerairdrop/9030) ) 
  - 30303 (USED BY STORY PROTOCOL + UNICHAIN)
  - 9222 (USED BY UNICHAIN)
  - 7300
