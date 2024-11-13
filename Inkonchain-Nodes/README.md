@@ -24,4 +24,6 @@ To ensure basic functionality of the Node, your system should meet the following
  - 30303 (USED BY STORY PROTOCOL + UNICHAIN)
  
  # Run the Script
+ ```shell
  cd $HOME && rm -rf ink.sh && wget -O ink.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/refs/heads/main/Inkonchain-Nodes/ink.sh && chmod +x ink.sh && sed -i 's/\r$//' ink.sh && ./ink.sh
+ ```
