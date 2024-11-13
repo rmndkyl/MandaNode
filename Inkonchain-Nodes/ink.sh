@@ -17,20 +17,32 @@ sleep 4
 # Required TCP and UDP ports
 TCP_PORTS=(8545 8546 30303 9222 7300 6060)
 UDP_PORTS=(30303)
+# Alternative Ports for TCP and UDP
+ALT_TCP_PORTS=(8550 8552 30304 9223 7301 6061)
+ALT_UDP_PORTS=(30304)
 
 # Check if ports are available
 check_ports() {
     echo -e "${CYAN}Checking port availability...${NC}"
-    for port in "${TCP_PORTS[@]}"; do
+    for i in "${!TCP_PORTS[@]}"; do
+        port=${TCP_PORTS[$i]}
+        alt_port=${ALT_TCP_PORTS[$i]}
+
         if sudo lsof -iTCP:$port -sTCP:LISTEN &>/dev/null; then
-            echo -e "${YELLOW}⚠️  TCP Port $port is already in use.${NC}"
+            echo -e "${YELLOW}⚠️  TCP Port $port is in use. Switching to alternative port $alt_port.${NC}"
+            TCP_PORTS[$i]=$alt_port
         else
             echo -e "${GREEN}✅ TCP Port $port is available.${NC}"
         fi
     done
-    for port in "${UDP_PORTS[@]}"; do
+
+    for i in "${!UDP_PORTS[@]}"; do
+        port=${UDP_PORTS[$i]}
+        alt_port=${ALT_UDP_PORTS[$i]}
+
         if sudo lsof -iUDP:$port &>/dev/null; then
-            echo -e "${YELLOW}⚠️  UDP Port $port is already in use.${NC}"
+            echo -e "${YELLOW}⚠️  UDP Port $port is in use. Switching to alternative port $alt_port.${NC}"
+            UDP_PORTS[$i]=$alt_port
         else
             echo -e "${GREEN}✅ UDP Port $port is available.${NC}"
         fi
@@ -65,17 +77,18 @@ setup_ink_node() {
     mkdir -p "$HOME/InkNode" && cd "$HOME/InkNode"
     if git clone https://github.com/inkonchain/node; then
         cd node
+
+        # Write .env.ink-sepolia file with updated L1 RPC URLs
         cat <<EOL > .env.ink-sepolia
 L1_RPC_URL="https://ethereum-sepolia-rpc.publicnode.com"
 L1_BEACON_URL="https://ethereum-sepolia-beacon-api.publicnode.com"
 EOL
-        echo -e "${GREEN}.env.ink-sepolia file created.${NC}"
-        
-        # Configure ports in entrypoint.sh
-        read -p "Enter alternative port for op-geth (default 8551): " op_geth_port
-        op_geth_port=${op_geth_port:-8551}
-        sed -i "s/8551/$op_geth_port/g" "$HOME/InkNode/node/op-node/entrypoint.sh"
-        
+
+        # Update entrypoint.sh with available ports
+        sed -i "s/8551/${TCP_PORTS[0]}/g" "$HOME/InkNode/node/op-node/entrypoint.sh"
+        sed -i "s/30303/${TCP_PORTS[2]}/g" "$HOME/InkNode/node/op-node/entrypoint.sh"
+        sed -i "s/30303/${UDP_PORTS[0]}/g" "$HOME/InkNode/node/op-node/entrypoint.sh"
+
         echo -e "${GREEN}Ink Node installed and ports configured.${NC}"
     else
         echo -e "${RED}Failed to clone Ink Node repository.${NC}"
@@ -139,13 +152,13 @@ node_maintenance() {
 # Main menu function
 main_menu() {
     while true; do
-	echo -e "${GREEN}Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions${RESET}"
+		echo -e "${GREEN}Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions${RESET}"
         echo -e "${CYAN}----------------------------------${NC}"
         echo -e "${CYAN}       Ink Node Setup Menu        ${NC}"
         echo -e "${CYAN}----------------------------------${NC}"
-	echo -e "${GREEN}Node community Telegram channel: https://t.me/layerairdrop${RESET}"
-	echo -e "${GREEN}Node community Telegram group: https://t.me/+UgQeEnnWrodiNTI1${RESET}"
-	echo -e "${GREEN}Please select an option:${RESET}"
+		echo -e "${GREEN}Node community Telegram channel: https://t.me/layerairdrop${RESET}"
+		echo -e "${GREEN}Node community Telegram group: https://t.me/+UgQeEnnWrodiNTI1${RESET}"
+		echo -e "${GREEN}Please select an option:${RESET}"
         echo -e "1. Check Port Availability"
         echo -e "2. Install Dependencies (Prerequisites and Docker)"
         echo -e "3. Install and Configure Ink Node"
