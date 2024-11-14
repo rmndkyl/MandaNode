@@ -474,7 +474,7 @@ function import_sidecar_config() {
     echo "Importing sidecar configuration and keys..."
 
     # Define source and destination paths
-    src_dir="/root/zenrock-validators/configs"
+    src_dir="/root/zenrock-validators/scaffold_setup/configs"
     dest_dir="$HOME/.zrchain/sidecar"
 
     # Check if source config files exist before copying
