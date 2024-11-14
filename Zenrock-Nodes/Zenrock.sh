@@ -50,7 +50,7 @@ function deploy_script() {
 
     # Download the binary
     mkdir -p $HOME/.zrchain/cosmovisor/genesis/bin
-    wget -O $HOME/.zrchain/cosmovisor/genesis/bin/zenrockd https://releases.gardia.zenrocklabs.io/zenrockd-4.9.3
+    wget -O $HOME/.zrchain/cosmovisor/genesis/bin/zenrockd https://releases.gardia.zenrocklabs.io/zenrockd-4.7.1
     chmod +x $HOME/.zrchain/cosmovisor/genesis/bin/zenrockd
 
     # Create symbolic links
