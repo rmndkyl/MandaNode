@@ -390,23 +390,13 @@ function set_operator_config() {
     # Set variables
     EIGEN_OPERATOR_CONFIG="$HOME/.zrchain/sidecar/eigen_operator_config.yaml"
     read -p "Enter the testnet Holesky endpoint: " TESTNET_HOLESKY_ENDPOINT
-    read -p "Enter the Mainnet ETH endpoint: " MAINNET_ENDPOINT
+    read -p "Enter the Ethereum mainnet endpoint: " MAINNET_ENDPOINT  # Allow user to enter mainnet endpoint
     OPERATOR_VALIDATOR_ADDRESS_TBD=$(zenrockd keys show wallet --bech val -a)
     OPERATOR_ADDRESS_TBU=$ecdsa_address
     ETH_RPC_URL=$TESTNET_HOLESKY_ENDPOINT  # Set to match TESTNET_HOLESKY_ENDPOINT
     read -p "Enter the testnet Holesky WebSocket URL: " ETH_WS_URL
     ECDSA_KEY_PATH=$ecdsa_output_file
     BLS_KEY_PATH=$bls_output_file
-
-    # Ensure the necessary configuration files exist
-    if [ ! -f "$HOME/zenrock-validators/configs/eigen_operator_config.yaml" ]; then
-        echo "Error: eigen_operator_config.yaml file not found in the expected directory."
-        return
-    fi
-    if [ ! -f "$HOME/zenrock-validators/configs/config.yaml" ]; then
-        echo "Error: config.yaml file not found in the expected directory."
-        return
-    fi
 
     # Copy initial configuration files
     cp $HOME/zenrock-validators/configs/eigen_operator_config.yaml $HOME/.zrchain/sidecar/
@@ -426,11 +416,6 @@ function set_operator_config() {
     sed -i "s|BLS_KEY_PATH|$BLS_KEY_PATH|g" "$HOME/.zrchain/sidecar/eigen_operator_config.yaml"
 
     # Download and set permissions for the validator sidecar binary
-    if [ -f "$HOME/.zrchain/sidecar/bin/validator_sidecar" ]; then
-        echo "Stopping existing sidecar service before updating binary..."
-        sudo systemctl stop zenrock-testnet-sidecar.service
-    fi
-
     wget -O $HOME/.zrchain/sidecar/bin/validator_sidecar https://releases.gardia.zenrocklabs.io/validator_sidecar-1.2.3
     chmod +x $HOME/.zrchain/sidecar/bin/validator_sidecar
 
@@ -439,6 +424,7 @@ function set_operator_config() {
 [Unit]
 Description=Validator Sidecar
 After=network-online.target
+
 [Service]
 User=$USER
 ExecStart=$HOME/.zrchain/sidecar/bin/validator_sidecar
