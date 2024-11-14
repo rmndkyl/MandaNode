@@ -1,9 +1,7 @@
 {
-    "name": "LayerAirdrop",
-    "website": "https://t.me/layerairdrop",
-    "twitter": "https://x.com/mandayy72",
-    "logo": "https://raw.githubusercontent.com/rmndkyl/MandaNode/main/eOracle-Nodes/LOGO.png",
-    "description": "Node Contributor & Testnet Enthusiast",
-    "country": "Decentralized",
-    "email": "layerairdrop@gmail.com"
+  "name": "LayerAirdrop",
+  "website": "https://t.me/layerairdrop",
+  "description": "Node Contributor & Testnet Enthusiast",
+  "logo": "https://raw.githubusercontent.com/rmndkyl/MandaNode/main/eOracle-Nodes/LOGO.png",
+  "twitter": "https://x.com/mandayy72"
 }
