@@ -143,8 +143,16 @@ install_dria_node() {
 run_dria_node() {
     display_status "Starting Dria node..." "info"
     cd $HOME/dkn-compute-node
-    ./dkn-compute-launcher || { display_status "Dria node startup failed, please check the error and try again." "error"; return; }
+    screen -dmS dria ./dkn-compute-launcher || { display_status "Dria node startup failed, please check the error and try again." "error"; return; }
     display_status "Dria node started successfully." "success"
+    # Create a new screen session and run ./dkn-compute-launcher 
+    echo "Creating a new screen session and running ./dkn-compute-launcher..."
+    
+    echo "Operation completed."
+    echo "dkn-compute-launcher is running in the 'dria' screen session."
+    echo "Use the 'screen -r dria' command to check the running status."
+    # Prompt the user to press any key to return to the main menu
+    read -n 1 -s -r -p "Press any key to return to the main menu..."
 }
 
 # Uninstall Dria node and Ollama
