@@ -19,5 +19,5 @@ screen -S cysic-verifier
 
 # One-click Installation
 ```shell
-wget -O cysic.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Cysic-Nodes/cysic.sh && chmod +x cysic.sh && sed -i 's/\r$//' cysic.sh && ./cysic.sh
+cd $HOME && rm -rf cysic.sh && wget -O cysic.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Cysic-Nodes/cysic.sh && chmod +x cysic.sh && sed -i 's/\r$//' cysic.sh && ./cysic.sh
 ```
