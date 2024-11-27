@@ -16,5 +16,5 @@ Network Bandwidth | 100MB/s
 Open your terminal and execute the following command to download and run the script:
 
    ```sh
-   cd $HOME && rm -rf hyperlane.sh && wget -O hyperlane.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Hyperlane-Nodes/hyperlane.sh && chmod +x hyperlanehyperlanehyperlane.sh && sed -i 's/\r$//' hyperlanehyperlane.sh && ./hyperlane.sh
+   cd $HOME && rm -rf hyperlane.sh && wget -O hyperlane.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Hyperlane-Nodes/hyperlane.sh && chmod +x hyperlane.sh && sed -i 's/\r$//' hyperlane.sh && ./hyperlane.sh
    ```
