@@ -97,31 +97,55 @@ change_port_and_restart() {
     # Input the container ID
     read -p "Enter the ID of the Nesa container listed above: " container_id
 
+    # Validate container ID
+    if ! docker ps --filter "id=$container_id" --format "{{.ID}}" &> /dev/null; then
+        echo -e "${RED}Error: Invalid container ID. Please enter a valid ID from the list above.${NC}"
+        return 1
+    fi
+
     # Stop the container
     echo -e "${BLUE}Stopping the container...${NC}"
-    docker stop $container_id
+    docker stop "$container_id"
 
-    # Check currently used ports
-    used_ports=$(docker ps --format "{{.Ports}}" | grep -oP '(?<=:)\d+(?=->)' | sort -n)
-    echo -e "${YELLOW}Currently used port list:${NC}"
-    echo "$used_ports"
+    # Function to find an available port
+    find_available_port() {
+        local start_port=$1
+        while ss -tuln | grep ":$start_port" &> /dev/null; do
+            start_port=$((start_port + 1))
+        done
+        echo $start_port
+    }
 
-    # Find the next available port
-    last_port=8080
-    while ss -tuln | grep ":$last_port" &> /dev/null; do
-        last_port=$((last_port + 1))
-    done
-    echo -e "${BLUE}The next available port is: $last_port${NC}"
+    # Check if port 8080 is available, otherwise find the next one
+    echo -e "${YELLOW}Checking for available ports...${NC}"
+    target_port=$(find_available_port 8080)
+    echo -e "${GREEN}Using port: $target_port${NC}"
 
-    # Modify docker-compose.yml file
-    echo -e "${BLUE}Changing the port to $last_port...${NC}"
-    cd /root/.nesa/docker
-    sed -i "s/- [0-9]\+:8080/- $last_port:8080/" compose.ipfs.yml
+    # Modify the docker-compose.yml file to use the new port
+    echo -e "${BLUE}Updating the port in the docker-compose.yml file...${NC}"
+    cd /root/.nesa/docker || {
+        echo -e "${RED}Error: Failed to navigate to /root/.nesa/docker. Check if the directory exists.${NC}"
+        return 1
+    }
+    sed -i "s/- [0-9]\+:8080/- $target_port:8080/" compose.ipfs.yml
+
+    # Verify sed operation success
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}Error: Failed to update the port in compose.ipfs.yml. Please check the file manually.${NC}"
+        return 1
+    fi
 
     # Restart the node
     echo -e "${BLUE}Restarting the node...${NC}"
     bash <(curl -s https://raw.githubusercontent.com/nesaorg/bootstrap/master/bootstrap.sh)
-    echo -e "${GREEN}Node restarted successfully!${NC}"
+
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}Node restarted successfully!${NC}"
+        echo -e "${CYAN}Visit your dashboard at: https://node.nesa.ai/${NC}"
+    else
+        echo -e "${RED}Error: Node restart failed. Please check the logs for more details.${NC}"
+        return 1
+    fi
 }
 
 # Main Menu
