@@ -26,11 +26,11 @@ Network Bandwidth | 10MB/s
 
 Open your terminal and execute the following command to download and run the script:
    ```sh
-screen -S nesa-nodes
+   screen -S nesa-nodes
    ```
 
    ```sh
-   wget -O Nesa.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Nesa-Nodes/Nesa.sh && chmod +x Nesa.sh && sed -i 's/\r$//' Nesa.sh && ./Nesa.sh
+   cd $HOME && rm -rf nesa.sh Nesa.sh && wget -O nesa.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Nesa-Nodes/nesa.sh && chmod +x nesa.sh && sed -i 's/\r$//' nesa.sh && ./nesa.sh
    ```
 - Pilih Wizardy
 - Submit nama node
