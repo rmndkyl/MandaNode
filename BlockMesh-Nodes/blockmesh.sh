@@ -8,6 +8,7 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
+CYAN='\033[0;35m'
 NC='\033[0m' # No color
 
 # Log file for debugging
@@ -32,7 +33,7 @@ spinner() {
 
 # Display a banner
 banner() {
-    echo -e "${BLUE}"
+    echo -e "${YELLOW}"
     echo "========================================"
     echo "        BlockMesh CLI Installer        "
     echo "========================================"
@@ -66,10 +67,10 @@ function main_menu() {
     while true; do
         clear
         banner
-        echo -e "${BLUE}Script and tutorial by Telegram @rmndkyl, free and open source.${NC}"
-        echo -e "${BLUE}================================================================${NC}"
-        echo -e "${BLUE}Node community Telegram channel: https://t.me/layerairdrop${NC}"
-        echo -e "${BLUE}Node community Telegram group: https://t.me/+UgQeEnnWrodiNTI1${NC}"
+        echo -e "${CYAN}Script and tutorial by Telegram @rmndkyl, free and open source.${NC}"
+        echo -e "${YELLOW}================================================================${NC}"
+        echo -e "${CYAN}Node community Telegram channel: https://t.me/layerairdrop${NC}"
+        echo -e "${CYAN}Node community Telegram group: https://t.me/+UgQeEnnWrodiNTI1${NC}"
         echo -e "${GREEN}1. Deploy Node${NC}"
         echo -e "${GREEN}2. View Logs${NC}"
         echo -e "${GREEN}3. Deploy Old Version VPS Node${NC}"
