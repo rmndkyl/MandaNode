@@ -209,11 +209,11 @@ view_logs() {
 main_menu() {
     while true; do
         echo -e "${YELLOW}"
-		echo "Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions"
-		echo "============================ Hyperlane Installation ===================================="
-		echo "Node community Telegram channel: https://t.me/layerairdrop"
-		echo "Node community Telegram group: https://t.me/+UgQeEnnWrodiNTI1"
-		echo "Please Select an Option(1-6):"
+	echo "Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions"
+ 	echo "============================ Hyperlane Installation ===================================="
+	echo "Node community Telegram channel: https://t.me/layerairdrop"
+ 	echo "Node community Telegram group: https://t.me/+UgQeEnnWrodiNTI1"
+	echo "Please Select an Option(1-6):"
         echo "1) Check System Requirements"
         echo "2) Install All Dependencies (Docker, Node.js, Foundry)"
         echo "3) Install Hyperlane"
