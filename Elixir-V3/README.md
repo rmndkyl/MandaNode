@@ -15,5 +15,5 @@ Network Bandwidth | 100MB/s
 Open your terminal and execute the following command to download and run the script:
 
    ```sh
-   wget -O elixir.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Elixir-V3/elixir.sh && chmod +x elixir.sh && sed -i 's/\r$//' elixir.sh && ./elixir.sh
+   cd $HOME && rm -rf elixir.sh && wget -O elixir.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Elixir-V3/elixir.sh && chmod +x elixir.sh && sed -i 's/\r$//' elixir.sh && ./elixir.sh
    ```
