@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e  
+set -e
 
 # Define color codes for terminal output
 GREEN='\033[0;32m'
@@ -63,6 +63,7 @@ chmod -R 755 .
 echo -e "${YELLOW}Please enter account information to bind the node:${NC}"
 while [[ -z "$IDENTIFIER" ]]; do
     read -p "Enter your IDENTIFIER (account ID): " IDENTIFIER
+    IDENTIFIER=$(echo "$IDENTIFIER" | xargs)  # Trim any leading/trailing spaces
     if [[ -z "$IDENTIFIER" ]]; then
         echo -e "${RED}IDENTIFIER cannot be empty. Please try again.${NC}"
     fi
@@ -70,20 +71,31 @@ done
 
 while [[ -z "$PIN" ]]; do
     read -p "Enter your PIN (password): " PIN
+    PIN=$(echo "$PIN" | xargs)  # Trim any leading/trailing spaces
     if [[ -z "$PIN" ]]; then
         echo -e "${RED}PIN cannot be empty. Please try again.${NC}"
     fi
 done
 
+echo "Debug: IDENTIFIER=$IDENTIFIER, PIN=$PIN"  # Debugging output for validation
+
 # Start the node program
 echo -e "${GREEN}Starting node program...${NC}"
 nohup ./multiple-node > output.log 2>&1 &
+if [[ $? -ne 0 ]]; then
+    echo -e "${RED}Failed to start the node program. Check the logs for details.${NC}"
+    exit 1
+fi
 echo -e "${BLUE}Node is running. Logs are available at: $(pwd)/output.log${NC}"
 
 # Bind account information
 echo -e "${GREEN}Binding account information...${NC}"
-./multiple-cli bind --bandwidth-download 100 --identifier "$IDENTIFIER" --pin "$PIN" --storage 200 --bandwidth-upload 100
-echo -e "${GREEN}Account binding completed.${NC}"
+if ! ./multiple-cli bind --bandwidth-download 100 --identifier "$IDENTIFIER" --pin "$PIN" --storage 200 --bandwidth-upload 100; then
+    echo -e "${RED}Account binding failed. Please check your inputs and try again.${NC}"
+    exit 1
+fi
+
+echo -e "${GREEN}Account binding completed successfully.${NC}"
 
 # Installation complete
 echo -e "${GREEN}Installation complete!${NC}"
