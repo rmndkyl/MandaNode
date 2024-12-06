@@ -9,26 +9,6 @@ CYAN='\033[36m'
 MAGENTA='\033[35m'
 NC='\033[0m'
 
-# Check for Korean language support
-check_korean_support() {
-    if locale -a | grep -q "ko_KR.utf8"; then
-        return 0  # Korean support is installed
-    else
-        return 1  # Korean support is not installed
-    fi
-}
-
-# Korean language check
-if check_korean_support; then
-    echo -e "${CYAN}Korean language support detected. Skipping installation.${NC}"
-else
-    echo -e "${CYAN}Korean language support not found. Installing...${NC}"
-    sudo apt-get install language-pack-ko -y
-    sudo locale-gen ko_KR.UTF-8
-    sudo update-locale LANG=ko_KR.UTF-8 LC_MESSAGES=POSIX
-    echo -e "${CYAN}Installation completed.${NC}"
-fi
-
 # Ritual basic file installation and configuration
 install_ritual() {
 
