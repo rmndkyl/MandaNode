@@ -15,5 +15,5 @@ Network Bandwidth | 10MB/s
 Open your terminal and execute the following command to download and run the script:
 
    ```sh
-   wget -O ritual.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Ritual-Nodes/ritual.sh && chmod +x ritual.sh && sed -i 's/\r$//' ritual.sh && ./ritual.sh
+   cd $HOME && rm -rf ritual.sh && wget -O ritual.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Ritual-Nodes/ritual.sh && chmod +x ritual.sh && sed -i 's/\r$//' ritual.sh && ./ritual.sh
    ```
