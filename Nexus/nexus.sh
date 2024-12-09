@@ -1,223 +1,133 @@
 #!/bin/bash
 
-echo "Showing Animation.."
-wget -O loader.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/loader.sh && chmod +x loader.sh && sed -i 's/\r$//' loader.sh && ./loader.sh
-wget -O logo.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/logo.sh && chmod +x logo.sh && sed -i 's/\r$//' logo.sh && ./logo.sh
-sleep 2
+# Define color codes
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+PURPLE='\033[0;35m'
+CYAN='\033[0;36m'
+NC='\033[0m' # No Color
 
-# Define service name and file path
-SERVICE_NAME="nexus"
-SERVICE_FILE="/etc/systemd/system/nexus.service"  # Update the service file path
-
-# Script save path
-SCRIPT_PATH="$HOME/nexus.sh"
-
-# Check if the script is run as root
-if [ "$(id -u)" != "0" ]; then
-    echo "This script needs to be run as root."
-    echo "Please try using 'sudo -i' to switch to the root user and run this script again."
+# Error handling function
+handle_error() {
+    echo -e "${RED}Error: $1${NC}"
     exit 1
+}
+
+# Success message function
+success_msg() {
+    echo -e "${GREEN}✓ $1${NC}"
+}
+
+# Info message function
+info_msg() {
+    echo -e "${CYAN}ℹ $1${NC}"
+}
+
+# Warning message function
+warning_msg() {
+    echo -e "${YELLOW}⚠ $1${NC}"
+}
+
+# Check if script is run as root
+if [[ $EUID -ne 0 ]]; then
+    handle_error "This script must be run as root. Please use sudo ./install_nexus.sh"
 fi
 
-# Main menu function
-function main_menu() {
-    while true; do
-        clear
-        echo "The script and tutorial were written by Telegram user @rmndkyl, free and open source, please do not believe in the paid version"
-        echo "============================== Nexus Prover Automation! ===================================="
-        echo "Node community Telegram channel: https://t.me/layerairdrop"
-        echo "Node community Telegram group: https://t.me/layerairdropdiskusi"
-        echo "To exit the script, press ctrl + C on the keyboard."
-        echo "Please choose an operation:"
-        echo "1. Start Node"
-        echo "2. Check Prover Status"
-        echo "3. View Logs"
-        echo "4. Delete Node"
-        echo "5. Show ID"  # Added option
-        echo "6. Exit"
-        
-        read -p "Please enter an option (1-6): " choice
-        
-        case $choice in
-            1)
-                start_node  # Call start node function
-                ;;
-            2)
-                check_prover_status  # Call check prover status function
-                ;;
-            3)
-                view_logs  # Call view logs function
-                ;;
-            4)
-                delete_node  # Call delete node function
-                ;;
-            5)
-                show_id  # Call show ID function
-                ;;
-            6)
-                echo "Exiting script."
-                exit 0
-                ;;
-            *)
-                echo "Invalid option, please choose again."
-                ;;
-        esac
-    done
-}
-
-# Function to show ID
-function show_id() {
-    if [ -f /root/.nexus/prover-id ]; then
-        echo "Prover ID content:"
-        echo "$(</root/.nexus/prover-id)"  # Use echo to display file content
+# Function to check command status
+check_status() {
+    if [ $? -eq 0 ]; then
+        success_msg "$1"
     else
-        echo "File /root/.nexus/prover-id does not exist."
+        handle_error "$2"
     fi
-
-    # Wait for the user to press any key to return to the main menu
-    read -p "Press any key to return to the main menu"
 }
 
-# Function to start the node
-function start_node() {
-    # Check if the service is already running
-    if systemctl is-active --quiet nexus.service; then
-        echo "nexus.service is currently running. Stopping and disabling it..."
-        sudo systemctl stop nexus.service
-        sudo systemctl disable nexus.service
+# Create necessary directories
+mkdir -p ~/.nexus || handle_error "Failed to create .nexus directory"
+
+# Display logo with enhanced visuals
+echo -e "${PURPLE}=================================${NC}"
+info_msg "Initializing Nexus Installation..."
+echo -e "${PURPLE}=================================${NC}"
+
+# Download and execute loader animation
+info_msg "Loading animation..."
+wget -q -O loader.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/loader.sh && \
+chmod +x loader.sh && \
+sed -i 's/\r$//' loader.sh && \
+./loader.sh
+check_status "Animation loaded successfully" "Failed to load animation"
+rm -rf loader.sh
+
+# Download and execute logo
+wget -q -O logo.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/logo.sh && \
+chmod +x logo.sh && \
+sed -i 's/\r$//' logo.sh && \
+./logo.sh
+rm -rf logo.sh
+sleep 2
+
+# Update system packages
+info_msg "Updating system packages..."
+sudo apt update && sudo apt upgrade -y
+check_status "System packages updated successfully" "Failed to update system packages"
+
+# Install required packages
+declare -a packages=("protobuf-compiler" "libssl-dev" "pkg-config" "openssl")
+
+for package in "${packages[@]}"; do
+    if ! dpkg -l | grep -q "^ii  $package"; then
+        info_msg "Installing $package..."
+        sudo apt install -y "$package"
+        check_status "$package installed successfully" "Failed to install $package"
     else
-        echo "nexus.service is not currently running."
+        success_msg "$package is already installed"
     fi
+done
 
-    # Ensure the directory exists
-    mkdir -p /root/.nexus  # Create directory (if it doesn't exist)
+# Install Rust and Cargo
+info_msg "Checking Rust and Cargo installation..."
+if ! command -v cargo &> /dev/null; then
+    warning_msg "Cargo not found. Installing Rust and Cargo..."
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+    source $HOME/.cargo/env
+    check_status "Rust and Cargo installed successfully" "Failed to install Rust and Cargo"
+else
+    success_msg "Cargo is already installed"
+fi
 
-   # Update the system and install necessary packages
-    echo "Updating the system and installing necessary packages..."
-    if ! sudo apt update && sudo apt upgrade -y && sudo apt install curl iptables build-essential git wget lz4 jq make gcc nano automake autoconf tmux htop nvme-cli pkg-config libssl-dev libleveldb-dev tar clang bsdmainutils ncdu unzip build-essential -y; then
-        echo "Failed to install packages."  # Error message
-        exit 1
+# Prover ID setup with validation
+while true; do
+    echo -e "${BLUE}Please enter your Prover ID:${NC} "
+    read -r PROVER_ID
+    
+    # Basic validation - check if input is not empty and contains only alphanumeric characters
+    if [[ -z "$PROVER_ID" ]]; then
+        warning_msg "Prover ID cannot be empty. Please try again."
+        continue
+    elif ! [[ "$PROVER_ID" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+        warning_msg "Prover ID contains invalid characters. Please use only letters, numbers, underscores, and hyphens."
+        continue
     fi
     
-    # Check and install Git
-    if ! command -v git &> /dev/null; then
-        echo "Git is not installed. Installing Git..."
-        if ! sudo apt install git -y; then
-            echo "Failed to install Git."  # Error message
-            exit 1
-        fi
-    else
-        echo "Git is already installed."  # Success message
-    fi
+    echo "$PROVER_ID" > ~/.nexus/prover-id
+    success_msg "Prover ID saved successfully"
+    break
+done
 
-    # Check if Rust is installed
-    if command -v rustc &> /dev/null; then
-        echo "Rust is installed, version: $(rustc --version)"
-    else
-        echo "Rust is not installed, installing Rust..."
-        # Install Rust using rustup
-        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-        echo "Rust installation completed."
-        
-        # Load Rust environment
-        source $HOME/.cargo/env
-        export PATH="$HOME/.cargo/bin:$PATH"
-        echo "Rust environment loaded."
-    fi
+# Install Nexus CLI
+info_msg "Installing Nexus CLI..."
+curl -sSf https://cli.nexus.xyz/ | sh
+check_status "Nexus CLI installed successfully" "Failed to install Nexus CLI"
 
-    if [ -d "$HOME/network-api" ]; then
-        echo "Removing existing repository..."
-        rm -rf "$HOME/network-api"
-    fi
-    
-    # Clone the specified GitHub repository
-    echo "Cloning repository..."
-    cd
-    git clone https://github.com/nexus-xyz/network-api.git
+echo -e "\n${PURPLE}=================================${NC}"
+success_msg "Installation completed successfully!"
+echo -e "${PURPLE}=================================${NC}"
 
-    # Install dependencies
-    cd $HOME/network-api/clients/cli
-    echo "Installing required dependencies..." 
-    if ! sudo apt install pkg-config libssl-dev -y; then
-        echo "Failed to install dependencies."  # Error message
-        exit 1
-    fi
-    
-    # Create a systemd service file
-    echo "Creating systemd service..." 
-    if ! sudo bash -c "cat > $SERVICE_FILE <<EOF
-[Unit]
-Description=Nexus XYZ Prover Service
-After=network.target
-
-[Service]
-User=$USER
-WorkingDirectory=$HOME/network-api/clients/cli
-Environment=NONINTERACTIVE=1
-Environment=PATH=/root/.cargo/bin:$PATH
-ExecStart=$HOME/.cargo/bin/cargo run --release --bin prover -- beta.orchestrator.nexus.xyz
-Restart=always
-RestartSec=10
-
-[Install]
-WantedBy=multi-user.target
-EOF"; then
-        echo "Failed to create systemd service file." 
-        exit 1
-    fi
-
-    # Reload systemd and start the service
-    echo "Reloading systemd and starting the service..." 
-    if ! sudo systemctl daemon-reload; then
-        echo "Failed to reload systemd."
-        exit 1
-    fi
-
-    if ! sudo systemctl start nexus.service; then
-        echo "Failed to start the service." 
-        exit 1
-    fi
-
-    if ! sudo systemctl enable nexus.service; then
-        echo "Failed to enable the service." 
-        exit 1
-    fi
-
-    echo "Node started successfully!"
-    
-    # Wait for the user to press any key to return to the main menu
-    read -p "Press any key to return to the main menu"
-}
-
-# Function to check the Prover status
-function check_prover_status() {
-    echo "Checking Prover status..."
-    systemctl status nexus.service
-}
-
-# Function to view the logs
-function view_logs() {
-    echo "Viewing Prover logs..."
-    journalctl -u nexus.service -f -n 50
-}
-
-# Function to delete the node
-function delete_node() {
-    echo "Deleting the node..."
-    sudo systemctl stop nexus.service
-    sudo systemctl disable nexus.service
-    rm -rf /root/network-api
-    rm -rf /etc/systemd/system/nexus.service
-    echo "Node successfully deleted. Press any key to return to the main menu."
-    
-    # Wait for the user to press any key to return to the main menu
-    read -p "Press any key to return to the main menu"
-}
-
-# Function to show status
-function show_status() {
-    echo "$1"
-}
-
-# Call the main menu function
-main_menu
+# Display next steps
+echo -e "\n${CYAN}Next steps:${NC}"
+echo -e "1. Run ${GREEN}'source ~/.bashrc'${NC} to update your environment"
+echo -e "2. Verify installation with ${GREEN}'nexus --version'${NC}"
+echo -e "3. Configure your settings using ${GREEN}'nexus config'${NC}\n"
