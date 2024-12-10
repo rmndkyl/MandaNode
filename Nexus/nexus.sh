@@ -75,7 +75,7 @@ sudo apt update && sudo apt upgrade -y
 check_status "System packages updated successfully" "Failed to update system packages"
 
 # Install required packages
-declare -a packages=("protobuf-compiler" "libssl-dev" "pkg-config" "openssl")
+declare -a packages=("protobuf-compiler" "libssl-dev" "pkg-config" "openssl" "build-essential")
 
 for package in "${packages[@]}"; do
     if ! dpkg -l | grep -q "^ii  $package"; then
@@ -87,13 +87,29 @@ for package in "${packages[@]}"; do
     fi
 done
 
-# Install Rust and Cargo
+# Install Rust and Cargo with comprehensive checks
 info_msg "Checking Rust and Cargo installation..."
 if ! command -v cargo &> /dev/null; then
     warning_msg "Cargo not found. Installing Rust and Cargo..."
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+    # Check for build-essential again before Rust installation
+    if ! dpkg -l | grep -q "^ii  build-essential"; then
+        info_msg "Installing build-essential..."
+        sudo apt install -y build-essential
+        check_status "build-essential installed successfully" "Failed to install build-essential"
+    fi
+
+    # Rust installation with non-interactive mode and default options
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    
+    # Source Rust environment
     source $HOME/.cargo/env
-    check_status "Rust and Cargo installed successfully" "Failed to install Rust and Cargo"
+    
+    # Verify Rust installation
+    if command -v cargo &> /dev/null; then
+        success_msg "Rust and Cargo installed successfully"
+    else
+        handle_error "Failed to install Rust and Cargo"
+    fi
 else
     success_msg "Cargo is already installed"
 fi
