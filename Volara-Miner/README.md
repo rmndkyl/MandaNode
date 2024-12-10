@@ -21,5 +21,5 @@ screen -S volara-miner
 Open your terminal and execute the following command to download and run the script:
 
    ```sh
-   wget -O Volara.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Volara-Miner/Volara.sh && chmod +x Volara.sh && sed -i 's/\r$//' Volara.sh && ./Volara.sh
+   cd $HOME && rm -rf Volara.sh && wget -O Volara.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Volara-Miner/Volara.sh && chmod +x Volara.sh && sed -i 's/\r$//' Volara.sh && ./Volara.sh
    ```
