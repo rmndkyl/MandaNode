@@ -1,5 +1,16 @@
 #!/bin/bash
 
+# Function to display colorful banner
+display_banner() {
+    echo -e "\n\033[38;5;39m██╗   ██╗ ██████╗ ██╗      █████╗ ██████╗  █████╗ \033[0m"
+    echo -e "\033[38;5;39m██║   ██║██╔═══██╗██║     ██╔══██╗██╔══██╗██╔══██╗\033[0m"
+    echo -e "\033[38;5;39m██║   ██║██║   ██║██║     ███████║██████╔╝███████║\033[0m"
+    echo -e "\033[38;5;39m╚██╗ ██╔╝██║   ██║██║     ██╔══██║██╔══██╗██╔══██║\033[0m"
+    echo -e "\033[38;5;39m ╚████╔╝ ╚██████╔╝███████╗██║  ██║██║  ██║██║  ██║\033[0m"
+    echo -e "\033[38;5;39m  ╚═══╝   ╚═════╝ ╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝\033[0m"
+    echo -e "\033[38;5;39m                     MINER INSTALLER\033[0m\n"
+}
+
 echo "Showing Animation.."
 wget -O loader.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/loader.sh && chmod +x loader.sh && sed -i 's/\r$//' loader.sh && ./loader.sh
 rm -rf loader.sh
@@ -7,204 +18,251 @@ wget -O logo.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/logo
 rm -rf logo.sh
 sleep 4
 
-# Automation script: Volara-Miner installation and startup
+# Enhanced color palette
+declare -A colors=(
+    ["primary"]='\033[38;5;39m'    # Bright blue
+    ["success"]='\033[38;5;82m'    # Bright green
+    ["warning"]='\033[38;5;214m'   # Bright orange
+    ["error"]='\033[38;5;196m'     # Bright red
+    ["info"]='\033[38;5;147m'      # Light purple
+    ["highlight"]='\033[38;5;226m' # Bright yellow
+    ["reset"]='\033[0m'
+)
 
-# Define color codes
-RED='\033[0;31m'
-GREEN='\033[1;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-CYAN='\033[0;36m'
-MAGENTA='\033[1;35m'
-BOLD='\033[1m'
-UNDERLINE='\033[4m'
-RESET='\033[0m'
-
-# Define icons
-INFO_ICON="ℹ️"
-SUCCESS_ICON="✅"
-WARNING_ICON="⚠️"
-ERROR_ICON="❌"
+# Enhanced icons
+declare -A icons=(
+    ["info"]="🔹"
+    ["success"]="✨"
+    ["warning"]="⚡"
+    ["error"]="❌"
+    ["progress"]="📦"
+    ["system"]="🖥️"
+    ["docker"]="🐳"
+    ["wallet"]="💰"
+)
 
 # Define log file path
-LOG_FILE="/var/log/dusk_script.log"
+LOG_FILE="/var/log/volara_miner.log"
+touch "$LOG_FILE" 2>/dev/null || LOG_FILE="$HOME/volara_miner.log"
 
-# Information display functions
-log_info() {
-  echo -e "${CYAN}${INFO_ICON} ${1}${RESET}"
-  echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] ${1}" >> "${LOG_FILE}"
+# Progress bar function
+show_progress() {
+    local duration=$1
+    local width=50
+    local progress=0
+    local fill_char="▰"
+    local empty_char="▱"
+    
+    while [ $progress -le 100 ]; do
+        local fill=$(($progress * $width / 100))
+        local empty=$(($width - $fill))
+        
+        printf "\r${colors[primary]}Progress: ["
+        printf "%${fill}s" | tr " " "${fill_char}"
+        printf "%${empty}s" | tr " " "${empty_char}"
+        printf "] %3d%%${colors[reset]}" $progress
+        
+        progress=$(($progress + 2))
+        sleep $(echo "scale=3; $duration/50" | bc)
+    done
+    echo
 }
 
-log_success() {
-  echo -e "${GREEN}${SUCCESS_ICON} ${1}${RESET}"
-  echo "$(date +'%Y-%m-%d %H:%M:%S') [SUCCESS] ${1}" >> "${LOG_FILE}"
+# Enhanced logging function
+log() {
+    local type=$1
+    local message=$2
+    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+    echo -e "${colors[$type]}${icons[$type]} [$timestamp] $message${colors[reset]}" | tee -a "$LOG_FILE"
 }
 
-log_warning() {
-  echo -e "${YELLOW}${WARNING_ICON} ${1}${RESET}"
-  echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] ${1}" >> "${LOG_FILE}"
-}
-
-log_error() {
-  echo -e "${RED}${ERROR_ICON} ${1}${RESET}"
-  echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] ${1}" >> "${LOG_FILE}"
-  echo "Please refer to the logs for more details or contact support if needed."
+# Function to check system requirements
+check_system_requirements() {
+    log "info" "Checking system requirements..."
+    
+    local min_ram=4000000  # 4GB in KB
+    local min_disk=10000000  # 10GB in KB
+    
+    local available_ram=$(grep MemTotal /proc/meminfo | awk '{print $2}')
+    local available_disk=$(df / | awk 'NR==2 {print $4}')
+    
+    if [ $available_ram -lt $min_ram ]; then
+        log "warning" "System RAM ($(($available_ram/1024))MB) is below recommended ($(($min_ram/1024))MB)"
+    else
+        log "success" "RAM check passed: $(($available_ram/1024))MB available"
+    fi
+    
+    if [ $available_disk -lt $min_disk ]; then
+        log "warning" "Available disk space ($(($available_disk/1024))MB) is below recommended ($(($min_disk/1024))MB)"
+    else
+        log "success" "Disk space check passed: $(($available_disk/1024))MB available"
+    fi
 }
 
 # Function to check dependencies
 check_dependency() {
-  command -v "$1" &> /dev/null
-  if [ $? -ne 0 ]; then
-    log_error "$1 is not installed. Please install it before proceeding."
-    exit 1
-  fi
+    if ! command -v "$1" &> /dev/null; then
+        log "error" "$1 is not installed. Please install it before proceeding."
+        return 1
+    fi
+    log "success" "$1 is installed"
+    return 0
 }
-
-# Check required dependencies
-check_dependency "curl"
-check_dependency "docker"
-check_dependency "screen"
 
 # Function: Update and upgrade system
 update_system() {
-  log_info "Updating and upgrading the system..."
-  sudo apt update -y && sudo apt upgrade -y
+    log "system" "Updating and upgrading the system..."
+    if sudo apt update -y && sudo apt upgrade -y; then
+        log "success" "System update completed successfully"
+        show_progress 2
+    else
+        log "error" "System update failed"
+        return 1
+    fi
 }
 
-# Function: Install Docker
+# Enhanced Docker installation
 install_docker() {
-  log_info "Checking if Docker is already installed..."
-
-  if docker --version &> /dev/null; then
-    docker_version=$(docker --version | awk '{print $3}' | sed 's/,//')
-    log_info "Docker is already installed. Version: $docker_version"
-    return 0
-  fi
-
-  log_info "Docker not found. Proceeding with installation..."
-
-  log_info "Removing conflicting packages..."
-  for pkg in docker.io docker-doc docker-compose podman-docker containerd runc; do sudo apt-get remove -y $pkg; done
-
-  sudo apt-get update
-  sudo apt-get install -y ca-certificates curl gnupg
-
-  sudo install -m 0755 -d /etc/apt/keyrings
-  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-  sudo chmod a+r /etc/apt/keyrings/docker.gpg
-
-  echo \
-    "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-    $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-    sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-  sudo apt update -y && sudo apt upgrade -y
-  sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-
-  sudo chmod +x /usr/local/bin/docker-compose
-
-  docker --version &> /dev/null
-  if [[ $? -eq 0 ]]; then
-    log_success "Docker installed successfully."
-  else
-    log_error "Docker installation failed."
-    exit 1
-  fi
+    log "docker" "Starting Docker installation..."
+    
+    if docker --version &> /dev/null; then
+        local docker_version=$(docker --version | awk '{print $3}' | sed 's/,//')
+        log "success" "Docker is already installed. Version: $docker_version"
+        return 0
+    fi
+    
+    log "info" "Removing conflicting packages..."
+    for pkg in docker.io docker-doc docker-compose podman-docker containerd runc; do 
+        sudo apt-get remove -y $pkg
+    done
+    
+    # Create temporary directory for Docker installation
+    local tmp_dir=$(mktemp -d)
+    cd "$tmp_dir" || exit
+    
+    log "info" "Setting up Docker repository..."
+    sudo apt-get update
+    sudo apt-get install -y ca-certificates curl gnupg
+    
+    sudo install -m 0755 -d /etc/apt/keyrings
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+    sudo chmod a+r /etc/apt/keyrings/docker.gpg
+    
+    echo \
+      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+      $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+      sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+    
+    log "progress" "Installing Docker..."
+    sudo apt-get update
+    sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+    
+    # Clean up
+    cd - > /dev/null
+    rm -rf "$tmp_dir"
+    
+    # Verify installation
+    if docker --version &> /dev/null; then
+        log "success" "Docker installed successfully: $(docker --version)"
+        sudo usermod -aG docker $USER
+        log "info" "Added current user to docker group"
+        show_progress 3
+    else
+        log "error" "Docker installation failed"
+        return 1
+    fi
 }
 
-# Function: Start Volara-Miner
+# Enhanced miner start function
 start_miner() {
-  log_info "Please ensure your Vana network wallet has enough test tokens. Visit the faucet: https://faucet.vana.org/moksha to receive test tokens."
-  echo -e "${YELLOW}Tip: Please check your Vana network balance. Continue after receiving Moksha test tokens.${RESET}"
-  
-  echo -e "${MAGENTA}Enter your Metamask private key (it will not be shown):${RESET}"
-  read -sp "Private Key: " VANA_PRIVATE_KEY
-  export VANA_PRIVATE_KEY
-
-  if [[ -z "$VANA_PRIVATE_KEY" ]]; then
-    log_error "Metamask private key cannot be empty. Please rerun the script and enter a valid key."
-    exit 1
-  fi
-
-  log_info "Pulling Volara-Miner Docker image..."
-  timeout 300 docker pull volara/miner
-  if [[ $? -eq 0 ]]; then
-    log_success "Volara-Miner Docker image pulled successfully."
-  else
-    log_error "Failed to pull Volara-Miner Docker image. Check your network connection."
-    exit 1
-  fi
-
-  log_info "Creating Screen session..."
-  screen -S volara -m bash -c "docker run -it -e VANA_PRIVATE_KEY=${VANA_PRIVATE_KEY} volara/miner"
-
-  log_info "Please manually connect to the Screen session: screen -r volara"
-  log_info "In the Screen session, please follow the on-screen instructions to complete Google authentication and X account login."
-
-  log_success "Setup complete! You can check your mining points at https://volara.xyz/."
+    log "info" "Please ensure your Vana network wallet has enough test tokens"
+    log "info" "Visit: https://faucet.vana.org/moksha to receive test tokens"
+    
+    echo -e "${colors[highlight]}Enter your Metamask private key (it will not be shown):${colors[reset]}"
+    read -sp "Private Key: " VANA_PRIVATE_KEY
+    echo
+    
+    if [[ -z "$VANA_PRIVATE_KEY" ]]; then
+        log "error" "Metamask private key cannot be empty"
+        return 1
+    fi
+    
+    export VANA_PRIVATE_KEY
+    
+    log "progress" "Pulling Volara-Miner Docker image..."
+    if timeout 300 docker pull volara/miner; then
+        log "success" "Volara-Miner Docker image pulled successfully"
+        screen -S volara -m bash -c "docker run -it -e VANA_PRIVATE_KEY=${VANA_PRIVATE_KEY} volara/miner"
+        log "info" "Screen session created. Connect using: screen -r volara"
+        show_progress 2
+    else
+        log "error" "Failed to pull Volara-Miner Docker image"
+        return 1
+    fi
 }
 
-# Function: View Volara-Miner logs
+# Enhanced log viewing function
 view_miner_logs() {
-  clear
-  log_info "Displaying logs of Volara-Miner..."
-  docker ps --filter "ancestor=volara/miner" --format "{{.Names}}" | while read container_name
-  do
-    echo "Logs from container: $container_name"
-    docker logs --tail 20 "$container_name"
-    echo "--------------------------------------"
-  done
+    clear
+    log "info" "Displaying Volara-Miner logs..."
+    docker ps --filter "ancestor=volara/miner" --format "{{.Names}}" | while read container_name; do
+        echo -e "${colors[primary]}Logs from container: $container_name${colors[reset]}"
+        docker logs --tail 20 "$container_name"
+        echo -e "${colors[primary]}--------------------------------------${colors[reset]}"
+    done
 }
 
-# Function to rotate log files
-log_file_rotate() {
-  if [ -f "$LOG_FILE" ]; then
-    mv "$LOG_FILE" "$LOG_FILE.bak"
-  fi
-}
-
-log_file_rotate
-
-# Main menu function
+# Enhanced menu display
 show_menu() {
-  clear
-  echo -e "${BOLD}${BLUE}Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions${RESET}"
-  echo -e "${BOLD}${BLUE}==================== Volara-Miner Setup ====================${RESET}"
-  echo -e "${BOLD}${BLUE}Node community Telegram channel: https://t.me/layerairdrop${RESET}"
-  echo -e "${BOLD}${BLUE}Node community Telegram group: https://t.me/+UgQeEnnWrodiNTI1${RESET}"
-  echo -e "To exit the script, press ctrl+c on your keyboard."
-  echo "1. Update system and upgrade packages"
-  echo "2. Install Docker and its dependencies"
-  echo "3. Start the Volara-Miner with your wallet credentials"
-  echo "4. View the most recent Volara-Miner logs"
-  echo "5. Exit"
-  echo -e "${BOLD}===========================================================${RESET}"
-  echo -n "Select an option [1-5]: "
+    clear
+    display_banner
+    
+    echo -e "${colors[primary]}═══════════════════════ MAIN MENU ═══════════════════════${colors[reset]}"
+    echo -e "${colors[info]}1.${colors[reset]} System Update & Requirements Check"
+    echo -e "${colors[info]}2.${colors[reset]} Install Docker"
+    echo -e "${colors[info]}3.${colors[reset]} Start Volara Miner"
+    echo -e "${colors[info]}4.${colors[reset]} View Miner Logs"
+    echo -e "${colors[info]}5.${colors[reset]} Exit"
+    echo -e "${colors[primary]}═══════════════════════════════════════════════════════════${colors[reset]}\n"
+    echo -e "${colors[primary]}Script by Telegram user @rmndkyl - Free and Open Source${colors[reset]}"
+    echo -e "${colors[primary]}Community: https://t.me/layerairdrop | https://t.me/+UgQeEnnWrodiNTI1${colors[reset]}\n"
 }
 
-# Main loop
-while true; do
-  show_menu
-  read -r choice
-  case $choice in
-    1)
-      update_system
-      ;;
-    2)
-      install_docker
-      ;;
-    3)
-      start_miner
-      ;;
-    4)
-      view_miner_logs
-      ;;
-    5)
-      log_info "Exiting the script, goodbye!"
-      exit 0
-      ;;
-    *)
-      log_warning "Invalid choice. Please select a valid option."
-      ;;
-  esac
-done
+# Main execution loop
+main() {
+    trap 'echo -e "\n${colors[warning]}Script interrupted by user${colors[reset]}"; exit 1' INT
+    
+    while true; do
+        show_menu
+        read -p "Select an option (1-5): " choice
+        
+        case $choice in
+            1)
+                update_system
+                check_system_requirements
+                ;;
+            2)
+                install_docker
+                ;;
+            3)
+                start_miner
+                ;;
+            4)
+                view_miner_logs
+                ;;
+            5)
+                log "info" "Exiting script"
+                exit 0
+                ;;
+            *)
+                log "warning" "Invalid option selected"
+                ;;
+        esac
+        
+        echo -e "\n${colors[primary]}Press Enter to continue...${colors[reset]}"
+        read
+    done
+}
+
+# Start script
+main
