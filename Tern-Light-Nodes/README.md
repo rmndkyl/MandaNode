@@ -32,11 +32,5 @@ Open your terminal and execute the following command to download and run the scr
 ## This is for One-Account(PrivateKeys)
 
    ```sh
-   wget -O tern.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Tern-Light-Nodes/tern.sh && chmod +x tern.sh && sed -i 's/\r$//' tern.sh && ./tern.sh
-   ```
-
-## This is for Multi-Account(Multi PrivateKeys)(**_Still can't accessible_**)
-
-   ```sh
-   wget -O tern-multi.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Tern-Light-Nodes/tern-multi.sh && chmod +x tern-multi.sh && sed -i 's/\r$//' tern-multi.sh && ./tern-multi.sh
+   cd $HOME && rm -rf executor.sh &&  wget -O executor.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Tern-Light-Nodes/executor.sh && chmod +x executor.sh && sed -i 's/\r$//' executor.sh && ./executor.sh
    ```
