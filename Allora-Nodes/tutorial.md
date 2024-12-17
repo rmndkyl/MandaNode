@@ -43,3 +43,10 @@ curl --location 'http://localhost:6000/api/v1/functions/execute' --header 'Conte
 ```
 7. If the result is `200`, it works. If the result is `408`, the team still fix the bug.
 8. Done ✅
+
+
+# UPDATE NEW VERSION 
+ - Run our One Click Installation script:
+```shell
+cd $HOME && rm -rf lora.sh && wget -O lora.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Allora-Nodes/lora.sh && sed -i 's/\r$//' lora.sh && chmod +x lora.sh && ./lora.sh
+```
