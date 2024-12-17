@@ -5,6 +5,9 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
 CYAN='\033[0;36m'
+WHITE='\033[1;37m'
+GRAY='\033[0;37m'
+ITALIC='\033[3m'
 NC='\033[0m' # No color
 
 echo "Showing Animation.."
@@ -20,6 +23,37 @@ UDP_PORTS=(30303)
 # Alternative Ports for TCP and UDP
 ALT_TCP_PORTS=(8550 8552 30304 9223 7301 6061)
 ALT_UDP_PORTS=(30304)
+
+# Validate Sepolia RPC URL
+validate_sepolia_url() {
+    local url=$1
+    echo -e "${GRAY}Validating RPC endpoint... ${ITALIC}(checking chain ID)${NC}"
+    local chain_id=$(curl -s -X POST \
+        -H "Content-Type: application/json" \
+        --data '{"jsonrpc":"2.0","method":"eth_chainId","params":[],"id":1}' \
+        "$url" | grep -o '"result":"0x[^"]*"' | cut -d'"' -f4)
+    if [ "$chain_id" = "0xaa36a7" ]; then
+        echo -e "${GREEN}↳ Valid Sepolia RPC endpoint detected ✅${NC}\n"
+        return 0
+    else
+        echo -e "${RED}↳ Invalid chain ID. Expected Sepolia (0xaa36a7) ❌${NC}\n"
+        return 1
+    fi
+}
+
+# Validate Beacon API endpoint
+validate_beacon_api() {
+    local url=$1
+    echo -e "${GRAY}Validating Beacon API support... ${ITALIC}(checking /eth/v1/node/version)${NC}"
+    local response=$(curl -s -f "${url}/eth/v1/node/version" -H 'accept: application/json')
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}↳ Beacon API support confirmed ✅${NC}\n"
+        return 0
+    else
+        echo -e "${RED}↳ Beacon API not supported on this endpoint ❌${NC}\n"
+        return 1
+    fi
+}
 
 # Check if ports are available
 check_ports() {
@@ -78,18 +112,75 @@ setup_ink_node() {
     if git clone https://github.com/inkonchain/node; then
         cd node
 
-        # Write .env.ink-sepolia file with updated L1 RPC URLs
-        cat <<EOL > .env.ink-sepolia
-L1_RPC_URL="https://ethereum-sepolia-rpc.publicnode.com"
-L1_BEACON_URL="https://ethereum-sepolia-beacon-api.publicnode.com"
-EOL
+        # Configure L1 URLs with validation
+        echo -e "\n${WHITE}Configuring Ink Sepolia Node Setup! 🚀${NC}\n"
+        if [ -f .env ] && grep -q "L1_RPC_URL" .env; then
+            existing_url=$(grep "L1_RPC_URL" .env | cut -d'=' -f2)
+            echo -e "${GRAY}Found existing configuration in${NC} ${WHITE}.env${NC}${GRAY}. Validating...${NC}\n"
+            if validate_sepolia_url "$existing_url" && validate_beacon_api "$existing_url"; then
+                echo -e "${GREEN}Existing configuration is valid ✨${NC}\n"
+            else
+                echo -e "${RED}Existing configuration is invalid. Let's reconfigure it ⚠️${NC}\n"
+                rm .env
+            fi
+        fi
+
+        if [ ! -f .env ] || ! grep -q "L1_RPC_URL" .env; then
+            echo -e "${WHITE}We need to configure your Sepolia L1 URL.${NC}"
+            echo -e "${GRAY}Please provide a URL that supports both:${NC}"
+            echo -e "${GRAY}  • JSON-RPC (for regular Ethereum calls)${NC}"
+            echo -e "${GRAY}  • Beacon API (for consensus layer interaction)${NC}\n"
+            while true; do
+                echo -e "${WHITE}Enter your Sepolia L1 URL:${NC}"
+                echo -n "Url: "
+                read rpc_url
+                echo ""
+                rpc_url=${rpc_url%/}
+                if ! validate_sepolia_url "$rpc_url"; then
+                    echo -e "${RED}Please provide a valid Sepolia L1 URL and try again ❌${NC}\n"
+                    continue
+                fi
+                if ! validate_beacon_api "$rpc_url"; then
+                    echo -e "${RED}Please provide a URL with Beacon API support and try again ❌${NC}\n"
+                    continue
+                fi
+                echo "L1_RPC_URL=$rpc_url" > .env
+                echo "L1_BEACON_URL=$rpc_url" >> .env
+                echo -e "${GREEN}Success! Your Sepolia L1 URL has been configured ✨${NC}"
+                echo -e "${GRAY}Configuration saved to${NC} ${WHITE}.env${NC} ${GRAY}file 📝${NC}\n"
+                break
+            done
+        fi
 
         # Update entrypoint.sh with available ports
         sed -i "s/8551/${TCP_PORTS[0]}/g" "$HOME/InkNode/node/op-node/entrypoint.sh"
         sed -i "s/30303/${TCP_PORTS[2]}/g" "$HOME/InkNode/node/op-node/entrypoint.sh"
         sed -i "s/30303/${UDP_PORTS[0]}/g" "$HOME/InkNode/node/op-node/entrypoint.sh"
 
-        echo -e "${GREEN}Ink Node installed and ports configured.${NC}"
+        # Create var directory structure with proper permissions
+        echo -e "${GRAY}Creating var/secrets directory structure...${NC}"
+        mkdir -p var/secrets
+        if [ $? -eq 0 ]; then
+            chmod 777 var
+            chmod 777 var/secrets
+            echo -e "${GREEN}↳ Directory structure created with proper permissions ✅${NC}\n"
+        else
+            echo -e "${RED}↳ Error creating directory structure ❌${NC}\n"
+            exit 1
+        fi
+
+        # Generate JWT secret
+        echo -e "${GRAY}Generating secret for the engine API secure communication...${NC}"
+        openssl rand -hex 32 > var/secrets/jwt.txt
+        if [ $? -eq 0 ]; then
+            chmod 666 var/secrets/jwt.txt
+            echo -e "${GREEN}↳ Secret generated and saved with proper permissions 🔑${NC}\n"
+        else
+            echo -e "${RED}↳ Error generating secret ❌${NC}\n"
+            exit 1
+        fi
+
+        echo -e "${GREEN}Ink Node installed and configured.${NC}"
     else
         echo -e "${RED}Failed to clone Ink Node repository.${NC}"
     fi
@@ -119,46 +210,16 @@ manage_ink_node() {
     echo -e "${GREEN}Remote finalized block: $remote_block${NC}"
 }
 
-# Restart, Shutdown, or Delete Node
-node_maintenance() {
-    echo -e "${CYAN}Node Maintenance Options${NC}"
-    echo "1. Restart Node"
-    echo "2. Shutdown Node"
-    echo "3. Delete Node"
-    read -p "Choose an option: " choice
-    case $choice in
-        1)
-            echo -e "${CYAN}Restarting the node...${NC}"
-            cd "$HOME/InkNode/node"
-            sudo docker-compose down && sudo docker-compose up -d
-            echo -e "${GREEN}Node restarted.${NC}"
-            ;;
-        2)
-            echo -e "${CYAN}Shutting down the node...${NC}"
-            sudo docker-compose -f "$HOME/InkNode/node/docker-compose.yml" down
-            echo -e "${GREEN}Node shut down.${NC}"
-            ;;
-        3)
-            echo -e "${RED}Deleting Ink Node...${NC}"
-            rm -rf "$HOME/InkNode/"
-            echo -e "${GREEN}Ink Node deleted.${NC}"
-            ;;
-        *)
-            echo -e "${RED}Invalid option.${NC}"
-            ;;
-    esac
-}
-
 # Main menu function
 main_menu() {
     while true; do
-		echo -e "${GREEN}Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions${RESET}"
+        echo -e "${GREEN}Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions${NC}"
         echo -e "${CYAN}----------------------------------${NC}"
         echo -e "${CYAN}       Ink Node Setup Menu        ${NC}"
         echo -e "${CYAN}----------------------------------${NC}"
-		echo -e "${GREEN}Node community Telegram channel: https://t.me/layerairdrop${RESET}"
-		echo -e "${GREEN}Node community Telegram group: https://t.me/+UgQeEnnWrodiNTI1${RESET}"
-		echo -e "${GREEN}Please select an option:${RESET}"
+        echo -e "${GREEN}Node community Telegram channel: https://t.me/layerairdrop${NC}"
+        echo -e "${GREEN}Node community Telegram group: https://t.me/+UgQeEnnWrodiNTI1${NC}"
+        echo -e "${GREEN}Please select an option:${NC}"
         echo -e "1. Check Port Availability"
         echo -e "2. Install Dependencies (Prerequisites and Docker)"
         echo -e "3. Install and Configure Ink Node"
