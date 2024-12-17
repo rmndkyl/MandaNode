@@ -55,6 +55,58 @@ validate_beacon_api() {
     fi
 }
 
+# Function to handle wallet setup
+setup_wallet() {
+    echo -e "\n${WHITE}Wallet Setup${NC}"
+    echo -e "${GRAY}Please choose an option:${NC}"
+    echo -e "1. Use existing JWT as wallet key"
+    echo -e "2. Import different wallet key"
+    
+    while true; do
+        read -p "Enter your choice (1-2): " wallet_choice
+        case $wallet_choice in
+            1)
+                echo -e "${GRAY}Using JWT as wallet key...${NC}"
+                if [ -f "/InkNode/node/var/secrets/jwt.txt" ]; then
+                    # Copy JWT to wallet key
+                    cp "/InkNode/node/var/secrets/jwt.txt" "/InkNode/node/var/secrets/wallet.key"
+                    chmod 600 "/InkNode/node/var/secrets/wallet.key"
+                    echo -e "${GREEN}↳ JWT successfully set as wallet key ✅${NC}"
+                    private_key=$(cat "/InkNode/node/var/secrets/jwt.txt")
+                    echo -e "${YELLOW}IMPORTANT: Please backup your private key:${NC}"
+                    echo -e "${CYAN}$private_key${NC}"
+                    echo -e "${YELLOW}Store this key safely and never share it with anyone!${NC}\n"
+                else
+                    echo -e "${RED}JWT file not found. Please ensure node setup is complete.${NC}\n"
+                    exit 1
+                fi
+                break
+                ;;
+            2)
+                while true; do
+                    echo -e "${WHITE}Enter your private key (64 characters, hex format):${NC}"
+                    read -s private_key
+                    echo ""
+                    
+                    # Validate private key format (64 hex characters)
+                    if [[ ${#private_key} == 64 && "$private_key" =~ ^[0-9a-fA-F]+$ ]]; then
+                        echo $private_key > "/InkNode/node/var/secrets/wallet.key"
+                        chmod 600 "/InkNode/node/var/secrets/wallet.key"
+                        echo -e "${GREEN}↳ Wallet imported successfully ✅${NC}\n"
+                        break
+                    else
+                        echo -e "${RED}Invalid private key format. Please enter a valid 64-character hex string.${NC}\n"
+                    fi
+                done
+                break
+                ;;
+            *)
+                echo -e "${RED}Invalid choice. Please enter 1 or 2.${NC}"
+                ;;
+        esac
+    done
+}
+
 # Check if ports are available
 check_ports() {
     echo -e "${CYAN}Checking port availability...${NC}"
@@ -175,6 +227,9 @@ setup_ink_node() {
         if [ $? -eq 0 ]; then
             chmod 666 var/secrets/jwt.txt
             echo -e "${GREEN}↳ Secret generated and saved with proper permissions 🔑${NC}\n"
+            
+            # Call wallet setup function
+            setup_wallet
         else
             echo -e "${RED}↳ Error generating secret ❌${NC}\n"
             exit 1
@@ -247,9 +302,10 @@ main_menu() {
                 docker logs -f node-op-node-1
                 ;;
             8) 
-                echo -e "${CYAN}Displaying generated wallet backup...${NC}"
-                cat ~/InkNode/node/var/secrets/jwt.txt
-                ;;
+                echo -e "${CYAN}Displaying wallet and JWT information...${NC}"
+                echo -e "${YELLOW}Your JWT token (same as wallet private key):${NC}"
+                cat /InkNode/node/var/secrets/jwt.txt
+                ;;;
             9) exit 0 ;;
             *) echo -e "${RED}Invalid option. Please try again.${NC}" ;;
         esac
