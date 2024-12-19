@@ -23,9 +23,10 @@ sleep 4
 # Script banner
 print_banner() {
     echo -e "${CYAN}${BOLD}"
-    echo '╔═══════════════════════╗'
-    echo '║     Volara Miner      ║'
-    echo '╚═══════════════════════╝'
+    echo '╔════════════════════════════════════════════╗'
+    echo '║             Volara Miner                   ║'
+    echo '║          Created by @rmndkyl               ║'
+    echo '╚════════════════════════════════════════════╝'
     echo -e "${NC}"
 }
 
