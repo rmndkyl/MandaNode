@@ -55,7 +55,6 @@ check_requirements() {
 
     log "CPU cores: $CPU"
     log "Available memory: ${RAM}MB"
-    log "Available disk space: ${DISK}GB"
 
     if [ "$CPU" -lt 2 ]; then
         error_exit "Insufficient CPU cores (at least 2 cores required)"
@@ -63,10 +62,6 @@ check_requirements() {
 
     if [ "$RAM" -lt 2000 ]; then
         error_exit "Insufficient memory (at least 2GB required)"
-    fi
-
-    if [ "${DISK%.*}" -lt 20 ]; then
-        error_exit "Insufficient disk space (at least 20GB required)"
     fi
 
     log "${GREEN}System requirements met.${NC}"
