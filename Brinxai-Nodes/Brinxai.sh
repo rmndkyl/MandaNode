@@ -140,19 +140,18 @@ clone_repository() {
 
     log "INFO" "Starting Docker containers..."
     
-    # Try `docker compose up -d` first
-    if sudo docker compose up -d; then
-        log "INFO" "Started Docker containers with 'docker compose up -d'."
-    else
-        log "WARN" "'docker compose up -d' failed. Trying 'docker-compose up -d'..."
-        
-        # Fallback to `docker-compose up -d` if the first command fails
-        if sudo docker-compose up -d; then
-            log "INFO" "Started Docker containers with 'docker-compose up -d'."
-        else
-            log "ERROR" "Failed to start Docker containers with both 'docker compose up -d' and 'docker-compose up -d'. Please check your Docker setup."
-        fi
-    fi
+    # Create a Docker network if it doesn't exist
+    sudo docker network create brinxai-network 2>/dev/null || true
+    
+    # Pull and run the worker container
+    local worker_port=$(find_available_port 5011)
+    sudo docker run -d \
+        --name brinxai-worker \
+        --network brinxai-network \
+        -p "$worker_port":5011 \
+        admier/brinxai_nodes-worker:latest
+
+    log "INFO" "Started BrinxAI worker container on port $worker_port"
 }
 
 run_docker_menu() {
