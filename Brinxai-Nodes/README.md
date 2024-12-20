@@ -32,5 +32,5 @@ screen -S brinxai-nodes
 Open your terminal and execute the following command to download and run the script:
 
    ```sh
-   wget -O Brinxai.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Brinxai-Nodes/Brinxai.sh && chmod +x Brinxai.sh && sed -i 's/\r$//' Brinxai.sh && ./Brinxai.sh
+   cd $HOME && rm -rf Brinxai.sh && wget -O Brinxai.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Brinxai-Nodes/Brinxai.sh && chmod +x Brinxai.sh && sed -i 's/\r$//' Brinxai.sh && ./Brinxai.sh
    ```
