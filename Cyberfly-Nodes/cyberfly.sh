@@ -96,7 +96,7 @@ function installNode() {
     
     # Clone and setup repository
     echo -e "${YELLOW}Cloning repository...${NC}"
-    git clone https://github.com/cyberfly-io/cyberfly-node-docker.git
+    git clone https://github.com/rmndkyl/cyberfly-node-docker.git
     cd cyberfly-node-docker
     git pull
     
