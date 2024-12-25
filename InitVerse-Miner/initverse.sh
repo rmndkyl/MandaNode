@@ -16,6 +16,7 @@ CPU_CORES=$(nproc)
 MINING_SOFTWARE_URL="https://github.com/Project-InitVerse/ini-miner/releases/download/v1.0.0/iniminer-linux-x64"
 FULL_NODE_URL="https://github.com/Project-InitVerse/ini-chain/archive/refs/tags/v1.0.0.tar.gz"
 POOL_ADDRESS="pool-core-testnet.inichain.com:32672"
+RESTART_INTERVAL=3600  # 1 hour in seconds
 
 # Show Logo
 echo "Showing Animation.."
@@ -40,6 +41,27 @@ validate_wallet() {
     return 0
 }
 
+# Function to run mining command with auto-restart
+run_with_restart() {
+    local cmd="$1"
+    while true; do
+        echo -e "${GREEN}Starting mining process...${NC}"
+        echo -e "${BLUE}$cmd${NC}"
+        eval "$cmd"
+        
+        # Calculate next restart time
+        next_restart=$(date -d "+1 hour" +"%H:%M:%S")
+        echo -e "${YELLOW}Mining process will restart at $next_restart${NC}"
+        
+        # Sleep for the specified interval
+        sleep $RESTART_INTERVAL
+        
+        echo -e "${YELLOW}Restarting mining process...${NC}"
+        # Kill any remaining mining processes
+        pkill -f iniminer-linux-x64
+    done
+}
+
 # Function to set up mining pool
 setup_pool_mining() {
     echo -e "${YELLOW}Setting up Pool Mining...${NC}"
@@ -60,8 +82,7 @@ setup_pool_mining() {
     
     # Download and extract mining software
     echo -e "${YELLOW}Downloading mining software...${NC}"
-    wget "https://github.com/Project-InitVerse/ini-miner/releases/download/v1.0.0/iniminer-linux-x64" -O iniminer-linux-x64
-    tar -xzf ini-miner.tar.gz --strip-components=1
+    wget "$MINING_SOFTWARE_URL" -O iniminer-linux-x64
     chmod +x iniminer-linux-x64
     
     # Check if executable exists
@@ -82,10 +103,8 @@ setup_pool_mining() {
         MINING_CMD+=" --cpu-devices $i"
     done
     
-    # Start mining
-    echo -e "${GREEN}Starting mining with command:${NC}"
-    echo -e "${BLUE}$MINING_CMD${NC}"
-    eval "$MINING_CMD"
+    # Start mining with auto-restart
+    run_with_restart "$MINING_CMD"
 }
 
 # Function to set up solo mining
@@ -109,22 +128,21 @@ setup_solo_mining() {
     
     # Start node
     echo -e "${GREEN}Starting full node...${NC}"
-    ./geth-linux-x64 --datadir data --http.api="eth,admin,miner,net,web3,personal" --allow-insecure-unlock --testnet console
+    ./geth-linux-x64 --datadir data --http.api="eth,admin,miner,net,web3,personal" --allow-insecure-unlock --testnet console &
     
-    # Set up mining
-    echo -e "${YELLOW}Setting up mining...${NC}"
-    echo "miner.setEtherbase(\"$WALLET_ADDRESS\")"
+    # Wait for node to start
+    sleep 10
     
-    # Get number of CPU cores to use
-    echo -e "${CYAN}Enter number of CPU cores to use (1-${CPU_CORES}, default: 1):${NC}"
-    read cores
-    cores=${cores:-1}
+    # Set up mining command
+    MINING_CMD="geth attach http://localhost:8545 --exec 'miner.setEtherbase(\"$WALLET_ADDRESS\"); miner.start()'"
     
-    echo "miner.start($cores)"
+    # Start mining with auto-restart
+    run_with_restart "$MINING_CMD"
 }
 
-# Function to check system requirements
+# Rest of the script remains the same...
 check_requirements() {
+    # Previous implementation
     echo -e "${YELLOW}Checking system requirements...${NC}"
     
     # Check CPU
