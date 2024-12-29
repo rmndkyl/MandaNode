@@ -15,7 +15,7 @@ WORKER_NAME="Worker001"
 CPU_CORES=$(nproc)
 MINING_SOFTWARE_URL="https://github.com/Project-InitVerse/ini-miner/releases/download/v1.0.0/iniminer-linux-x64"
 FULL_NODE_URL="https://github.com/Project-InitVerse/ini-chain/archive/refs/tags/v1.0.0.tar.gz"
-POOL_ADDRESS="pool-core-testnet.inichain.com:32672"
+POOL_ADDRESS="pool-core-testnet.inichain.com:32672,backup-pool-testnet.inichain.com:32672"
 RESTART_INTERVAL=3600  # 1 hour in seconds
 
 # Show Logo
@@ -44,21 +44,32 @@ validate_wallet() {
 # Function to run mining command with auto-restart
 run_with_restart() {
     local cmd="$1"
+    local retry_interval=30  # Reduced from 3600 to 30 seconds
+    local max_retries=5
+    
     while true; do
         echo -e "${GREEN}Starting mining process...${NC}"
         echo -e "${BLUE}$cmd${NC}"
-        eval "$cmd"
         
-        # Calculate next restart time
-        next_restart=$(date -d "+1 hour" +"%H:%M:%S")
-        echo -e "${YELLOW}Mining process will restart at $next_restart${NC}"
+        # Run the mining command in the background
+        eval "$cmd" &
+        mining_pid=$!
         
-        # Sleep for the specified interval
-        sleep $RESTART_INTERVAL
+        # Monitor the process
+        while kill -0 $mining_pid 2>/dev/null; do
+            sleep 10
+            # Check if process is still responding
+            if ! ps -p $mining_pid >/dev/null; then
+                echo -e "${YELLOW}Mining process died, restarting...${NC}"
+                break
+            fi
+        done
         
-        echo -e "${YELLOW}Restarting mining process...${NC}"
-        # Kill any remaining mining processes
+        # Kill any remaining processes
         pkill -f iniminer-linux-x64
+        
+        echo -e "${YELLOW}Waiting $retry_interval seconds before restart...${NC}"
+        sleep $retry_interval
     done
 }
 
