@@ -15,7 +15,7 @@ WORKER_NAME="Worker001"
 CPU_CORES=$(nproc)
 MINING_SOFTWARE_URL="https://github.com/Project-InitVerse/ini-miner/releases/download/v1.0.0/iniminer-linux-x64"
 FULL_NODE_URL="https://github.com/Project-InitVerse/ini-chain/archive/refs/tags/v1.0.0.tar.gz"
-POOL_ADDRESS="pool-core-testnet.inichain.com:32672,backup-pool-testnet.inichain.com:32672"
+POOL_ADDRESS="pool-core-testnet.inichain.com:32672"
 RESTART_INTERVAL=3600  # 1 hour in seconds
 
 # Show Logo
@@ -44,32 +44,31 @@ validate_wallet() {
 # Function to run mining command with auto-restart
 run_with_restart() {
     local cmd="$1"
-    local retry_interval=30  # Reduced from 3600 to 30 seconds
-    local max_retries=5
+    local reconnect_delay=5
+    local max_failures=3
+    local failure_count=0
     
     while true; do
         echo -e "${GREEN}Starting mining process...${NC}"
         echo -e "${BLUE}$cmd${NC}"
         
-        # Run the mining command in the background
-        eval "$cmd" &
-        mining_pid=$!
+        # Run the mining command
+        eval "$cmd"
         
-        # Monitor the process
-        while kill -0 $mining_pid 2>/dev/null; do
-            sleep 10
-            # Check if process is still responding
-            if ! ps -p $mining_pid >/dev/null; then
-                echo -e "${YELLOW}Mining process died, restarting...${NC}"
-                break
+        # Check exit status
+        if [ $? -ne 0 ]; then
+            ((failure_count++))
+            if [ $failure_count -ge $max_failures ]; then
+                echo -e "${YELLOW}Multiple failures detected. Waiting 30 seconds before retry...${NC}"
+                sleep 30
+                failure_count=0
+            else
+                echo -e "${YELLOW}Connection failed. Retrying in $reconnect_delay seconds...${NC}"
+                sleep $reconnect_delay
             fi
-        done
-        
-        # Kill any remaining processes
-        pkill -f iniminer-linux-x64
-        
-        echo -e "${YELLOW}Waiting $retry_interval seconds before restart...${NC}"
-        sleep $retry_interval
+        else
+            failure_count=0
+        fi
     done
 }
 
@@ -102,8 +101,8 @@ setup_pool_mining() {
         return 1
     fi
     
-    # Set up mining command
-    MINING_CMD="./iniminer-linux-x64 --pool stratum+tcp://${WALLET_ADDRESS}.${WORKER_NAME}@${POOL_ADDRESS}"
+    # Set up mining command with separate pools instead of comma-separated
+    MINING_CMD="./iniminer-linux-x64 --pool stratum+tcp://${WALLET_ADDRESS}.${WORKER_NAME}@38.75.137.183:32672"
     
     # Get number of CPU cores to use
     echo -e "${CYAN}Enter number of CPU cores to use (1-${CPU_CORES}, default: 1):${NC}"
