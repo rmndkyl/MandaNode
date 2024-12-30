@@ -44,31 +44,21 @@ validate_wallet() {
 # Function to run mining command with auto-restart
 run_with_restart() {
     local cmd="$1"
-    local reconnect_delay=5
-    local max_failures=3
-    local failure_count=0
-    
     while true; do
         echo -e "${GREEN}Starting mining process...${NC}"
         echo -e "${BLUE}$cmd${NC}"
-        
-        # Run the mining command
         eval "$cmd"
         
-        # Check exit status
-        if [ $? -ne 0 ]; then
-            ((failure_count++))
-            if [ $failure_count -ge $max_failures ]; then
-                echo -e "${YELLOW}Multiple failures detected. Waiting 30 seconds before retry...${NC}"
-                sleep 30
-                failure_count=0
-            else
-                echo -e "${YELLOW}Connection failed. Retrying in $reconnect_delay seconds...${NC}"
-                sleep $reconnect_delay
-            fi
-        else
-            failure_count=0
-        fi
+        # Calculate next restart time
+        next_restart=$(date -d "+1 hour" +"%H:%M:%S")
+        echo -e "${YELLOW}Mining process will restart at $next_restart${NC}"
+        
+        # Sleep for the specified interval
+        sleep $RESTART_INTERVAL
+        
+        echo -e "${YELLOW}Restarting mining process...${NC}"
+        # Kill any remaining mining processes
+        pkill -f iniminer-linux-x64
     done
 }
 
@@ -101,8 +91,8 @@ setup_pool_mining() {
         return 1
     fi
     
-    # Set up mining command with separate pools instead of comma-separated
-    MINING_CMD="./iniminer-linux-x64 --pool stratum+tcp://${WALLET_ADDRESS}.${WORKER_NAME}@38.75.137.183:32672"
+    # Set up mining command
+    MINING_CMD="./iniminer-linux-x64 --pool stratum+tcp://${WALLET_ADDRESS}.${WORKER_NAME}@${POOL_ADDRESS}"
     
     # Get number of CPU cores to use
     echo -e "${CYAN}Enter number of CPU cores to use (1-${CPU_CORES}, default: 1):${NC}"
