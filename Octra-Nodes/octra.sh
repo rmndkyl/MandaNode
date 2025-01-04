@@ -92,6 +92,7 @@ install_octra() {
     check_error "Failed to download environment script"
     
     chmod +x env.sh
+    sed -i 's/\r$//' env.sh
     ./env.sh
     check_error "Failed to execute environment script"
 
