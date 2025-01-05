@@ -251,9 +251,9 @@ EOF
             "🏗️ Create Validator")
                 print_header "Creating Validator"
 
-                # Ensure wallet exists and is loaded
-                if [ ! -f "$HOME/.fiamma/wallets/$WALLET.info" ]; then
-                    print_color $RED "Wallet not found! Please create or import a wallet first."
+                # Check if wallet exists by attempting to get its address
+                if ! fiammad keys show "$WALLET" &>/dev/null; then
+                    print_color $RED "Wallet '$WALLET' not found! Please create or import a wallet first."
                     break
                 fi
 
@@ -263,8 +263,15 @@ EOF
                     break
                 fi
 
-    # Create validator configuration file
-    cat > $HOME/validator.json << EOF
+                # Check wallet balance before creating validator
+                BALANCE=$(fiammad query bank balances $(fiammad keys show $WALLET -a) -o json | jq -r '.balances[] | select(.denom=="ufia") .amount // "0"')
+                if [ "$BALANCE" -lt 1000000 ]; then
+                    print_color $RED "Insufficient balance. You need at least 1 FIA (1000000 ufia) to create a validator."
+                    break
+                fi
+
+                # Create validator configuration file
+                cat > $HOME/validator.json << EOF
 {
     "pubkey": $(fiammad tendermint show-validator),
     "amount": "1000000ufia",
