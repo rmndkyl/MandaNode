@@ -1,148 +1,193 @@
 #!/bin/bash
 
-echo "Showing Animation..."
-sudo apt install -y wget curl  # Ensure wget and curl are installed
-wget -O loader.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/loader.sh && chmod +x loader.sh && sed -i 's/\r$//' loader.sh && ./loader.sh
-wget -O logo.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/logo.sh && chmod +x logo.sh && sed -i 's/\r$//' logo.sh && ./logo.sh
-rm -rf logo.sh loader.sh
-sleep 4
+# Define color codes for better readability
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+RESET='\033[0m'
 
-# Script save path
-SCRIPT_PATH="$HOME/chromium.sh"
-
-# Check if the script is running as the root user
-if [ "$(id -u)" != "0" ]; then
-    echo "This script must be run as root."
-    echo "Try switching to root user with 'sudo -i' and then rerun the script."
+# Error handling function
+error_exit() {
+    echo -e "${RED}Error: $1${RESET}" >&2
     exit 1
-fi
+}
 
-# Check if Docker is installed
-if ! command -v docker &> /dev/null; then
-    echo "Docker is not installed. Installing Docker..."
+# Logging function
+log_message() {
+    echo -e "${GREEN}[LOG]${RESET} $1"
+}
 
-    # Update the system
-    sudo apt update -y && sudo apt upgrade -y
-
-    # Remove old versions
-    for pkg in docker.io docker-doc docker-compose podman-docker containerd runc; do
-        sudo apt-get remove -y $pkg
+# Animation and setup
+setup_animations() {
+    log_message "Showing Animation..."
+    sudo apt install -y wget curl || error_exit "Failed to install wget and curl"
+    
+    # Download and execute loader and logo scripts with error handling
+    for script in loader logo; do
+        wget -O ${script}.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/${script}.sh ||
+            error_exit "Failed to download ${script}.sh"
+        chmod +x ${script}.sh
+        sed -i 's/\r$//' ${script}.sh
+        ./${script}.sh || error_exit "Failed to execute ${script}.sh"
     done
+    
+    rm -rf logo.sh loader.sh
+    sleep 4
+}
 
-    # Install necessary packages
-    sudo apt-get update
-    sudo apt-get install -y ca-certificates curl gnupg
-    sudo install -m 0755 -d /etc/apt/keyrings
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-    sudo chmod a+r /etc/apt/keyrings/docker.gpg
+# Install Docker
+install_docker() {
+    if ! command -v docker &> /dev/null; then
+        log_message "Installing Docker..."
+        # Update system
+        sudo apt update -y && sudo apt upgrade -y
 
-    # Add Docker's source
-    echo \
-      "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-      "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
-      sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+        # Remove conflicting packages
+        sudo apt-get remove -y docker.io docker-doc docker-compose podman-docker containerd runc
 
-    # Update again and install Docker
-    sudo apt update -y && sudo apt upgrade -y
-    sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+        # Install prerequisites
+        sudo apt install -y apt-transport-https ca-certificates curl software-properties-common
 
-    # Check Docker version
-    docker --version
-else
-    echo "Docker is already installed, version: $(docker --version)"
-fi
+        # Add Docker's official GPG key and repository
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+        sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 
-# Get relative path
-relative_path=$(realpath --relative-to=/usr/share/zoneinfo /etc/localtime)
-echo "Relative path is: $relative_path"
+        # Install Docker
+        sudo apt update -y
+        sudo apt install -y docker-ce
+        sudo systemctl start docker
+        sudo systemctl enable docker
 
-# Create chromium directory and navigate into it
-mkdir -p $HOME/chromium
-cd $HOME/chromium
-echo "Entered chromium directory"
+        log_message "Docker installed successfully."
+    else
+        log_message "Docker is already installed."
+    fi
+}
 
-# Function to create docker-compose.yaml file and start container
-function deploy_browser() {
-    # Get user input
-    read -p "Enter CUSTOM_USER: " CUSTOM_USER
-    read -sp "Enter PASSWORD: " PASSWORD
-    echo
+# Install Docker Compose
+install_docker_compose() {
+    if ! command -v docker-compose &> /dev/null; then
+        log_message "Installing Docker Compose..."
+        
+        # Fetch latest version dynamically
+        DOCKER_COMPOSE_VERSION=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep tag_name | cut -d '"' -f 4)
+        
+        sudo curl -L "https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        sudo chmod +x /usr/local/bin/docker-compose
 
-    # Create docker-compose.yaml file
+        log_message "Docker Compose installed successfully."
+    else
+        log_message "Docker Compose is already installed."
+    fi
+}
+
+# Generate secure random credentials
+generate_credentials() {
+    # Use more secure random generation methods
+    username=$(tr -dc 'a-z0-9' < /dev/urandom | head -c 10)
+    password=$(tr -dc 'A-Za-z0-9!@#$%^&*()_+~`' < /dev/urandom | head -c 16)
+    
+    echo "$username" "$password"
+}
+
+# Get timezone based on IP
+get_timezone() {
+    local timezone
+    timezone=$(curl -s http://ip-api.com/json | jq -r '.timezone')
+    
+    # Fallback if timezone detection fails
+    if [[ -z "$timezone" ]]; then
+        timezone="UTC"
+        log_message "Unable to detect timezone. Defaulting to UTC."
+    fi
+    
+    echo "$timezone"
+}
+
+# Prepare Docker Compose configuration
+prepare_docker_compose() {
+    # Read credentials and timezone
+    read -r username password <<< "$(generate_credentials)"
+    timezone=$(get_timezone)
+
+    # Ensure directory exists
+    mkdir -p "$HOME/chrom"
+    cd "$HOME/chrom" || error_exit "Failed to change directory"
+
+    # Create docker-compose configuration
     cat <<EOF > docker-compose.yaml
 ---
 services:
   chromium:
     image: lscr.io/linuxserver/chromium:latest
     container_name: chromium
+    user: root
     security_opt:
-      - seccomp:unconfined # optional
+      - seccomp:unconfined
     environment:
-      - CUSTOM_USER=$CUSTOM_USER
-      - PASSWORD=$PASSWORD
+      - CUSTOM_USER=$username
+      - PASSWORD=$password
       - PUID=1000
       - PGID=1000
-      - TZ=Europe/London
-      - CHROME_CLI=https://x.com/abdulbinjai32 # optional
+      - TIMEZONE=$timezone
+      - LANG=en_US.UTF-8
+      - CHROME_CLI=https://google.com/
     volumes:
-      - /root/chromium/config:/config
+      - /root/chrom/config:/config
     ports:
-      - 3010:3000   # Change 3010 to your preferred port if needed
-      - 3011:3001   # Change 3011 to your preferred port if needed
+      - 3010:3000
+      - 3011:3001
     shm_size: "1gb"
     restart: unless-stopped
 EOF
 
-    echo "docker-compose.yaml file created and contents added."
-    docker compose up -d
-    echo "Docker Compose has started."
+    # Verify configuration file creation
+    [[ -f "docker-compose.yaml" ]] || error_exit "Failed to create docker-compose.yaml"
 }
 
-# Function to uninstall the node
-function uninstall_docker() {
-    echo "Stopping Docker..."
-    # Stop Docker container
-    cd /root/chromium
-    docker compose down
-
-    # Remove file directory
-    rm -rf /root/chromium
-    echo "Node has been uninstalled."
+# Open necessary firewall ports
+configure_firewall() {
+    log_message "Configuring firewall..."
+    sudo ufw allow 3010/tcp
+    sudo ufw allow 3011/tcp
 }
 
-# Main menu function
-function main_menu() {
-    while true; do
-        clear
-        echo "Once the browser is deployed, it can support projects like Dawn, Functor Node, Gradient, Node pay, etc."
-        echo "================================================================"
-        echo "To exit the script, press ctrl + C"
-        echo "Select an action:"
-        echo "1) Deploy Browser"
-        echo "2) Uninstall Node"
-        echo "3) Exit"
-        
-        read -p "Enter your choice: " choice
-        
-        case $choice in
-            1)
-                deploy_browser
-                ;;
-            2)
-                uninstall_docker
-                ;;
-            3)
-                echo "Exiting the script."
-                exit 0
-                ;;
-            *)
-                echo "Invalid option. Please try again."
-                ;;
-        esac
-
-        read -p "Press any key to continue..."
-    done
+# Deploy Chromium container
+deploy_chromium() {
+    cd "$HOME/chrom" || error_exit "Failed to change directory"
+    docker-compose up -d || error_exit "Failed to start Chromium container"
 }
 
-# Call the main menu
-main_menu
+# Get and display access information
+display_access_info() {
+    local ipvps
+    ipvps=$(curl -s ifconfig.me)
+    
+    echo -e "\n${GREEN}Chromium Container Deployment Completed!${RESET}"
+    echo -e "${YELLOW}Access Information:${RESET}"
+    echo -e "Web Interface 1: ${BLUE}http://$ipvps:3010${RESET}"
+    echo -e "Web Interface 2: ${BLUE}http://$ipvps:3011${RESET}"
+    echo -e "\n${RED}Credentials:${RESET}"
+    echo -e "Username: ${GREEN}$username${RESET}"
+    echo -e "Password: ${GREEN}$password${RESET}"
+    
+    log_message "Deployment completed successfully."
+}
+
+# Main script execution
+main() {
+    # Ensure script is run as root
+    [[ $EUID -ne 0 ]] && error_exit "This script must be run as root. Use 'sudo $0'"
+
+    setup_animations
+    install_docker
+    install_docker_compose
+    configure_firewall
+    prepare_docker_compose
+    deploy_chromium
+    display_access_info
+}
+
+# Execute main function
+main
