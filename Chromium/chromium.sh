@@ -10,6 +10,7 @@ RESET='\033[0m'
 # Error handling function
 error_exit() {
     echo -e "${RED}Error: $1${RESET}" >&2
+    read -p "Press any key to exit..." 
     exit 1
 }
 
@@ -18,11 +19,32 @@ log_message() {
     echo -e "${GREEN}[LOG]${RESET} $1"
 }
 
-# Install prerequisite packages
+# Comprehensive prerequisite installation
 install_prerequisites() {
     log_message "Installing prerequisite packages..."
+    
+    # Ensure multiverse and universe repositories are enabled
+    sudo add-apt-repository -y multiverse
+    sudo add-apt-repository -y universe
+    
+    # Update package lists
     sudo apt update -y
-    sudo apt install -y wget curl jq software-properties-common || error_exit "Failed to install prerequisites"
+    
+    # Install core prerequisites
+    sudo apt install -y \
+        wget \
+        curl \
+        jq \
+        software-properties-common \
+        apt-transport-https \
+        ca-certificates \
+        gnupg \
+        lsb-release || error_exit "Failed to install prerequisites"
+
+    # Verify jq is installed
+    command -v jq >/dev/null 2>&1 || error_exit "jq is not installed"
+
+    read -p "Press any key to continue..."
 }
 
 # Animation and setup
@@ -40,6 +62,7 @@ setup_animations() {
     
     rm -rf logo.sh loader.sh
     sleep 4
+    read -p "Press any key to continue..."
 }
 
 # Install Docker
@@ -71,6 +94,8 @@ install_docker() {
     else
         log_message "Docker is already installed."
     fi
+    
+    read -p "Press any key to continue..."
 }
 
 # Install Docker Compose
@@ -88,6 +113,8 @@ install_docker_compose() {
     else
         log_message "Docker Compose is already installed."
     fi
+    
+    read -p "Press any key to continue..."
 }
 
 # Generate secure random credentials
@@ -99,12 +126,12 @@ generate_credentials() {
     echo "$username" "$password"
 }
 
-# Get timezone based on IP with multiple fallback methods
+# Get timezone with multiple fallback methods
 get_timezone() {
     local timezone
 
     # Try multiple methods to get timezone
-    timezone=$(curl -s http://ip-api.com/json | jq -r '.timezone' 2>/dev/null)
+    timezone=$(curl -s http://ip-api.com/json | jq -r '.timezone // empty' 2>/dev/null)
     
     # Fallback methods
     if [[ -z "$timezone" ]]; then
@@ -131,8 +158,9 @@ prepare_docker_compose() {
     mkdir -p "$HOME/chrom"
     cd "$HOME/chrom" || error_exit "Failed to change directory"
 
-    # Create docker-compose configuration with proper indentation
-    cat > docker-compose.yaml << EOF
+    # Create docker-compose configuration with careful YAML formatting
+    cat > docker-compose.yaml << 'EOF'
+version: '3.8'
 services:
   chromium:
     image: lscr.io/linuxserver/chromium:latest
@@ -151,14 +179,21 @@ services:
     volumes:
       - /root/chrom/config:/config
     ports:
-      - 3010:3000
-      - 3011:3001
+      - "3010:3000"
+      - "3011:3001"
     shm_size: "1gb"
     restart: unless-stopped
 EOF
 
-    # Verify configuration file creation
+    # Use sed to replace placeholders safely
+    sed -i "s/\${username}/$username/g" docker-compose.yaml
+    sed -i "s/\${password}/$password/g" docker-compose.yaml
+    sed -i "s/\${timezone}/$timezone/g" docker-compose.yaml
+
+    # Verify configuration file creation and validity
     [[ -f "docker-compose.yaml" ]] || error_exit "Failed to create docker-compose.yaml"
+    
+    read -p "Press any key to continue..."
 }
 
 # Open necessary firewall ports
@@ -171,26 +206,49 @@ configure_firewall() {
     else
         log_message "UFW not found. Skipping firewall configuration."
     fi
+    
+    read -p "Press any key to continue..."
 }
 
 # Deploy Chromium container
 deploy_chromium() {
     cd "$HOME/chrom" || error_exit "Failed to change directory"
     
-    # Use docker compose instead of docker-compose for newer versions
+    # Ensure proper Docker Compose installation
     if command -v docker-compose &> /dev/null; then
-        docker-compose up -d || error_exit "Failed to start Chromium container"
+        docker-compose config || error_exit "Invalid Docker Compose configuration"
+        docker-compose up -d || error_exit "Failed to start Chromium container with docker-compose"
     elif command -v docker &> /dev/null && docker compose version &> /dev/null; then
-        docker compose up -d || error_exit "Failed to start Chromium container"
+        docker compose config || error_exit "Invalid Docker Compose configuration"
+        docker compose up -d || error_exit "Failed to start Chromium container with docker compose"
     else
         error_exit "Neither docker-compose nor docker compose found"
     fi
+    
+    read -p "Press any key to continue..."
+}
+
+# Get server IP address
+get_server_ip() {
+    # Try multiple methods to get the IP address
+    local ip
+    ip=$(hostname -I | awk '{print $1}')
+    
+    if [[ -z "$ip" ]]; then
+        ip=$(ip addr show | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | grep -v '127.0.0.1' | head -n 1)
+    fi
+    
+    if [[ -z "$ip" ]]; then
+        ip=$(curl -s https://ipv4.icanhazip.com)
+    fi
+    
+    echo "$ip"
 }
 
 # Get and display access information
 display_access_info() {
     local ipvps
-    ipvps=$(curl -s ifconfig.me)
+    ipvps=$(get_server_ip)
     
     echo -e "\n${GREEN}Chromium Container Deployment Completed!${RESET}"
     echo -e "${YELLOW}Access Information:${RESET}"
@@ -200,7 +258,18 @@ display_access_info() {
     echo -e "Username: ${GREEN}$username${RESET}"
     echo -e "Password: ${GREEN}$password${RESET}"
     
+    echo -e "\n${YELLOW}Firewall Configuration Reminder:${RESET}"
+    echo -e "- Ensure ports 3010 and 3011 are open in your firewall/security group"
+    echo -e "- If using cloud providers like AWS, Azure, or DigitalOcean, check security group settings"
+
+    echo -e "\n${RED}IMPORTANT SECURITY NOTES:${RESET}"
+    echo -e "- Change default password after first login"
+    echo -e "- Use strong, unique passwords"
+    echo -e "- Consider setting up SSH tunneling or VPN for additional security"
+    
     log_message "Deployment completed successfully."
+    
+    read -p "Press any key to continue..."
 }
 
 # Main script execution
@@ -216,6 +285,9 @@ main() {
     prepare_docker_compose
     deploy_chromium
     display_access_info
+
+    echo -e "${GREEN}Script execution completed successfully!${RESET}"
+    read -p "Press any key to exit..."
 }
 
 # Execute main function
