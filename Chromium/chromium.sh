@@ -18,10 +18,16 @@ log_message() {
     echo -e "${GREEN}[LOG]${RESET} $1"
 }
 
+# Install prerequisite packages
+install_prerequisites() {
+    log_message "Installing prerequisite packages..."
+    sudo apt update -y
+    sudo apt install -y wget curl jq software-properties-common || error_exit "Failed to install prerequisites"
+}
+
 # Animation and setup
 setup_animations() {
     log_message "Showing Animation..."
-    sudo apt install -y wget curl || error_exit "Failed to install wget and curl"
     
     # Download and execute loader and logo scripts with error handling
     for script in loader logo; do
@@ -50,12 +56,14 @@ install_docker() {
         sudo apt install -y apt-transport-https ca-certificates curl software-properties-common
 
         # Add Docker's official GPG key and repository
-        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/docker.gpg
+        sudo chmod a+r /etc/apt/trusted.gpg.d/docker.gpg
         sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 
         # Install Docker
         sudo apt update -y
-        sudo apt install -y docker-ce
+        sudo apt install -y docker-ce docker-ce-cli containerd.io
+
         sudo systemctl start docker
         sudo systemctl enable docker
 
@@ -91,12 +99,20 @@ generate_credentials() {
     echo "$username" "$password"
 }
 
-# Get timezone based on IP
+# Get timezone based on IP with multiple fallback methods
 get_timezone() {
     local timezone
-    timezone=$(curl -s http://ip-api.com/json | jq -r '.timezone')
+
+    # Try multiple methods to get timezone
+    timezone=$(curl -s http://ip-api.com/json | jq -r '.timezone' 2>/dev/null)
     
-    # Fallback if timezone detection fails
+    # Fallback methods
+    if [[ -z "$timezone" ]]; then
+        # Try system timezone
+        timezone=$(timedatectl | grep "Time zone" | awk '{print $3}')
+    fi
+
+    # Ultimate fallback
     if [[ -z "$timezone" ]]; then
         timezone="UTC"
         log_message "Unable to detect timezone. Defaulting to UTC."
@@ -115,9 +131,8 @@ prepare_docker_compose() {
     mkdir -p "$HOME/chrom"
     cd "$HOME/chrom" || error_exit "Failed to change directory"
 
-    # Create docker-compose configuration
-    cat <<EOF > docker-compose.yaml
----
+    # Create docker-compose configuration with proper indentation
+    cat > docker-compose.yaml << EOF
 services:
   chromium:
     image: lscr.io/linuxserver/chromium:latest
@@ -126,11 +141,11 @@ services:
     security_opt:
       - seccomp:unconfined
     environment:
-      - CUSTOM_USER=$username
-      - PASSWORD=$password
+      - CUSTOM_USER=${username}
+      - PASSWORD=${password}
       - PUID=1000
       - PGID=1000
-      - TIMEZONE=$timezone
+      - TIMEZONE=${timezone}
       - LANG=en_US.UTF-8
       - CHROME_CLI=https://google.com/
     volumes:
@@ -149,14 +164,27 @@ EOF
 # Open necessary firewall ports
 configure_firewall() {
     log_message "Configuring firewall..."
-    sudo ufw allow 3010/tcp
-    sudo ufw allow 3011/tcp
+    # Check if UFW is installed
+    if command -v ufw &> /dev/null; then
+        sudo ufw allow 3010/tcp
+        sudo ufw allow 3011/tcp
+    else
+        log_message "UFW not found. Skipping firewall configuration."
+    fi
 }
 
 # Deploy Chromium container
 deploy_chromium() {
     cd "$HOME/chrom" || error_exit "Failed to change directory"
-    docker-compose up -d || error_exit "Failed to start Chromium container"
+    
+    # Use docker compose instead of docker-compose for newer versions
+    if command -v docker-compose &> /dev/null; then
+        docker-compose up -d || error_exit "Failed to start Chromium container"
+    elif command -v docker &> /dev/null && docker compose version &> /dev/null; then
+        docker compose up -d || error_exit "Failed to start Chromium container"
+    else
+        error_exit "Neither docker-compose nor docker compose found"
+    fi
 }
 
 # Get and display access information
@@ -180,6 +208,7 @@ main() {
     # Ensure script is run as root
     [[ $EUID -ne 0 ]] && error_exit "This script must be run as root. Use 'sudo $0'"
 
+    install_prerequisites
     setup_animations
     install_docker
     install_docker_compose
