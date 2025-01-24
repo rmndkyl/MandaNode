@@ -15,7 +15,13 @@ WORKER_NAME="Worker001"
 CPU_CORES=$(nproc)
 MINING_SOFTWARE_URL="https://github.com/Project-InitVerse/ini-miner/releases/download/v1.0.0/iniminer-linux-x64"
 FULL_NODE_URL="https://github.com/Project-InitVerse/ini-chain/archive/refs/tags/v1.0.0.tar.gz"
-POOL_ADDRESS="pool-core-testnet.inichain.com:32672"
+
+# Mainnet Pool Addresses
+POOL_ADDRESSES=(
+    "pool-a.yatespool.com:31588"
+    "pool-b.yatespool.com:32488"
+)
+
 RESTART_INTERVAL=3600  # 1 hour in seconds
 
 # Show Logo
@@ -28,7 +34,7 @@ sleep 4
 # Function to print colored header
 print_header() {
     echo -e "${PURPLE}=================================================${NC}"
-    echo -e "${CYAN}             InitVerse Mining Setup${NC}"
+    echo -e "${CYAN}             InitVerse Mining Setup (Mainnet)${NC}"
     echo -e "${PURPLE}=================================================${NC}"
 }
 
@@ -62,9 +68,33 @@ run_with_restart() {
     done
 }
 
+# Function to select mining pool
+select_mining_pool() {
+    echo -e "${CYAN}Select a Mining Pool:${NC}"
+    for i in "${!POOL_ADDRESSES[@]}"; do
+        echo -e "$((i+1)). ${POOL_ADDRESSES[i]}"
+    done
+    
+    while true; do
+        read -p "Enter pool number (1-${#POOL_ADDRESSES[@]}): " pool_choice
+        
+        if [[ $pool_choice =~ ^[0-9]+$ ]] && 
+           [[ $pool_choice -ge 1 ]] && 
+           [[ $pool_choice -le ${#POOL_ADDRESSES[@]} ]]; then
+            POOL_ADDRESS=${POOL_ADDRESSES[$((pool_choice-1))]}
+            break
+        else
+            echo -e "${RED}Invalid pool selection. Please try again.${NC}"
+        fi
+    done
+}
+
 # Function to set up mining pool
 setup_pool_mining() {
     echo -e "${YELLOW}Setting up Pool Mining...${NC}"
+    
+    # Select mining pool
+    select_mining_pool
     
     # Get wallet address if not already set
     while [ -z "$WALLET_ADDRESS" ] || ! validate_wallet "$WALLET_ADDRESS"; do
