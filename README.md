@@ -16,6 +16,6 @@ A shell script collection for running nodes in Web3 is essentially a set of auto
 - https://trakteer.id/layerairdrop/tip
 
 # Credited By Layer Airdrop
-[Telegram Channel](https://t.me/+U3vHFLDNC5JjN2Jl)
+[Telegram Channel](https://t.me/layerairdrop)
 
-[Telegram Group](https://t.me/+UgQeEnnWrodiNTI1)
+[Telegram Group](https://t.me/layerairdropdiskusi)
