@@ -353,11 +353,10 @@ function update_script() {
 function main_menu() {
     while true; do
         clear
-        echo "This script and tutorial were written by Twitter user @y95277777 and maintained by @rainy242869. It is free and open-source. Do not trust paid services."
+        echo "This script and tutorial were written by Telegram Channel @layerairdrop and maintained by @layerairdrop. It is free and open-source. Do not trust paid services."
         echo "======================= 0G AI Node Installation ================================"
         echo "======================= Validator Node Functions =============================="
-        echo "Node Community Telegram Group: https://t.me/niuwuriji"
-        echo "Node Community Discord: https://discord.gg/GbMV5EcNWF"
+        echo "Node Community Telegram Group: https://t.me/layerairdrop"
         echo "To exit the script, press Ctrl + C."
         echo "Select an action:"
         echo "======================= Validator Node ================================"
