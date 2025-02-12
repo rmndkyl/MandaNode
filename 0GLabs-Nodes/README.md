@@ -21,3 +21,9 @@ Network Bandwidth | 100MB/s
 ```bash
 wget -O setup.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/0GLabs-Nodes/setup.sh && chmod +x setup.sh && sed -i 's/\r$//' setup.sh && ./setup.sh
 ```
+
+# UPDATE
+
+```bash
+wget -O 0g.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/0GLabs-Nodes/0g.sh && chmod +x 0g.sh && sed -i 's/\r$//' 0g.sh && ./0g.sh
+```
