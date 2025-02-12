@@ -9,27 +9,27 @@ wget -O logo.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/logo
 rm -rf logo.sh
 sleep 4
 
-# Check if the script is run with root user privileges
+# Check if the script is run as root
 if [ "$(id -u)" != "0" ]; then
-    echo "This script needs to be run with root user permissions."
-    echo "Please try using the 'sudo -i' command to switch to the root user, then run this script again."
+    echo "This script must be run as root."
+    echo "Please try using 'sudo -i' to switch to the root user, then run this script again."
     exit 1
 fi
 
 # Check and install Node.js and npm
 function install_nodejs_and_npm() {
     if command -v node > /dev/null 2>&1; then
-        echo "Node.js is already installed"
+        echo "Node.js is already installed."
     else
-        echo "Node.js is not installed, installing..."
+        echo "Node.js is not installed. Installing..."
         curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
         sudo apt-get install -y nodejs
     fi
 
     if command -v npm > /dev/null 2>&1; then
-        echo "npm is already installed"
+        echo "npm is already installed."
     else
-        echo "npm is not installed, installing..."
+        echo "npm is not installed. Installing..."
         sudo apt-get install -y npm
     fi
 }
@@ -37,36 +37,35 @@ function install_nodejs_and_npm() {
 # Check and install PM2
 function install_pm2() {
     if command -v pm2 > /dev/null 2>&1; then
-        echo "PM2 is already installed"
+        echo "PM2 is already installed."
     else
-        echo "PM2 is not installed, installing..."
+        echo "PM2 is not installed. Installing..."
         npm install pm2@latest -g
     fi
 }
 
-# Check Go environment
+# Check Go installation
 function check_go_installation() {
     if command -v go > /dev/null 2>&1; then
-        echo "Go environment is already installed"
+        echo "Go is already installed."
         return 0
     else
-        echo "Go environment is not installed, installing..."
+        echo "Go is not installed. Installing..."
         return 1
     fi
 }
 
-# Validator node installation function
+# Install validator function
 function install_validator() {
-
     install_nodejs_and_npm
     install_pm2
 
-    # Check if curl is installed, install if not
+    # Check and install curl if not installed
     if ! command -v curl > /dev/null; then
         sudo apt update && sudo apt install curl -y
     fi
 
-    # Update and install necessary software
+    # Update and install necessary packages
     sudo apt update && sudo apt upgrade -y
     sudo apt install git wget build-essential jq make lz4 gcc -y
 
@@ -79,7 +78,7 @@ function install_validator() {
         go version
     fi
 
-    # Download binary
+    # Download binary file
     wget -O 0gchaind https://github.com/0glabs/0g-chain/releases/download/v0.5.0/0gchaind-linux-v0.5.0
     chmod +x $HOME/0gchaind
     mv $HOME/0gchaind $HOME/go/bin
@@ -100,9 +99,9 @@ function install_validator() {
     wget -O $HOME/.0gchain/config/genesis.json https://server-5.itrocket.net/testnet/og/genesis.json
     0gchaind validate-genesis
 
-    # Configure node
+    # Configure peers and seeds
     SEEDS="bac83a636b003495b2aa6bb123d1450c2ab1a364@og-testnet-seed.itrocket.net:47656"
-    PEERS="80fa309afab4a35323018ac70a40a446d3ae9caf@og-testnet-peer.itrocket.net:11656,407e52882cd3e9027c3979742c38f4d655334ee1@185.239.208.65:12656,3b8df79c5322dcb2d25aa8d10f886461fcbb93a5@161.97.89.237:12656,1dd9da1053e932e7c287c94191c418212c96da96@157.173.125.137:26656,1469b5aba1c6401bc191fa5a6fabbc6e02720add@62.171.156.121:12656,af4fe9d510848eb952110da4b03b7ca696d46a3a@84.247.191.112:12656,c30554e3c291acacf327c717beb5c01fc7acf9c1@109.123.253.9:12656,80aead3e238fca6805c37be8b780c99b0e934daf@77.237.246.197:12656,8db25df522e76176b00ab184df972b86bf72cd22@161.97.103.44:12656,e142f3cb55585a1987faa01f5c70de51aa82dd13@31.220.81.231:12656,4a77eb8103ada3687be7038ab722b611acc832be@158.220.111.17:12656,6e9edc59c3a6495bf5769c23fc37dc9756e258d3@161.97.110.78:12656,4ebff8cc1d7fb899643228d367b8e5395b6cb4ca@62.171.189.13:12656,492453098ed9c42e214d5bd3d4bb84113c92571c@89.116.27.67:12656,0f835342124117a4a5f0177c049bf57802de959c@5.252.54.96:47656,c3674c176cf70b8832930bd0c01d57cd1df292ac@161.97.78.57:12656"
+    PEERS="80fa309afab4a35323018ac70a40a446d3ae9caf@og-testnet-peer.itrocket.net:11656,..."
     sed -i "s/persistent_peers = \"\"/persistent_peers = \"$PEERS\"/" $HOME/.0gchain/config/config.toml
     sed -i "s/seeds = \"\"/seeds = \"$SEEDS\"/" $HOME/.0gchain/config/config.toml
     sed -i -e 's/max_num_inbound_peers = 40/max_num_inbound_peers = 100/' -e 's/max_num_outbound_peers = 10/max_num_outbound_peers = 100/' $HOME/.0gchain/config/config.toml
@@ -115,8 +114,8 @@ function install_validator() {
     sed -i -e "s/^pruning-interval *=.*/pruning-interval = \"10\"/" $HOME/.0gchain/config/app.toml
 
     # Configure ports
-    sed -i -e "s%^proxy_app = \"tcp://127.0.0.1:26658\"%proxy_app = \"tcp://127.0.0.1:13458\"%; s%^laddr = \"tcp://127.0.0.1:26657\"%laddr = \"tcp://127.0.0.1:13457\"%; s%^pprof_laddr = \"localhost:6060\"%pprof_laddr = \"localhost:13460\"%; s%^laddr = \"tcp://0.0.0.0:26656\"%laddr = \"tcp://0.0.0.0:13456\"%; s%^prometheus_listen_addr = \":26660\"%prometheus_listen_addr = \":13466\"%" $HOME/.0gchain/config/config.toml
-    sed -i -e "s%^address = \"tcp://localhost:1317\"%address = \"tcp://0.0.0.0:13417\"%; s%^address = \":8080\"%address = \":13480\"%; s%^address = \"0.0.0.0:9090\"%address = \"0.0.0.0:13490\"%; s%^address = \"localhost:9091\"%address = \"0.0.0.0:13491\"%; s%:8545%:13445%; s%:8546%:13446%; s%:6065%:13465%" $HOME/.0gchain/config/app.toml
+    sed -i -e "s%^proxy_app = \"tcp://127.0.0.1:26658\"%proxy_app = \"tcp://127.0.0.1:13458\"%; ..." $HOME/.0gchain/config/config.toml
+    sed -i -e "s%^address = \"tcp://localhost:1317\"%address = \"tcp://0.0.0.0:13417\"%; ..." $HOME/.0gchain/config/app.toml
     source $HOME/.bash_profile
 
     # Download snapshot
@@ -129,8 +128,7 @@ function install_validator() {
     pm2 start 0gchaind -- start --log_output_console --home ~/.0gchain && pm2 save && pm2 startup
     pm2 restart 0gchaind
 
-    echo '====================== Installation complete, please exit the script and execute source $HOME/.bash_profile to load environment variables ==========================='
-
+    echo '====================== Installation complete. Please exit the script and run source $HOME/.bash_profile to load environment variables ==========================='
 }
 
 # Check PM2 service status
@@ -138,45 +136,45 @@ function check_service_status() {
     pm2 list
 }
 
-# Validator node log query
+# View node logs
 function view_logs() {
     pm2 logs 0gchaind
 }
 
-# Node uninstallation function
+# Uninstall validator node
 function uninstall_validator() {
-    echo "Are you sure you want to uninstall the 0gchain validator node program? This will delete all related data. [Y/N]"
-    read -r -p "Please confirm: " response
+    echo "Are you sure you want to uninstall the 0gchain validator node? This will delete all related data. [Y/N]"
+    read -r -p "Confirm: " response
 
     case "$response" in
         [yY][eE][sS]|[yY])
-            echo "Starting node program uninstallation..."
+            echo "Starting uninstallation..."
             pm2 stop 0gchaind && pm2 delete 0gchaind
             rm -rf $HOME/.0gchain $(which 0gchaind)  $HOME/0g-chain
-            echo "Node program uninstallation completed."
+            echo "Uninstallation complete."
             ;;
         *)
-            echo "Uninstallation cancelled."
+            echo "Uninstallation canceled."
             ;;
     esac
 }
 
 # Create wallet
 function add_wallet() {
-    read -p "Please enter the wallet name you want to set: " wallet_name
+    read -p "Enter the wallet name you want to set: " wallet_name
     0gchaind keys add $wallet_name --eth
 }
 
 # Import wallet
 function import_wallet() {
-    read -p "Please enter the wallet name you want to set: " wallet_name
+    read -p "Enter the wallet name you want to set: " wallet_name
     0gchaind keys add $wallet_name --recover --eth
 }
 
 # Check balance
 function check_balances() {
-    echo "Please ensure synchronization to the latest block before checking balance"
-    read -p "Please enter wallet address: " wallet_address
+    echo "Please ensure synchronization to the latest block before checking balance."
+    read -p "Enter wallet address: " wallet_address
     0gchaind query bank balances "$wallet_address"
 }
 
@@ -188,10 +186,9 @@ function check_sync_status() {
 # Create validator
 function add_validator() {
 
-    read -p "Please enter your wallet name: " wallet_name
-    read -p "Please enter the name you want to set for your validator: " validator_name
-    read -p "Please enter your validator details (e.g., 'Dumb Capital'): " details
-
+    read -p "Enter your wallet name: " wallet_name
+    read -p "Enter the validator name you want to set: " validator_name
+    read -p "Enter your validator details (e.g., 'Capital Corp'): " details
 
     0gchaind tx staking create-validator \
     --amount=1000000ua0gi \
@@ -210,100 +207,214 @@ function add_validator() {
     --gas-adjustment=1.4
 }
 
-# Self-delegate to validator
+# Delegate to Own Validator
 function delegate_self_validator() {
-    read -p "Please enter the number of tokens to stake (in ua0gai, for example, if you have 1000000 ua0gai, leave some water for yourself, enter 900000): " math
-    read -p "Please enter wallet name: " wallet_name
-    0gchaind tx staking delegate $(0gchaind keys show $wallet_name --bech val -a) ${math}ua0gi --from $wallet_name   --gas=auto --gas-adjustment=1.4 -y
-
+    read -p "Enter the amount of tokens to stake (unit: ua0gi, e.g., if you have 1,000,000 ua0gi, keep some for yourself and enter 900,000): " math
+    read -p "Enter your wallet name: " wallet_name
+    0gchaind tx staking delegate $(0gchaind keys show $wallet_name --bech val -a) ${math}ua0gi --from $wallet_name --gas=auto --gas-adjustment=1.4 -y
 }
 
-# Unjail validator
-function unjail_validator() {
-    read -p "Please enter your wallet name: " wallet_name
-    0gchaind tx slashing unjail --from $wallet_name --chain-id zgtendermint_16600-2 --gas=auto --gas-adjustment=1.4
+# Install Storage Node
+function install_storage_node() {
+    sudo apt-get update
+    sudo apt-get install clang cmake build-essential git screen openssl pkg-config libssl-dev -y
+
+    # Install Go
+    sudo rm -rf /usr/local/go
+    curl -L https://go.dev/dl/go1.22.0.linux-amd64.tar.gz | sudo tar -xzf - -C /usr/local
+    echo 'export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin' >> $HOME/.bash_profile
+    export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin
+    source $HOME/.bash_profile
+
+    # Install Rust
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+
+    # Clone Repository
+    git clone -b v0.8.4 https://github.com/0glabs/0g-storage-node.git
+
+    # Navigate to Directory and Build
+    cd 0g-storage-node
+    git checkout 40d4355
+    git submodule update --init
+
+    # Build the Code
+    echo "Preparing to build. This process may take some time. Please keep SSH open. Wait for 'Finish' to indicate completion."
+    cargo build --release
+
+    # Edit Configuration
+    read -p "Enter your EVM wallet private key (without '0x'): " miner_key
+    read -p "Enter JSON-RPC URL (Official: https://evmrpc-testnet.0g.ai): " json_rpc
+    sed -i '
+    s|# blockchain_rpc_endpoint = ".*"|blockchain_rpc_endpoint = "'$json_rpc'"|
+    s|# miner_key = ""|miner_key = "'$miner_key'"|
+    ' $HOME/0g-storage-node/run/config-testnet-turbo.toml
+
+    # Start the Storage Node
+    cd ~/0g-storage-node/run
+    screen -dmS zgs_node_session $HOME/0g-storage-node/target/release/zgs_node --config $HOME/0g-storage-node/run/config-testnet-turbo.toml
+
+    echo '====================== Installation complete. Use screen -ls to check the session. ==========================='
 }
 
-# Withdraw validator rewards
-function withdraw_rewards() {
-    read -p "Please enter your wallet name: " wallet_name
-    0gchaind tx distribution withdraw-rewards $(0gchaind keys show $wallet_name --bech val -a) --from $wallet_name --commission --chain-id zgtendermint_16600-2 --gas=auto --gas-adjustment=1.4 -y
-}
-
-# Edit validator information
-function edit_validator() {
-    read -p "Please enter wallet name: " wallet_name
-    read -p "Please enter new moniker (validator name): " new_moniker
-    read -p "Please enter new details: " new_details
-
-    0gchaind tx staking edit-validator \
-    --new-moniker="$new_moniker" \
-    --details="$new_details" \
-    --from=$wallet_name \
-    --chain-id=zgtendermint_16600-2 \
-    --gas=auto \
-    --gas-adjustment=1.4
-}
-
-# Main menu
-function main_menu() {
+# Check Storage Node Sync Status
+function check_storage_status() {
     while true; do
-        clear
-        echo "================================="
-        echo "0G Chain Node Management Menu"
-        echo "================================="
-        echo "0. Install Validator Node"
-        echo "1. Check Service Status"
-        echo "2. View Node Logs"
-        echo "3. Uninstall Node"
-        echo "4. Create New Wallet"
-        echo "5. Import Wallet"
-        echo "6. Check Wallet Balance"
-        echo "7. Check Node Sync Status"
-        echo "8. Create Validator"
-        echo "9. Self-Delegate to Validator"
-        echo "10. Unjail Validator"
-        echo "11. Withdraw Validator Rewards"
-        echo "12. Edit Validator Information"
-        echo "13. Exit"
-        echo "================================="
-        read -p "Please enter your choice (0-13): " choice
-
-        case $choice in
-            0) install_validator ;;
-            1) check_service_status ;;
-            2) view_logs ;;
-            3) uninstall_validator ;;
-            4) add_wallet ;;
-            5) import_wallet ;;
-            6) check_balances ;;
-            7) check_sync_status ;;
-            8) add_validator ;;
-            9) delegate_self_validator ;;
-            10) unjail_validator ;;
-            11) withdraw_rewards ;;
-            12) edit_validator ;;
-            13) exit 0 ;;
-            *) 
-                echo "Invalid option, please try again."
-                sleep 2
-                ;;
-        esac
+    response=$(curl -s -X POST http://localhost:5678 -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"zgs_getStatus","params":[],"id":1}')
+    logSyncHeight=$(echo $response | jq '.result.logSyncHeight')
+    connectedPeers=$(echo $response | jq '.result.connectedPeers')
+    echo -e "Block: \033[32m$logSyncHeight\033[0m, Peers: \033[34m$connectedPeers\033[0m"
+    sleep 5;
     done
 }
 
-# Community group information
-function community_group() {
-    clear
-    echo "============================"
-    echo "0G Community Groups"
-    echo "============================"
-    echo "Telegram Community: https://t.me/layerairdrop"
-    echo "Discord Group: https://discord.gg/0glabs"
-    echo "Twitter/X: https://twitter.com/0G_labs"
-    echo "============================"
-    read -p "Press Enter to return to main menu"
+# View Storage Node Logs
+function check_storage_logs() {
+    tail -f -n50 ~/0g-storage-node/run/log/zgs.log.$(TZ=UTC date +%Y-%m-%d)
 }
 
-# Script startup
+# Filter Error Logs
+function check_storage_error() {
+    tail -f -n50 ~/0g-storage-node/run/log/zgs.log.$(TZ=UTC date +%Y-%m-%d) | grep ERROR
+}
+
+# Restart Storage Node
+function restart_storage() {
+    # Stop Existing Process
+    screen -S zgs_node_session -X quit
+    # Start the Node
+    cd ~/0g-storage-node/run
+    screen -dmS zgs_node_session $HOME/0g-storage-node/target/release/zgs_node --config $HOME/0g-storage-node/run/config-testnet-turbo.toml
+    echo '====================== Restarted successfully. Use screen -r zgs_node_session to check. ==========================='
+}
+
+# Delete Storage Node Logs
+function delete_storage_logs() {
+    echo "Are you sure you want to delete storage node logs? [Y/N]"
+    read -r -p "Confirm: " response
+    case "$response" in
+        [yY][eE][sS]|[yY])
+            rm -r ~/0g-storage-node/run/log/*
+            echo "Logs deleted. Please restart the storage node."
+            ;;
+        *)
+            echo "Operation canceled."
+            ;;
+    esac
+}
+
+# Uninstall Storage Node
+function uninstall_storage_node() {
+    echo "Are you sure you want to uninstall the 0G AI storage node? This will delete all related data. [Y/N]"
+    read -r -p "Confirm: " response
+
+    case "$response" in
+        [yY][eE][sS]|[yY])
+            echo "Starting to uninstall the storage node..."
+            rm -rf $HOME/0g-storage-node
+            echo "Storage node uninstalled successfully."
+            ;;
+        *)
+            echo "Uninstallation canceled."
+            ;;
+    esac
+}
+
+# Convert ETH Address
+function transfer_EIP() {
+    read -p "Enter your wallet name: " wallet_name
+    echo "0x$(0gchaind debug addr $(0gchaind keys show $wallet_name -a) | grep hex | awk '{print $3}')"
+}
+
+# Export Validator Key
+function export_priv_validator_key() {
+    echo "==================== Please back up the following content to your notes or an Excel file ==========================="
+    cat ~/.0gchain/config/priv_validator_key.json
+}
+
+# Update Script
+function update_script() {
+    SCRIPT_PATH="./0g.sh"  # Define script path
+    SCRIPT_URL="https://raw.githubusercontent.com/a3165458/0g.ai/main/0g.sh"
+
+    # Backup the original script
+    cp $SCRIPT_PATH "${SCRIPT_PATH}.bak"
+
+    # Download the new script and check if successful
+    if curl -o $SCRIPT_PATH $SCRIPT_URL; then
+        chmod +x $SCRIPT_PATH
+        echo "Script updated. Please exit and run 'bash 0g.sh' to restart the script."
+    else
+        echo "Update failed. Restoring the original script."
+        mv "${SCRIPT_PATH}.bak" $SCRIPT_PATH
+    fi
+}
+
+# Main Menu
+function main_menu() {
+    while true; do
+        clear
+        echo "This script and tutorial were written by Twitter user @y95277777 and maintained by @rainy242869. It is free and open-source. Do not trust paid services."
+        echo "======================= 0G AI Node Installation ================================"
+        echo "======================= Validator Node Functions =============================="
+        echo "Node Community Telegram Group: https://t.me/niuwuriji"
+        echo "Node Community Discord: https://discord.gg/GbMV5EcNWF"
+        echo "To exit the script, press Ctrl + C."
+        echo "Select an action:"
+        echo "======================= Validator Node ================================"
+        echo "1. Install Validator Node"
+        echo "2. Create Wallet"
+        echo "3. Import Wallet"
+        echo "4. Check Wallet Balance"
+        echo "5. Check Node Sync Status"
+        echo "6. Check Current Service Status"
+        echo "7. View Logs"
+        echo "8. Uninstall Validator Node"
+        echo "9. Create Validator"
+        echo "10. Delegate Tokens to Own Validator Address"
+        echo "11. Convert ETH Address"
+        echo "======================= Storage Node ================================"
+        echo "12. Install Storage Node"
+        echo "13. Check Storage Node Sync Status"
+        echo "14. View Storage Node Logs"
+        echo "15. Filter Error Logs"
+        echo "16. Restart Storage Node"
+        echo "17. Uninstall Storage Node"
+        echo "18. Delete Storage Node Logs"
+        echo "======================= Backup Functions ================================"
+        echo "19. Backup Validator Private Key"
+        echo "======================================================="
+        echo "20. Update This Script"
+        read -p "Enter an option (1-20): " OPTION
+
+        case $OPTION in
+        1) install_validator ;;
+        2) add_wallet ;;
+        3) import_wallet ;;
+        4) check_balances ;;
+        5) check_sync_status ;;
+        6) check_service_status ;;
+        7) view_logs ;;
+        8) uninstall_validator ;;
+        9) add_validator ;;
+        10) delegate_self_validator ;;
+        11) transfer_EIP ;;
+        12) install_storage_node ;;
+        13) check_storage_status ;;
+        14) check_storage_logs ;;
+        15) check_storage_error ;;
+        16) restart_storage ;;
+        17) uninstall_storage_node ;;
+        18) delete_storage_logs ;;
+        19) export_priv_validator_key ;;
+        20) update_script ;;
+
+        *) echo "Invalid option." ;;
+        esac
+        
+        echo "Press any key to return to the main menu..."
+        read -n 1
+    done
+}
+
+# Display Main Menu
 main_menu
