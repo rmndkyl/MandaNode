@@ -216,8 +216,9 @@ function delegate_self_validator() {
 
 # Install Storage Node
 function install_storage_node() {
+    # Update and install dependencies
     sudo apt-get update
-    sudo apt-get install clang cmake build-essential git screen openssl pkg-config libssl-dev -y
+    sudo apt-get install clang cmake build-essential git screen openssl pkg-config libssl-dev curl -y
 
     # Install Go
     sudo rm -rf /usr/local/go
@@ -227,9 +228,21 @@ function install_storage_node() {
     source $HOME/.bash_profile
 
     # Install Rust
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    if ! command -v rustup &> /dev/null; then
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    fi
+    source $HOME/.cargo/env
+
+    # Verify Rust installation
+    if ! command -v cargo &> /dev/null; then
+        echo "Rust installation failed. Please install manually."
+        return 1
+    fi
 
     # Clone Repository
+    if [ -d "0g-storage-node" ]; then
+        rm -rf 0g-storage-node
+    fi
     git clone -b v0.8.4 https://github.com/0glabs/0g-storage-node.git
 
     # Navigate to Directory and Build
@@ -238,16 +251,36 @@ function install_storage_node() {
     git submodule update --init
 
     # Build the Code
-    echo "Preparing to build. This process may take some time. Please keep SSH open. Wait for 'Finish' to indicate completion."
-    cargo build --release
+    echo "Preparing to build. This process may take some time. Please keep SSH open."
+    if ! cargo build --release; then
+        echo "Build failed. Please check your system requirements and try again."
+        return 1
+    fi
 
     # Edit Configuration
-    read -p "Enter your EVM wallet private key (without '0x'): " miner_key
+    while true; do
+        read -p "Enter your EVM wallet private key (without '0x'): " miner_key
+        # Basic validation of private key
+        if [[ "$miner_key" =~ ^[0-9a-fA-F]{64}$ ]]; then
+            break
+        else
+            echo "Invalid private key. Please enter a 64-character hexadecimal private key."
+        fi
+    done
+
     read -p "Enter JSON-RPC URL (Official: https://evmrpc-testnet.0g.ai): " json_rpc
-    sed -i '
-    s|# blockchain_rpc_endpoint = ".*"|blockchain_rpc_endpoint = "'$json_rpc'"|
-    s|# miner_key = ""|miner_key = "'$miner_key'"|
-    ' $HOME/0g-storage-node/run/config-testnet-turbo.toml
+
+    # Ensure config file exists
+    mkdir -p $HOME/0g-storage-node/run
+
+    # Use safer sed with escaping
+    sed -i \
+    -e "s|# blockchain_rpc_endpoint = \".*\"|blockchain_rpc_endpoint = \"$json_rpc\"|" \
+    -e "s|# miner_key = \"\"|miner_key = \"$miner_key\"|" \
+    $HOME/0g-storage-node/run/config-testnet-turbo.toml
+
+    # Create log directory
+    mkdir -p $HOME/0g-storage-node/run/log
 
     # Start the Storage Node
     cd ~/0g-storage-node/run
