@@ -1,5 +1,13 @@
 #!/bin/bash
 
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+MAGENTA='\033[0;35m'
+NC='\033[0m'
+
 # Display a logo
 echo -e "${BLUE}Showing Animation...${NC}"
 wget -O loader.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/loader.sh && chmod +x loader.sh && sed -i 's/\r$//' loader.sh && ./loader.sh
@@ -8,94 +16,132 @@ wget -O logo.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/logo
 rm -f logo.sh
 sleep 4
 
-# Install necessary packages
-echo "Installing necessary packages..."
-sudo apt update
-sudo apt install -y protobuf-compiler docker.io jq curl iptables build-essential git wget lz4 make gcc nano automake autoconf tmux htop nvme-cli pkg-config libssl-dev libleveldb-dev tar clang bsdmainutils ncdu unzip
-sudo systemctl start docker
-sudo systemctl enable docker
-echo "Packages installed successfully."
+error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+    exit 1
+}
 
-# Check if the directory exists
-if [ -d "nexus-docker" ]; then
-  echo "Directory nexus-docker already exists."
-else
-  mkdir nexus-docker
-  echo "Directory nexus-docker created."
-fi
+warn() {
+    echo -e "${YELLOW}[WARN]${NC} $1"
+}
 
-# Navigate into the directory
-cd nexus-docker
+info() {
+    echo -e "${BLUE}[INFO]${NC} $1"
+}
 
-# Ask for Prover ID
-read -p "Enter your Prover ID: " prover_id
+success() {
+    echo -e "${GREEN}[SUCCESS]${NC} $1"
+}
 
-# Create or replace the Dockerfile with the specified content
-cat <<EOL > Dockerfile
-FROM ubuntu:latest
-# Disable interactive configuration
-ENV DEBIAN_FRONTEND=noninteractive
+task() {
+    echo -e "${MAGENTA}[TASK]${NC} $1"
+}
 
-# Update and upgrade the system
-RUN apt-get update && apt-get install -y \\
-    curl \\
-    iptables \\
-    iproute2 \\
-    jq \\
-    nano \\
-    git \\
-    build-essential \\
-    wget \\
-    lz4 \\
-    make \\
-    gcc \\
-    automake \\
-    autoconf \\
-    tmux \\
-    htop \\
-    nvme-cli \\
-    pkg-config \\
-    libssl-dev \\
-    libleveldb-dev \\
-    tar \\
-    clang \\
-    bsdmainutils \\
-    ncdu \\
-    unzip \\
-    ca-certificates \\
-    protobuf-compiler
+run_with_spinner() {
+    local msg="$1"
+    shift
+    local cmd=("$@")
+    local pid
+    local spin_chars='🕘🕛🕒🕡'
+    local delay=0.1
+    local i=0
+
+    "${cmd[@]}" > /dev/null 2>&1 &
+    pid=$!
+
+    printf "${MAGENTA}[TASK]${NC} %s...  " "$msg"
+
+    while kill -0 "$pid" 2>/dev/null; do
+        i=$(( (i+1) %4 ))
+        printf "\r${MAGENTA}[TASK]${NC} %s... ${CYAN}%s${NC}" "$msg" "${spin_chars:$i:1}"
+        sleep "$delay"
+    done
+
+    wait "$pid"
+    local exit_status=$?
+
+    printf "\r\033[K"
+    return $exit_status
+}
+
+# Install required packages
+task "Installing system dependencies..."
+run_with_spinner "Updating packages" sudo apt-get update
+run_with_spinner "Installing dependencies" sudo apt-get install -y curl wget build-essential pkg-config libssl-dev unzip git-all
 
 # Install Rust
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-ENV PATH="/root/.cargo/bin:\${PATH}"
-
-# Set up Nexus Prover ID using the user provided value
-RUN mkdir -p /root/.nexus && echo "$prover_id" > /root/.nexus/prover-id
-
-# Run the Nexus command and then open a shell
-CMD ["bash", "-c", "curl -k https://cli.nexus.xyz/ | sh && nexus run; exec /bin/bash"]
-EOL
-
-# Detect existing nexus-docker instances and find the highest instance number
-existing_instances=$(docker ps -a --filter "name=nexus-docker-" --format "{{.Names}}" | grep -Eo 'nexus-docker-[0-9]+' | grep -Eo '[0-9]+' | sort -n | tail -1)
-
-# Set the instance number
-if [ -z "$existing_instances" ]; then
-  instance_number=1
+task "Checking Rust installation"
+if ! command -v rustc &> /dev/null; then
+    info "Rust not found. Installing..."
+    curl -sSL https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Rust-Installer/rust.sh | bash || error "Failed to install Rust"
+    source "$HOME/.cargo/env" || warn "Failed to source cargo environment"
 else
-  instance_number=$((existing_instances + 1))
+    success "Rust is already installed"
 fi
 
-# Set the container name
-container_name="nexus-docker-$instance_number"
+# Install Protocol Buffers
+task "Installing Protocol Buffers"
+if ! command -v protoc &> /dev/null; then
+    (
+        run_with_spinner "Downloading protoc" wget -q https://github.com/protocolbuffers/protobuf/releases/download/v21.5/protoc-21.5-linux-x86_64.zip || exit 1
+        run_with_spinner "Extracting protoc" unzip -o protoc-21.5-linux-x86_64.zip -d protoc || exit 1
+        sudo rm -rf /usr/local/include/google 2>/dev/null
+        run_with_spinner "Installing protoc" sudo mv protoc/bin/protoc /usr/local/bin/ && sudo mv protoc/include/* /usr/local/include/
+    ) || error "Protocol Buffers installation failed"
+    rm -rf protoc* 2>/dev/null
+else
+    success "Protocol Buffers already installed"
+fi
 
-# Create a data directory for the instance
-data_dir="/root/nexus-data/$container_name"
-mkdir -p "$data_dir"
+# Verify systemd
+task "Checking systemd"
+if ! command -v systemctl &> /dev/null; then
+    error "systemd is required but not installed"
+fi
 
-# Build the Docker image with the specified name
-docker build -t $container_name .
+# Nexus setup
+NEXUS_HOME="$HOME/.nexus"
+REPO_PATH="$NEXUS_HOME/network-api"
+export NONINTERACTIVE=1
 
-# Display the completion message
-echo -e "\e[32mSetup is complete. To run the Docker container, use the following command:\e[0m"
-echo "docker run -it --name $container_name -v $data_dir:/root/.nexus $container_name"
+task "Setting up Nexus"
+[ -d "$NEXUS_HOME" ] || mkdir -p "$NEXUS_HOME"
+
+if [ -d "$REPO_PATH" ]; then
+    run_with_spinner "Updating repository" git -C "$REPO_PATH" stash && git -C "$REPO_PATH" fetch --tags
+else
+    run_with_spinner "Cloning repository" git clone https://github.com/nexus-xyz/network-api "$REPO_PATH"
+fi
+
+latest_tag=$(git -C "$REPO_PATH" describe --tags $(git -C "$REPO_PATH" rev-list --tags --max-count=1))
+run_with_spinner "Checking out latest tag" git -C "$REPO_PATH" checkout "$latest_tag"
+
+# Create systemd service
+task "Configuring systemd service"
+SERVICE_FILE="/etc/systemd/system/nexus.service"
+USER=$(whoami)
+CARGO_PATH="$HOME/.cargo/bin/cargo"
+
+sudo tee "$SERVICE_FILE" > /dev/null <<EOF
+[Unit]
+Description=Nexus Node Service
+After=network.target
+
+[Service]
+Type=simple
+User=$USER
+WorkingDirectory=$REPO_PATH/clients/cli
+ExecStart=$CARGO_PATH run --release -- --start --beta
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+run_with_spinner "Reloading systemd" sudo systemctl daemon-reload
+run_with_spinner "Enabling service" sudo systemctl enable nexus
+run_with_spinner "Starting service" sudo systemctl start nexus
+
+success "Installation completed successfully!"
+echo -e "Run ${CYAN}journalctl -u nexus.service -f -n 50${NC} to check the service status"
