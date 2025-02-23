@@ -20,6 +20,7 @@ FULL_NODE_URL="https://github.com/Project-InitVerse/ini-chain/archive/refs/tags/
 POOL_ADDRESSES=(
     "pool-a.yatespool.com:31588"
     "pool-b.yatespool.com:32488"
+    "pool-c.yatespool.com:31189"
 )
 
 RESTART_INTERVAL=3600  # 1 hour in seconds
