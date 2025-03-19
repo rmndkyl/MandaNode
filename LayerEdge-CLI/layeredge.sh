@@ -33,21 +33,51 @@ check_success() {
     fi
 }
 
-# Create .env file
+# Create .env file with user-provided private key
 create_env_file() {
     print_section "Creating .env file"
     
+    # Default private key value
+    PRIVATEKEY="cli-node-private-key"
+    
+    # Prompt for private key
+    echo -e "${YELLOW}Do you want to enter your private key now? (y/n)${NC}"
+    read -r answer
+    
+    if [[ "$answer" =~ ^[Yy]$ ]]; then
+        # If user wants to enter key now, prompt for it
+        echo -e "${CYAN}Please enter your private key:${NC} "
+        read -r -s PRIVATEKEY  # -s flag for silent input (doesn't show typing)
+        
+        if [ -z "$PRIVATEKEY" ]; then
+            echo -e "${RED}No private key entered, using default placeholder.${NC}"
+            PRIVATEKEY="cli-node-private-key"
+            echo -e "${YELLOW}You will need to manually update the private key later.${NC}"
+        else
+            echo -e "${GREEN}Private key captured successfully!${NC}"
+        fi
+    else
+        echo -e "${YELLOW}Using default placeholder for private key.${NC}"
+        echo -e "${YELLOW}You will need to manually update the private key later.${NC}"
+    fi
+    
+    # Create the .env file with the provided or default key
     cat > .env << EOL
 GRPC_URL=34.31.74.109:9090
 CONTRACT_ADDR=cosmos1ufs3tlq4umljk0qfe8k5ya0x6hpavn897u2cnf9k0en9jr7qarqqt56709
 ZK_PROVER_URL=http://127.0.0.1:3001
 API_REQUEST_TIMEOUT=100
 POINTS_API=http://127.0.0.1:8080
-PRIVATE_KEY='cli-node-private-key'
+PRIVATE_KEY='${PRIVATEKEY}'
 EOL
     
-    echo -e "${CYAN}Created .env file with default settings.${NC}"
-    echo -e "${YELLOW}IMPORTANT: Please update the PRIVATE_KEY value in .env file before running the application!${NC}"
+    echo -e "${CYAN}Created .env file with the specified settings.${NC}"
+    
+    # If user didn't enter a key, remind them again
+    if [ "$PRIVATEKEY" == "cli-node-private-key" ]; then
+        echo -e "${YELLOW}Remember: You need to update the private key in ${HOME}/light-node/.env before running the application!${NC}"
+        echo -e "${YELLOW}You can do this with: nano ${HOME}/light-node/.env${NC}"
+    fi
 }
 
 # Main script starts here
