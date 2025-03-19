@@ -48,7 +48,7 @@ cleanup() {
     pkill -f './light-node' 2>/dev/null || true
     pkill -f 'cargo run' 2>/dev/null || true
     # Remove temporary Go files
-    rm -f go1.21.8.linux-amd64.tar.gz 2>/dev/null
+    rm -f go1.24.1.linux-amd64.tar.gz 2>/dev/null
     echo "Cleanup complete."
 }
 
@@ -80,13 +80,25 @@ command_exists() {
 check_dependencies() {
     echo "Checking dependencies..."
 
-    # Check Go
-    if ! command_exists go; then
-        echo "Installing Go..."
-        wget https://golang.org/dl/go1.21.8.linux-amd64.tar.gz
-        sudo tar -C /usr/local -xzf go1.21.8.linux-amd64.tar.gz
+    # Check Go - updated to use version 1.24.1
+    if ! command_exists go || [[ $(go version) != *"go1.24"* ]]; then
+        echo "Installing Go 1.24.1..."
+        wget https://go.dev/dl/go1.24.1.linux-amd64.tar.gz
+        sudo rm -rf /usr/local/go
+        sudo tar -C /usr/local -xzf go1.24.1.linux-amd64.tar.gz
         echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc
+        echo 'export GOPATH=$HOME/go' >> ~/.bashrc
+        echo 'export PATH=$PATH:$GOPATH/bin' >> ~/.bashrc
         source ~/.bashrc
+        rm -f go1.24.1.linux-amd64.tar.gz
+    fi
+    
+    # Verify Go version
+    go version
+    if [[ $(go version) != *"go1.24"* ]]; then
+        echo -e "${YELLOW}Warning: Go version may not be 1.24. Current version: $(go version)${NC}"
+        echo "Attempting to ensure correct version is used..."
+        export PATH="/usr/local/go/bin:$PATH"
     fi
 
     # Check Rust
@@ -115,8 +127,6 @@ check_dependencies() {
     fi
     echo "Risc0 Toolchain verified: $(rzup --version)"
 }
-
-
 
 # Clone repository and navigate
 setup_repository() {
