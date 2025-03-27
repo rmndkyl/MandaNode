@@ -5,5 +5,5 @@
 Open your terminal and execute the following command to download and run the script:
 
    ```sh
-   cd $HOME && rm -rf Dria.sh && wget -O Dria.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Dria-Nodes/Dria.sh && chmod +x Dria.sh && sed -i 's/\r$//' Dria.sh && ./Dria.sh
+   cd $HOME && rm -rf DriaV2.sh && wget -O DriaV2.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Dria-Nodes/DriaV2.sh && chmod +x DriaV2.sh && sed -i 's/\r$//' DriaV2.sh && ./DriaV2.sh
    ```
