@@ -1,479 +1,343 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-BOLD='\033[1m'
-RED='\033[31m'
-GREEN='\033[32m'
-YELLOW='\033[33m'
-BLUE='\033[34m'
-CYAN='\033[36m'
-MAGENTA='\033[35m'
-NC='\033[0m'
+# Showing Logo
+echo "Showing Animation..."
+sudo apt install -y wget curl  # Ensure wget and curl are installed
+wget -O loader.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/loader.sh && chmod +x loader.sh && sed -i 's/\r$//' loader.sh && ./loader.sh
+wget -O logo.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/logo.sh && chmod +x logo.sh && sed -i 's/\r$//' logo.sh && ./logo.sh
+rm -rf logo.sh loader.sh
+sleep 4
 
-# Ritual basic file installation and configuration
-install_ritual() {
-
-# Install essential packages
-command_exists() {
-    command -v "$1" >/dev/null 2>&1
-}
-
-echo -e "${CYAN}Updating system...${NC}"
-sudo apt update
-
-echo -e "${CYAN}Upgrading packages...${NC}"
-sudo apt upgrade -y
-
-echo -e "${CYAN}Removing unused packages...${NC}"
-sudo apt autoremove -y
-
-echo -e "${CYAN}Installing necessary packages...${NC}"
-sudo apt -qy install curl git jq lz4 build-essential screen
-
-echo -e "${BOLD}${CYAN}Checking for Docker installation...${NC}"
-if ! command_exists docker; then
-    echo -e "${RED}Docker is not installed. Installing Docker...${NC}"
-    sudo apt install docker.io -y
-    echo -e "${CYAN}Docker installed successfully.${NC}"
-else
-    echo -e "${CYAN}Docker is already installed.${NC}"
+# Check if the script is run as root
+if [ "$(id -u)" != "0" ]; then
+    echo "This script must be run as root."
+    echo "Please try switching to the root user using 'sudo -i' and then run this script again."
+    exit 1
 fi
 
-echo -e "${CYAN}Displaying Docker version...${NC}"
-docker version
+# Script save path
+SCRIPT_PATH="$HOME/Ritual.sh"
 
-echo -e "${CYAN}Updating package lists...${NC}"
-sudo apt-get update
+# Log file paths
+LOG_FILE="/root/ritual_install.log"
+DOCKER_LOG_FILE="/root/infernet_node.log"
 
-if ! command_exists docker-compose; then
-    echo -e "${RED}Docker Compose is not installed. Installing Docker Compose...${NC}"
-    sudo curl -L https://github.com/docker/compose/releases/download/$(curl --silent https://api.github.com/repos/docker/compose/releases/latest | jq .name -r)/docker-compose-$(uname -s)-$(uname -m) -o /usr/bin/docker-compose
-    sudo chmod 755 /usr/bin/docker-compose
-    echo -e "${CYAN}Docker Compose installed successfully.${NC}"
-else
-    echo -e "${CYAN}Docker Compose is already installed.${NC}"
-fi
+# Initialize log files
+echo "Ritual Script Log - $(date)" > "$LOG_FILE"
+echo "Docker Container Log - $(date)" > "$DOCKER_LOG_FILE"
 
-echo -e "${CYAN}Installing Docker Compose CLI plugin...${NC}"
-DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
-mkdir -p $DOCKER_CONFIG/cli-plugins
-curl -SL https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-linux-x86_64 -o $DOCKER_CONFIG/cli-plugins/docker-compose
+# Main menu function
+function main_menu() {
+    while true; do
+        clear
+        echo "Script and tutorial written by Telegram user @rmndkyl, free and open source, do not believe in paid versions." | tee -a "$LOG_FILE"
+        echo "============================ Ritual Node Installation ====================================" | tee -a "$LOG_FILE"
+        echo "To exit the script, press Ctrl + C." | tee -a "$LOG_FILE"
+        echo "Please select an operation:" | tee -a "$LOG_FILE"
+        echo "1) Install Ritual Node" | tee -a "$LOG_FILE"
+        echo "2) View Ritual Node Logs" | tee -a "$LOG_FILE"
+        echo "3) Remove Ritual Node" | tee -a "$LOG_FILE"
+        echo "4) Exit Script" | tee -a "$LOG_FILE"
+        
+        read -p "Enter your choice: " choice
+        echo "User selection: $choice" >> "$LOG_FILE"
 
-echo -e "${CYAN}Making CLI plugin executable...${NC}"
-chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
+        case $choice in
+            1) 
+                install_ritual_node
+                ;;
+            2)
+                view_logs
+                ;;
+            3)
+                remove_ritual_node
+                ;;
+            4)
+                echo "Exiting script!" | tee -a "$LOG_FILE"
+                exit 0
+                ;;
+            *)
+                echo "Invalid option, please try again." | tee -a "$LOG_FILE"
+                ;;
+        esac
 
-echo -e "${CYAN}Displaying Docker Compose version...${NC}"
-docker-compose version
-
-# Ritual installation
-echo -e "${CYAN}Cloning the Ritual repository...${NC}"
-git clone https://github.com/ritual-net/infernet-container-starter
-
-docker_yaml=~/infernet-container-starter/deploy/docker-compose.yaml
-sed -i 's/image: ritualnetwork\/infernet-node:1.3.1/image: ritualnetwork\/infernet-node:1.2.0/' "$docker_yaml"
-echo -e "${BOLD}${CYAN}docker-compose.yaml version reverted to 1.2.0.${NC}"
-
-echo -e "${MAGENTA}${BOLD}To start Ritual, run 'screen -S ritual', then 'cd ~/infernet-container-starter && project=hello-world make deploy-container'.${NC}"
-echo -e "${MAGENTA}${BOLD}When you see a large green RITUAL message, use Ctrl+A+D to detach.${NC}"
+        echo "Press any key to continue..." | tee -a "$LOG_FILE"
+        read -n 1 -s
+    done
 }
 
-install_ritual_2() {
+function install_ritual_node() {
+    echo "Starting Ritual Node Installation - $(date)" | tee -a "$LOG_FILE"
+    
+    # System update and necessary package installation (including Python and pip)
+    echo "System update and installing necessary packages..." | tee -a "$LOG_FILE"
+    sudo apt update && sudo apt upgrade -y >> "$LOG_FILE" 2>&1
+    sudo apt -qy install curl git jq lz4 build-essential screen python3 python3-pip >> "$LOG_FILE" 2>&1
 
-# Prompt the user for a new RPC URL and Private Key
-echo -ne "${BOLD}${MAGENTA}Enter the new RPC URL: ${NC}"
-read -e rpc_url1
+    # Install or upgrade Python packages
+    echo "[Note] Upgrading pip3 and installing infernet-cli / infernet-client" | tee -a "$LOG_FILE"
+    pip3 install --upgrade pip >> "$LOG_FILE" 2>&1
+    pip3 install infernet-cli infernet-client >> "$LOG_FILE" 2>&1
 
-echo -ne "${BOLD}${MAGENTA}Enter the new Private Key (prepend with 0x): ${NC}"
-read -e private_key1
+    # Check if Docker is already installed
+    echo "Checking if Docker is already installed..." | tee -a "$LOG_FILE"
+    if command -v docker &> /dev/null; then
+        echo " - Docker is already installed, skipping this step." | tee -a "$LOG_FILE"
+    else
+        echo " - Docker not installed, proceeding with installation..." | tee -a "$LOG_FILE"
+        sudo apt update >> "$LOG_FILE" 2>&1
+        sudo apt install -y apt-transport-https ca-certificates curl software-properties-common >> "$LOG_FILE" 2>&1
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - >> "$LOG_FILE" 2>&1
+        sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" >> "$LOG_FILE" 2>&1
+        sudo apt update >> "$LOG_FILE" 2>&1
+        sudo apt install -y docker-ce docker-ce-cli containerd.io >> "$LOG_FILE" 2>&1
+        sudo systemctl enable docker >> "$LOG_FILE" 2>&1
+        sudo systemctl start docker >> "$LOG_FILE" 2>&1
+        echo "Docker installation complete, current version:" | tee -a "$LOG_FILE"
+        docker --version >> "$LOG_FILE" 2>&1
+    fi
 
-# File paths to be modified
-json_1=~/infernet-container-starter/deploy/config.json
-json_2=~/infernet-container-starter/projects/hello-world/container/config.json
+    # Check Docker Compose installation
+    echo "Checking if Docker Compose is installed..." | tee -a "$LOG_FILE"
+    if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null; then
+        echo " - Docker Compose not installed, proceeding with installation..." | tee -a "$LOG_FILE"
+        sudo curl -L "https://github.com/docker/compose/releases/download/v2.29.2/docker-compose-$(uname -s)-$(uname -m)" \
+            -o /usr/local/bin/docker-compose >> "$LOG_FILE" 2>&1
+        sudo chmod +x /usr/local/bin/docker-compose >> "$LOG_FILE" 2>&1
+    else
+        echo " - Docker Compose is already installed, skipping this step." | tee -a "$LOG_FILE"
+    fi
 
-# Create a temporary file
-temp_file=$(mktemp)
+    echo "[Confirm] Docker Compose version:" | tee -a "$LOG_FILE"
+    docker compose version >> "$LOG_FILE" 2>&1 || docker-compose version >> "$LOG_FILE" 2>&1
 
-# Use jq to update RPC URL and Private Key in the configuration and save to a temporary file
-jq --arg rpc "$rpc_url1" --arg priv "$private_key1" \
-    '.chain.rpc_url = $rpc |
-     .chain.wallet.private_key = $priv |
-     .chain.trail_head_blocks = 3 |
-     .chain.registry_address = "0x3B1554f346DFe5c482Bb4BA31b880c1C18412170" |
-     .chain.snapshot_sync.sleep = 3 |
-     .chain.snapshot_sync.batch_size = 800 |
-     .chain.snapshot_sync.starting_sub_id = 160000 |
-     .chain.snapshot_sync.sync_period = 30' $json_1 > $temp_file
+    # Install Foundry and set environment variables
+    echo "Installing Foundry " | tee -a "$LOG_FILE"
+    if pgrep anvil &>/dev/null; then
+        echo "[Warning] anvil is running, shutting it down to update Foundry." | tee -a "$LOG_FILE"
+        pkill anvil
+        sleep 2
+    fi
 
-# Overwrite the original file with the temporary file and delete the temporary file
-mv $temp_file $json_1
+    cd ~ || exit 1
+    mkdir -p foundry
+    cd foundry
+    curl -L https://foundry.paradigm.xyz | bash >> "$LOG_FILE" 2>&1
+    $HOME/.foundry/bin/foundryup >> "$LOG_FILE" 2>&1
+    if [[ ":$PATH:" != *":$HOME/.foundry/bin:"* ]]; then
+        export PATH="$HOME/.foundry/bin:$PATH"
+    fi
 
-# Apply the same changes to the second file
-jq --arg rpc "$rpc_url1" --arg priv "$private_key1" \
-    '.chain.rpc_url = $rpc |
-     .chain.wallet.private_key = $priv |
-     .chain.trail_head_blocks = 3 |
-     .chain.registry_address = "0x3B1554f346DFe5c482Bb4BA31b880c1C18412170" |
-     .chain.snapshot_sync.sleep = 3 |
-     .chain.snapshot_sync.batch_size = 800 |
-     .chain.snapshot_sync.starting_sub_id = 160000 |
-     .chain.snapshot_sync.sync_period = 30' $json_2 > $temp_file
+    echo "[Confirm] forge version:" | tee -a "$LOG_FILE"
+    forge --version >> "$LOG_FILE" 2>&1 || {
+        echo "[Error] Cannot find forge command, ~/.foundry/bin may not be in PATH or installation failed." | tee -a "$LOG_FILE"
+        exit 1
+    }
 
-mv $temp_file $json_2
+    if [ -f /usr/bin/forge ]; then
+        echo "[Note] Removing /usr/bin/forge..." | tee -a "$LOG_FILE"
+        sudo rm /usr/bin/forge
+    fi
 
-# Delete the temporary file
-rm -f $temp_file
+    echo "[Note] Foundry installation and environment variable configuration completed." | tee -a "$LOG_FILE"
+    cd ~ || exit 1
 
-echo -e "${BOLD}${MAGENTA}RPC URL and Private Key have been updated.${NC}"
+    # Clone infernet-container-starter
+    if [ -d "infernet-container-starter" ]; then
+        echo "Directory infernet-container-starter already exists, deleting..." | tee -a "$LOG_FILE"
+        rm -rf "infernet-container-starter"
+    fi
 
-# File path for Makefile
-makefile=~/infernet-container-starter/projects/hello-world/contracts/Makefile 
+    echo "Cloning infernet-container-starter..." | tee -a "$LOG_FILE"
+    git clone https://github.com/ritual-net/infernet-container-starter >> "$LOG_FILE" 2>&1
+    cd infernet-container-starter || { echo "[Error] Failed to enter directory" | tee -a "$LOG_FILE"; exit 1; }
 
-# Use sed to update sender and RPC_URL values
-sed -i "s|sender := .*|sender := $private_key1|" "$makefile"
-sed -i "s|RPC_URL := .*|RPC_URL := $rpc_url1|" "$makefile"
+    # Modify port mapping in deploy/docker-compose.yaml
+    echo "Modifying port mappings in docker-compose.yaml..." | tee -a "$LOG_FILE"
+    DOCKER_COMPOSE_FILE="deploy/docker-compose.yaml"
+    if [ -f "$DOCKER_COMPOSE_FILE" ]; then
+        # Change 4000 to 4005
+        sed -i 's/0.0.0.0:4000:4000/0.0.0.0:4005:4000/' "$DOCKER_COMPOSE_FILE" >> "$LOG_FILE" 2>&1
+        # Change 8545 to 8550
+        sed -i 's/8545:3000/8550:3000/' "$DOCKER_COMPOSE_FILE" >> "$LOG_FILE" 2>&1
+        echo "[Note] Port mappings changed to 0.0.0.0:4005:4000 and 8550:3000" | tee -a "$LOG_FILE"
+    else
+        echo "[Error] Could not find $DOCKER_COMPOSE_FILE, port modification failed" | tee -a "$LOG_FILE"
+    fi
 
-echo -e "${BOLD}${CYAN}Makefile has been updated.${NC}"
+    # Pull Docker image
+    echo "Pulling Docker image..." | tee -a "$LOG_FILE"
+    docker pull ritualnetwork/hello-world-infernet:latest >> "$LOG_FILE" 2>&1
 
-# Update deploy.s.sol
-deploy_s_sol=~/infernet-container-starter/projects/hello-world/contracts/script/Deploy.s.sol
-old_registry="0x663F3ad617193148711d28f5334eE4Ed07016602"
-new_registry="0x3B1554f346DFe5c482Bb4BA31b880c1C18412170"
+    # Deploy in a screen session with logging enabled
+    echo "Checking if screen session 'ritual' exists..." | tee -a "$LOG_FILE"
+    if screen -list | grep -q "ritual"; then
+        echo "[Note] Found ritual session running, terminating..." | tee -a "$LOG_FILE"
+        screen -S ritual -X quit
+        sleep 1
+    fi
 
-sed -i "s|$old_registry|$new_registry|" "$deploy_s_sol"
-echo -e "${CYAN}deploy.s.sol has been updated.${NC}"
+    echo "Starting container deployment in screen -S ritual session, logging to /root/ritual_screen.log..." | tee -a "$LOG_FILE"
+    screen -S ritual -L -Logfile /root/ritual_screen.log -dm bash -c 'project=hello-world make deploy-container; exec bash'
+    echo "[Note] Deployment is running in background screen session (ritual), logs saved to /root/ritual_screen.log" | tee -a "$LOG_FILE"
 
-# Update docker-compose.yaml
-docker_yaml=~/infernet-container-starter/deploy/docker-compose.yaml
-sed -i 's/image: ritualnetwork\/infernet-node:1.2.0/image: ritualnetwork\/infernet-node:1.4.0/' "$docker_yaml"
-echo -e "${BOLD}${CYAN}docker-compose.yaml has been updated to 1.4.0.${NC}"
+    # User input (Private Key)
+    echo "Configuring Ritual Node files..." | tee -a "$LOG_FILE"
+    read -p "Please enter your Private Key (0x...): " PRIVATE_KEY
+    echo "User input Private Key: [hidden]" >> "$LOG_FILE"
 
-# Restart Docker
-echo -e "${CYAN}Stopping Docker containers...${NC}"
-cd $HOME/infernet-container-starter/deploy
-docker compose down
+    # Default settings
+    RPC_URL="https://mainnet.base.org/"
+    RPC_URL_SUB="https://mainnet.base.org/"
+    REGISTRY="0x3B1554f346DFe5c482Bb4BA31b880c1C18412170"
+    SLEEP=3
+    START_SUB_ID=160000
+    BATCH_SIZE=50
+    TRAIL_HEAD_BLOCKS=3
+    INFERNET_VERSION="1.4.0"
 
-echo -e "${CYAN}Restarting Docker container for hello-world...${NC}"
-docker restart hello-world
+    # Modify configuration files
+    sed -i "s|\"registry_address\": \".*\"|\"registry_address\": \"$REGISTRY\"|" deploy/config.json >> "$LOG_FILE" 2>&1
+    sed -i "s|\"private_key\": \".*\"|\"private_key\": \"$PRIVATE_KEY\"|" deploy/config.json >> "$LOG_FILE" 2>&1
+    sed -i "s|\"sleep\": [0-9]*|\"sleep\": $SLEEP|" deploy/config.json >> "$LOG_FILE" 2>&1
+    sed -i "s|\"starting_sub_id\": [0-9]*|\"starting_sub_id\": $START_SUB_ID|" deploy/config.json >> "$LOG_FILE" 2>&1
+    sed -i "s|\"batch_size\": [0-9]*|\"batch_size\": $BATCH_SIZE|" deploy/config.json >> "$LOG_FILE" 2>&1
+    sed -i "s|\"trail_head_blocks\": [0-9]*|\"trail_head_blocks\": $TRAIL_HEAD_BLOCKS|" deploy/config.json >> "$LOG_FILE" 2>&1
+    sed -i 's|"rpc_url": ".*"|"rpc_url": "https://mainnet.base.org"|' deploy/config.json >> "$LOG_FILE" 2>&1
+    sed -i 's|"rpc_url": ".*"|"rpc_url": "https://mainnet.base.org"|' projects/hello-world/container/config.json >> "$LOG_FILE" 2>&1
 
-# Display Docker status
-echo -e "${BOLD}${MAGENTA}Displaying Docker container status:${NC}"
-docker ps
+    sed -i "s|\"registry_address\": \".*\"|\"registry_address\": \"$REGISTRY\"|" projects/hello-world/container/config.json >> "$LOG_FILE" 2>&1
+    sed -i "s|\"private_key\": \".*\"|\"private_key\": \"$PRIVATE_KEY\"|" projects/hello-world/container/config.json >> "$LOG_FILE" 2>&1
+    sed -i "s|\"sleep\": [0-9]*|\"sleep\": $SLEEP|" projects/hello-world/container/config.json >> "$LOG_FILE" 2>&1
+    sed -i "s|\"starting_sub_id\": [0-9]*|\"starting_sub_id\": $START_SUB_ID|" projects/hello-world/container/config.json >> "$LOG_FILE" 2>&1
+    sed -i "s|\"batch_size\": [0-9]*|\"batch_size\": $BATCH_SIZE|" projects/hello-world/container/config.json >> "$LOG_FILE" 2>&1
+    sed -i "s|\"trail_head_blocks\": [0-9]*|\"trail_head_blocks\": $TRAIL_HEAD_BLOCKS|" projects/hello-world/container/config.json >> "$LOG_FILE" 2>&1
 
-echo -e "${BOLD}${MAGENTA}To start, run 'cd ~/infernet-container-starter/deploy && docker compose up' in your terminal.${NC}"
-echo -e "${BOLD}${MAGENTA}Once the output appears, do not press any keys. Close the terminal and reopen a new one to log back into Contabo.${NC}"
+    sed -i "s|\(registry\s*=\s*\).*|\1$REGISTRY;|" projects/hello-world/contracts/script/Deploy.s.sol >> "$LOG_FILE" 2>&1
+    sed -i "s|\(RPC_URL\s*=\s*\).*|\1\"$RPC_URL\";|" projects/hello-world/contracts/script/Deploy.s.sol >> "$LOG_FILE" 2>&1
+
+    sed -i 's|ritualnetwork/infernet-node:[^"]*|ritualnetwork/infernet-node:latest|' deploy/docker-compose.yaml >> "$LOG_FILE" 2>&1
+
+    MAKEFILE_PATH="projects/hello-world/contracts/Makefile"
+    sed -i "s|^sender := .*|sender := $PRIVATE_KEY|" "$MAKEFILE_PATH" >> "$LOG_FILE" 2>&1
+    sed -i "s|^RPC_URL := .*|RPC_URL := $RPC_URL|" "$MAKEFILE_PATH" >> "$LOG_FILE" 2>&1
+
+    # Start containers and redirect logs
+    cd ~/infernet-container-starter || exit 1
+    echo "docker compose down & up..." | tee -a "$LOG_FILE"
+    docker compose -f deploy/docker-compose.yaml down >> "$LOG_FILE" 2>&1
+    docker compose -f deploy/docker-compose.yaml up -d >> "$LOG_FILE" 2>&1
+    echo "[Note] Containers running in background (-d), logs will be redirected to $DOCKER_LOG_FILE" | tee -a "$LOG_FILE"
+
+    # Output Docker logs to file and monitor size
+    echo "Configuring Docker log output to $DOCKER_LOG_FILE, monitoring size (auto-clean if >500MB)..." | tee -a "$LOG_FILE"
+    (
+        while true; do
+            docker logs -f infernet-node >> "$DOCKER_LOG_FILE" 2>&1 &
+            LOG_PID=$!
+            while kill -0 $LOG_PID 2>/dev/null; do
+                LOG_SIZE=$(stat -c%s "$DOCKER_LOG_FILE" 2>/dev/null || echo 0)
+                if [ "$LOG_SIZE" -ge $((500 * 1024 * 1024)) ]; then  # 500MB = 500 * 1024 * 1024 bytes
+                    echo "[$DOCKER_LOG_FILE] Log size reached ${LOG_SIZE} bytes (>500MB), cleaning..." | tee -a "$LOG_FILE"
+                    kill $LOG_PID 2>/dev/null
+                    echo "Docker container logs - $(date)" > "$DOCKER_LOG_FILE"  # Clear and reinitialize
+                    echo "[$DOCKER_LOG_FILE] Cleanup complete, new logs will continue." | tee -a "$LOG_FILE"
+                    break
+                fi
+                sleep 60  # Check every minute
+            done
+            wait $LOG_PID 2>/dev/null
+        done
+    ) &
+
+    # Install Forge libraries
+    echo "Installing Forge (project dependencies)" | tee -a "$LOG_FILE"
+    cd projects/hello-world/contracts || exit 1
+    rm -rf lib/forge-std
+    rm -rf lib/infernet-sdk
+    forge install --no-commit foundry-rs/forge-std >> "$LOG_FILE" 2>&1
+    forge install --no-commit ritual-net/infernet-sdk >> "$LOG_FILE" 2>&1
+
+    # Restart containers
+    echo "Restarting docker compose..." | tee -a "$LOG_FILE"
+    cd ~/infernet-container-starter || exit 1
+    docker compose -f deploy/docker-compose.yaml down >> "$LOG_FILE" 2>&1
+    docker compose -f deploy/docker-compose.yaml up -d >> "$LOG_FILE" 2>&1
+    echo "[Note] View infernet-node logs: tail -f $DOCKER_LOG_FILE" | tee -a "$LOG_FILE"
+
+    # Deploy project contracts
+    echo "Deploying project contracts..." | tee -a "$LOG_FILE"
+    DEPLOY_OUTPUT=$(project=hello-world make deploy-contracts 2>&1)
+    echo "$DEPLOY_OUTPUT" | tee -a "$LOG_FILE"
+
+    NEW_ADDR=$(echo "$DEPLOY_OUTPUT" | grep -oP 'Deployed SaysHello:\s+\K0x[0-9a-fA-F]{40}')
+    if [ -z "$NEW_ADDR" ]; then
+        echo "[Warning] New contract address not found. May need to manually update CallContract.s.sol." | tee -a "$LOG_FILE"
+    else
+        echo "[Note] Deployed SaysHello address: $NEW_ADDR" | tee -a "$LOG_FILE"
+        sed -i "s|SaysGM saysGm = SaysGM(0x[0-9a-fA-F]\+);|SaysGM saysGm = SaysGM($NEW_ADDR);|" \
+            projects/hello-world/contracts/script/CallContract.s.sol >> "$LOG_FILE" 2>&1
+        echo "Executing call-contract with new address..." | tee -a "$LOG_FILE"
+        project=hello-world make call-contract >> "$LOG_FILE" 2>&1
+    fi
+
+    echo "===== Ritual Node Installation Complete =====" | tee -a "$LOG_FILE"
+    read -n 1 -s -r -p "Press any key to return to main menu..."
+    main_menu
 }
 
-install_ritual_3() {
-# Install Foundry
-echo -e "${CYAN}Changing directory to $HOME${NC}"
-cd $HOME
-
-echo -e "${CYAN}Creating a directory named 'foundry'${NC}"
-mkdir foundry
-
-echo -e "${CYAN}Changing directory to $HOME/foundry${NC}"
-cd $HOME/foundry
-
-echo -e "${CYAN}Downloading Foundry installation script${NC}"
-curl -L https://foundry.paradigm.xyz | bash
-
-export PATH="/root/.foundry/bin:$PATH"
-
-echo -e "${CYAN}Refreshing shell environment${NC}"
-source ~/.bashrc
-
-echo -e "${CYAN}Updating Foundry${NC}"
-foundryup
-
-echo -e "${CYAN}Changing directory to contracts folder${NC}"
-cd ~/infernet-container-starter/projects/hello-world/contracts
-
-echo -e "${CYAN}Removing 'lib' folder${NC}"
-rm -rf lib
-
-echo -e "${CYAN}Installing forge-std library${NC}"
-forge install --no-commit foundry-rs/forge-std
-
-echo -e "${CYAN}Installing infernet-sdk library${NC}"
-forge install --no-commit ritual-net/infernet-sdk
-
-export PATH="/root/.foundry/bin:$PATH"
-
-# Deploy contracts
-echo -e "${CYAN}Changing directory to the main infernet folder${NC}"
-cd $HOME/infernet-container-starter
-
-echo -e "${CYAN}Deploying contracts for project 'hello-world'${NC}"
-project=hello-world make deploy-contracts
-
-# Modify CallContract.s.sol
-echo -e "${CYAN}Scroll up to check the logs for deployment information.${NC}"
-echo -ne "${CYAN}Enter the exact deployed Sayshello address (e.g., Sayshello:): ${NC}"
-read -e says_gm
-
-callcontractpath="$HOME/infernet-container-starter/projects/hello-world/contracts/script/CallContract.s.sol"
-
-echo -e "${CYAN}Modifying CallContract.s.sol at /root/infernet-container-starter/projects/hello-world/contracts/script/CallContract.s.sol${NC}"
-sed "s|SaysGM saysGm = SaysGM(.*)|SaysGM saysGm = SaysGM($says_gm)|" "$callcontractpath" | sudo tee "$callcontractpath" > /dev/null
-
-# Finalize contract execution
-echo -e "${CYAN}Calling contract for project 'hello-world'${NC}"
-project=hello-world make call-contract
-
-echo -e "${BOLD}${MAGENTA}Ritual installation is complete. Great work! (Honestly, I did all the work, didn't I? 😂)${NC}"
+# View Ritual Node Logs
+function view_logs() {
+    echo "Viewing Ritual node logs (real-time output to $DOCKER_LOG_FILE)..." | tee -a "$LOG_FILE"
+    tail -f "$DOCKER_LOG_FILE"
 }
 
-restart_ritual() {
-echo -e "${CYAN}Stopping Docker containers...${NC}"
-cd $HOME/infernet-container-starter/deploy
-docker compose down
+# Remove Ritual Node
+function remove_ritual_node() {
+    echo "Removing Ritual Node - $(date)" | tee -a "$LOG_FILE"
 
-echo -e "${BOLD}${MAGENTA}Displaying Docker container status:${NC}"
-docker ps
+    # Stop and remove Docker containers
+    echo "Stopping and removing Docker containers..." | tee -a "$LOG_FILE"
+    cd /root/infernet-container-starter || echo "Directory does not exist, skipping docker compose down" | tee -a "$LOG_FILE"
+    if [ -d "/root/infernet-container-starter" ]; then
+        docker compose down >> "$LOG_FILE" 2>&1
+    fi
 
-echo -e "${BOLD}${MAGENTA}To restart, run 'cd ~/infernet-container-starter/deploy && docker compose up' in your terminal.${NC}"
-echo -e "${BOLD}${MAGENTA}When the output appears, do not press any keys. Simply close the terminal.${NC}"
+    # Stop and remove containers one by one
+    containers=(
+        "infernet-node"
+        "infernet-fluentbit"
+        "infernet-redis"
+        "infernet-anvil"
+        "hello-world"
+    )
+    
+    for container in "${containers[@]}"; do
+        if [ "$(docker ps -aq -f name=$container)" ]; then
+            echo "Stopping and removing $container..." | tee -a "$LOG_FILE"
+            docker stop "$container" >> "$LOG_FILE" 2>&1
+            docker rm "$container" >> "$LOG_FILE" 2>&1
+        fi
+    done
+
+    # Remove related files
+    echo "Removing related files..." | tee -a "$LOG_FILE"
+    rm -rf ~/infernet-container-starter >> "$LOG_FILE" 2>&1
+
+    # Remove Docker images
+    echo "Removing Docker images..." | tee -a "$LOG_FILE"
+    docker rmi -f ritualnetwork/hello-world-infernet:latest >> "$LOG_FILE" 2>&1
+    docker rmi -f ritualnetwork/infernet-node:latest >> "$LOG_FILE" 2>&1
+    docker rmi -f fluent/fluent-bit:3.1.4 >> "$LOG_FILE" 2>&1
+    docker rmi -f redis:7.4.0 >> "$LOG_FILE" 2>&1
+    docker rmi -f ritualnetwork/infernet-anvil:1.0.0 >> "$LOG_FILE" 2>&1
+
+    # Clean up background log processes
+    echo "Cleaning up background log processes..." | tee -a "$LOG_FILE"
+    pkill -f "docker logs -f infernet-node" 2>/dev/null || echo "No background log processes to clean up" | tee -a "$LOG_FILE"
+
+    echo "Ritual node has been successfully removed!" | tee -a "$LOG_FILE"
 }
 
-change_Wallet_Address() {
-# Prompt the user to enter a new private key
-echo -ne "${BOLD}${MAGENTA}Enter the new Private Key (include 0x prefix): ${NC}"
-read -e private_key1
-
-# Paths to the files to be updated
-json_1=~/infernet-container-starter/deploy/config.json
-json_2=~/infernet-container-starter/projects/hello-world/container/config.json
-makefile=~/infernet-container-starter/projects/hello-world/contracts/Makefile 
-
-# Create a temporary file
-temp_file=$(mktemp)
-
-# Update the private key in the first JSON file using jq
-jq --arg priv "$private_key1" \
-	'.chain.wallet.private_key = $priv' $json_1 > $temp_file
-
-# Replace the original file with the updated one
-mv $temp_file $json_1
-
-# Apply the same changes to the second JSON file
-jq --arg priv "$private_key1" \
-	'.chain.wallet.private_key = $priv' $json_2 > $temp_file
-
-mv $temp_file $json_2
-
-# Delete the temporary file
-rm -f $temp_file
-
-echo -e "${BOLD}${MAGENTA}Private key has been updated in the JSON files.${NC}"
-
-# Update the sender value in the Makefile using sed
-sed -i "s|sender := .*|sender := $private_key1|" "$makefile"
-
-echo -e "${BOLD}${MAGENTA}The private key in the Makefile has been updated.${NC}"
-
-# Redeploy the contracts
-echo -e "${CYAN}Changing directory to the main infernet folder.${NC}"
-cd $HOME/infernet-container-starter
-
-echo -e "${CYAN}Deploying contracts for project 'hello-world'.${NC}"
-project=hello-world make deploy-contracts
-
-# Modify CallContract.s.sol
-echo -e "${CYAN}Scroll up and review the logs to locate the deployed contract address.${NC}"
-echo -ne "${CYAN}Enter the exact deployed Sayshello address: ${NC}"
-read -e says_gm
-
-callcontractpath="$HOME/infernet-container-starter/projects/hello-world/contracts/script/CallContract.s.sol"
-
-echo -e "${CYAN}Updating CallContract.s.sol at /root/infernet-container-starter/projects/hello-world/contracts/script/CallContract.s.sol${NC}"
-sed "s|SaysGM saysGm = SaysGM(.*)|SaysGM saysGm = SaysGM($says_gm)|" "$callcontractpath" | sudo tee "$callcontractpath" > /dev/null
-
-# Finalize the contract call
-echo -e "${CYAN}Calling the contract for project 'hello-world'.${NC}"
-project=hello-world make call-contract
-
-echo -e "${BOLD}${MAGENTA}The wallet address change has been completed.${NC}"
-}
-
-change_RPC_Address() {
-# Prompt the user to input a new RPC URL
-echo -ne "${BOLD}${MAGENTA}Enter the new RPC URL: ${NC}"
-read -e rpc_url1
-
-# Paths to the files to be updated
-json_1=~/infernet-container-starter/deploy/config.json
-json_2=~/infernet-container-starter/projects/hello-world/container/config.json
-makefile=~/infernet-container-starter/projects/hello-world/contracts/Makefile 
-
-# Create a temporary file
-temp_file=$(mktemp)
-
-# Update the RPC URL in the first JSON file using jq
-jq --arg rpc "$rpc_url1" \
-	'.chain.rpc_url = $rpc' $json_1 > $temp_file
-
-# Replace the original file with the updated one
-mv $temp_file $json_1
-
-# Apply the same changes to the second JSON file
-jq --arg rpc "$rpc_url1" \
-	'.chain.rpc_url = $rpc' $json_2 > $temp_file
-
-mv $temp_file $json_2
-
-# Delete the temporary file
-rm -f $temp_file
-
-echo -e "${BOLD}${MAGENTA}RPC URL has been updated in the JSON files.${NC}"
-
-# Update the RPC_URL value in the Makefile using sed
-sed -i "s|RPC_URL := .*|RPC_URL := $rpc_url1|" "$makefile"
-
-echo -e "${BOLD}${MAGENTA}The RPC URL in the Makefile has been updated.${NC}"
-
-# Restart the necessary Docker containers
-echo -e  "${CYAN}Restarting infernet-anvil container...${NC}"
-docker restart infernet-anvil
-
-echo -e  "${CYAN}Restarting hello-world container...${NC}"
-docker restart hello-world
-
-echo -e  "${CYAN}Restarting infernet-node container...${NC}"
-docker restart infernet-node
-
-echo -e  "${CYAN}Restarting deploy-fluentbit-1 container...${NC}"
-docker restart deploy-fluentbit-1
-
-echo -e  "${CYAN}Restarting deploy-redis-1 container...${NC}"
-docker restart deploy-redis-1
-
-echo -e "${BOLD}${MAGENTA}RPC URL update completed.${NC}"
-echo -e "${BOLD}${MAGENTA}If the update doesn't work, try running this command again up to 4 times.${NC}"
-}
-
-update_ritual() {
-echo -e "${BOLD}${RED}Starting Ritual update (10/31).${NC}"
-
-# Paths to the files to be updated
-json_1=~/infernet-container-starter/deploy/config.json
-json_2=~/infernet-container-starter/projects/hello-world/container/config.json
-
-# Create a temporary file
-temp_file=$(mktemp)
-
-# Update the first JSON file
-jq '.chain.snapshot_sync.sleep = 3 |
-    .chain.snapshot_sync.batch_size = 9500 |
-    .chain.snapshot_sync.starting_sub_id = 170000 |
-    .chain.snapshot_sync.sync_period = 5' "$json_1" > "$temp_file"
-mv "$temp_file" "$json_1"
-
-# Update the second JSON file
-jq '.chain.snapshot_sync.sleep = 3 |
-    .chain.snapshot_sync.batch_size = 9500 |
-    .chain.snapshot_sync.starting_sub_id = 170000 |
-    .chain.snapshot_sync.sync_period = 5' "$json_2" > "$temp_file"
-mv "$temp_file" "$json_2"
-
-# Delete the temporary file
-rm -f $temp_file
-
-echo -e "${YELLOW}Stopping Docker containers...${NC}"
-cd ~/infernet-container-starter/deploy && docker compose down
-
-echo -e "${YELLOW}Now, run the following command to restart Docker:${NC}"
-echo -e "${RED}'cd ~/infernet-container-starter/deploy && docker compose up'${NC}${YELLOW}.${NC}"
-}
-
-uninstall_ritual() {
-# Remove all Ritual-related Docker containers
-echo -e "${BOLD}${CYAN}Stopping and removing Ritual Docker containers...${NC}"
-docker stop infernet-anvil
-docker stop infernet-node
-docker stop hello-world
-docker stop deploy-redis-1
-docker stop deploy-fluentbit-1
-
-docker rm -f infernet-anvil
-docker rm -f infernet-node
-docker rm -f hello-world
-docker rm -f deploy-redis-1
-docker rm -f deploy-fluentbit-1
-
-cd ~/infernet-container-starter/deploy && docker compose down
-
-# Remove Ritual Docker images
-echo -e "${BOLD}${CYAN}Removing Ritual Docker images...${NC}"
-docker image ls -a | grep "infernet" | awk '{print $3}' | xargs docker rmi -f
-docker image ls -a | grep "fluent-bit" | awk '{print $3}' | xargs docker rmi -f
-docker image ls -a | grep "redis" | awk '{print $3}' | xargs docker rmi -f
-
-# Remove Foundry files
-echo -e "${CYAN}Removing Foundry files...${NC}"
-rm -rf $HOME/foundry
-
-echo -e "${CYAN}Removing Foundry path from ~/.bashrc...${NC}"
-sed -i '/\/root\/.foundry\/bin/d' ~/.bashrc
-
-echo -e "${CYAN}Cleaning Foundry contracts directory...${NC}"
-rm -rf ~/infernet-container-starter/projects/hello-world/contracts/lib
-
-echo -e "${CYAN}Running 'forge clean'...${NC}"
-forge clean
-
-# Remove Ritual Node files
-echo -e "${BOLD}${CYAN}Removing Ritual Node directory (infernet-container-starter)...${NC}"
-cd $HOME
-sudo rm -rf infernet-container-starter
-cd $HOME
-
-echo -e "${BOLD}${CYAN}All Ritual Node-related files have been removed.${NC}"
-echo -e "${BOLD}${CYAN}Note: Docker itself has not been removed, as it may be used by other applications.${NC}"
-}
-
-# Main Menu
-echo && echo -e "${BOLD}${MAGENTA} Ritual Node Automated Installation Script${NC} by CoinLoveMiSun
- ${CYAN}Select the desired option and proceed with execution.${NC}
- ———————————————————————
- ${GREEN} 1. Install Basic Files and Ritual Node (Step 1, v1.4.0) ${NC}
- ${GREEN} 2. Install Ritual Node (Step 2, v1.4.0) ${NC}
- ${GREEN} 3. Install Ritual Node (Step 3, v1.4.0) ${NC}
- ${GREEN} 4. Restart Ritual Node if it has stopped working ${NC}
- ${GREEN} 5. Change the Wallet Address for Ritual Node ${NC}
- ${GREEN} 6. Change the RPC Address for Ritual Node ${NC}
- ${GREEN} 7. Update Ritual Node (as of 10/31) ${NC}
- ${GREEN} 8. Uninstall Ritual Node and remove all related files ${NC}
- ———————————————————————" && echo
-
-# Wait for user input
-echo -ne "${BOLD}${MAGENTA} What would you like to do? Enter the corresponding number from the list above: ${NC}"
-read -e num
-
-case "$num" in
-1)
-    install_ritual
-    ;;
-2)
-    install_ritual_2
-    ;;
-3)
-    install_ritual_3
-    ;;
-4)
-    restart_ritual
-    ;;
-5)
-    change_Wallet_Address
-    ;;
-6)
-    change_RPC_Address
-    ;;
-7)
-    update_ritual
-    ;;
-8)
-    uninstall_ritual
-    ;;
-*)
-    echo -e "${BOLD}${RED}Invalid input. Please try again!${NC}"
-    ;;
-esac
+# Call Main Menu Function
+main_menu
