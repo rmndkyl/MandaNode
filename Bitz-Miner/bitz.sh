@@ -23,12 +23,6 @@ echo -e "${RED}Note: This script must be run as root.${NC}"
 echo "Press Enter to continue or Ctrl+C to exit..."
 read
 
-# Check for root permissions
-if [[ $EUID -ne 0 ]]; then
-   echo -e "${RED}Please run with sudo: sudo bash bitz_setup.sh${NC}"
-   exit 1
-fi
-
 # Check system environment
 echo -e "${GREEN}Checking system environment...${NC}"
 GLIBC_VERSION=$(ldd --version | head -n1 | awk '{print $NF}')
