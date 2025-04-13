@@ -62,8 +62,8 @@ fi
 
 # Configure Solana RPC
 echo -e "${GREEN}Step 4: Configuring Solana RPC...${NC}"
-solana config set --url https://mainnetbeta-rpc.eclipse.xyz/
-echo "Solana RPC set to https://mainnetbeta-rpc.eclipse.xyz/"
+solana config set --url https://eclipse.helius-rpc.com
+echo "solana RPC set --url https://eclipse.helius-rpc.com"
 
 # Wallet setup
 echo -e "${GREEN}Step 5: Setting up Solana CLI wallet...${NC}"
