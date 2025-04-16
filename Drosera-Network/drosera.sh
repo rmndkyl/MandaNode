@@ -34,6 +34,16 @@ print_success() {
     echo -e "${GREEN}✓ $1${NC}"
 }
 
+# Function to check if command was successful
+check_status() {
+    if [ $? -eq 0 ]; then
+        print_success "$1"
+    else
+        echo -e "${RED}Error: $1 failed${NC}"
+        exit 1
+    fi
+}
+
 # Custom function to handle trap deployment that might fail in CLI but succeed on-chain
 deploy_trap() {
     print_step "Deploying Trap..."
@@ -182,12 +192,12 @@ print_header "INSTALLING DEPENDENCIES"
 # Update system
 print_step "Updating system packages..."
 sudo apt-get update && sudo apt-get upgrade -y
-check_status "System update"
+check_status_with_continue "System update"
 
 # Install required packages
 print_step "Installing required packages..."
 sudo apt install curl ufw iptables build-essential git wget lz4 jq make gcc nano automake autoconf tmux htop nvme-cli libgbm1 pkg-config libssl-dev libleveldb-dev tar clang bsdmainutils ncdu unzip libleveldb-dev -y
-check_status "Package installation"
+check_status_with_continue "Package installation"
 
 # Install Docker
 print_step "Installing Docker..."
@@ -207,33 +217,52 @@ echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.
 
 sudo apt update -y && sudo apt upgrade -y
 sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y
-check_status "Docker installation"
+check_status_with_continue "Docker installation"
 
 # Test Docker
 print_step "Testing Docker..."
 sudo docker run hello-world > /dev/null 2>&1
-check_status "Docker test"
+check_status_with_continue "Docker test"
 
 # Install Drosera CLI
 print_header "INSTALLING DROSERA CLI"
 print_step "Installing Drosera CLI..."
 curl -L https://app.drosera.io/install | bash
-check_status "Drosera CLI download"
+check_status_with_continue "Drosera CLI download"
 
-# Source bashrc to use droseraup
-print_step "Setting up Drosera CLI environment..."
+# Source profile files to ensure new binaries are in path
+print_step "Setting up environment..."
+source_profile_files() {
+    for profile in ~/.bashrc ~/.profile ~/.bash_profile ~/.zshrc /etc/profile; do
+        if [ -f "$profile" ]; then
+            echo "Sourcing $profile"
+            source "$profile" 2>/dev/null || true
+        fi
+    done
+    # Also try root profiles
+    for root_profile in /root/.bashrc /root/.profile /root/.bash_profile /root/.zshrc; do
+        if [ -f "$root_profile" ]; then
+            echo "Sourcing $root_profile"
+            source "$root_profile" 2>/dev/null || true
+        fi
+    done
+}
+source_profile_files
+
+# Add common bin directories to PATH if not already there
 export PATH="$HOME/.local/bin:$PATH"
-for rc in ~/.bashrc ~/.bash_profile /root/.bashrc /root/.bash_profile; do
-    if [ -f "$rc" ]; then
-        source "$rc" 2>/dev/null || true
-    fi
-done
+export PATH="$HOME/.foundry/bin:$PATH"
+export PATH="$HOME/.bun/bin:$PATH"
+export PATH="/usr/local/bin:$PATH"
+export PATH="$HOME/bin:$PATH"
 
-# Run droseraup with trapping to avoid script exit on failure
+# Run droseraup with error handling
 print_step "Running droseraup..."
 {
-    # Try using direct path first
-    if [ -f "$HOME/.local/bin/droseraup" ]; then
+    # Try different methods to run droseraup
+    if command -v droseraup &> /dev/null; then
+        droseraup
+    elif [ -f "$HOME/.local/bin/droseraup" ]; then
         $HOME/.local/bin/droseraup
     elif [ -f "/root/.local/bin/droseraup" ]; then
         /root/.local/bin/droseraup
@@ -243,8 +272,8 @@ print_step "Running droseraup..."
         if [ -n "$DROSERAUP_PATH" ]; then
             $DROSERAUP_PATH
         else
-            echo -e "${YELLOW}Warning: droseraup not found automatically. Trying with default path...${NC}"
-            # Manually download and install if needed
+            echo -e "${YELLOW}Warning: droseraup not found automatically. Manually installing Drosera CLI...${NC}"
+            # Manually download and install
             mkdir -p "$HOME/.local/bin"
             curl -L https://app.drosera.io/download/linux > "$HOME/.local/bin/drosera"
             chmod +x "$HOME/.local/bin/drosera"
@@ -252,33 +281,31 @@ print_step "Running droseraup..."
         fi
     fi
 } || {
-    echo -e "${YELLOW}Note: droseraup command didn't work as expected, but we'll continue with the setup.${NC}"
-    echo -e "${YELLOW}You may need to run 'droseraup' manually after this script completes.${NC}"
+    echo -e "${YELLOW}Warning: droseraup command had issues but continuing with setup${NC}"
 }
 
 # Install Foundry CLI
 print_step "Installing Foundry CLI..."
 curl -L https://foundry.paradigm.xyz | bash
+source_profile_files
 
-# Try to source all possible profile files
-for rc in ~/.bashrc ~/.bash_profile /root/.bashrc /root/.bash_profile; do
-    if [ -f "$rc" ]; then
-        source "$rc" 2>/dev/null || true
-    fi
-done
-
-# Run foundryup with trapping to avoid script exit on failure
+# Run foundryup with error handling
 {
-    if [ -f "$HOME/.foundry/bin/foundryup" ]; then
+    export PATH="$HOME/.foundry/bin:$PATH"
+    if command -v foundryup &> /dev/null; then
+        foundryup
+    elif [ -f "$HOME/.foundry/bin/foundryup" ]; then
         $HOME/.foundry/bin/foundryup
     else
-        # Try to continue anyway
+        echo -e "${YELLOW}Warning: foundryup not found. Adding foundry to PATH...${NC}"
+        mkdir -p $HOME/.foundry/bin
+        curl -L https://foundry.paradigm.xyz | bash
+        source_profile_files
         export PATH="$HOME/.foundry/bin:$PATH"
-        echo -e "${YELLOW}Added foundry to PATH. You can run 'foundryup' manually if needed.${NC}"
+        echo "export PATH=\"\$HOME/.foundry/bin:\$PATH\"" >> $HOME/.bashrc
     fi
 } || {
-    echo -e "${YELLOW}Note: foundryup command didn't work as expected, but we'll continue with the setup.${NC}"
-    echo -e "${YELLOW}You may need to run 'foundryup' manually after this script completes.${NC}"
+    echo -e "${YELLOW}Warning: foundryup command had issues but continuing with setup${NC}"
 }
 print_success "Foundry CLI setup"
 
@@ -287,6 +314,9 @@ print_step "Installing Bun..."
 curl -fsSL https://bun.sh/install | bash
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
+echo "export BUN_INSTALL=\"\$HOME/.bun\"" >> $HOME/.bashrc
+echo "export PATH=\"\$BUN_INSTALL/bin:\$PATH\"" >> $HOME/.bashrc
+source_profile_files
 print_success "Bun installation"
 
 print_header "DEPLOYING CONTRACT & TRAP"
@@ -297,55 +327,72 @@ cd ~/my-drosera-trap
 print_step "Configuring Git..."
 git config --global user.email "$GITHUB_EMAIL"
 git config --global user.name "$GITHUB_USERNAME"
-check_status "Git configuration"
+check_status_with_continue "Git configuration"
 
 print_step "Initializing Trap..."
-# Use forge binary directly to avoid PATH issues
-if [ -f "$HOME/.foundry/bin/forge" ]; then
+# Use forge or find it
+if command -v forge &> /dev/null; then
+    forge init -t drosera-network/trap-foundry-template
+elif [ -f "$HOME/.foundry/bin/forge" ]; then
     $HOME/.foundry/bin/forge init -t drosera-network/trap-foundry-template
 else
-    # Try to find forge
+    # Search for forge binary
     FORGE_PATH=$(find $HOME -name "forge" 2>/dev/null | head -n 1)
     if [ -n "$FORGE_PATH" ]; then
         $FORGE_PATH init -t drosera-network/trap-foundry-template
     else
         echo -e "${RED}Error: forge binary not found.${NC}"
-        echo -e "${YELLOW}Trying to install it directly via foundryup...${NC}"
+        echo -e "${YELLOW}Attempting to reinstall Foundry...${NC}"
         curl -L https://foundry.paradigm.xyz | bash
-        source ~/.bashrc
-        ~/.foundry/bin/foundryup
-        ~/.foundry/bin/forge init -t drosera-network/trap-foundry-template
-        check_status_with_continue "Trap initialization"
+        source_profile_files
+        if [ -f "$HOME/.foundry/bin/foundryup" ]; then
+            $HOME/.foundry/bin/foundryup
+            $HOME/.foundry/bin/forge init -t drosera-network/trap-foundry-template
+        else
+            echo -e "${RED}Critical error: Could not install forge. Please install manually.${NC}"
+            read -p "Do you want to continue anyway? (y/n): " CONTINUE
+            if [[ "$CONTINUE" != "y" && "$CONTINUE" != "Y" ]]; then
+                exit 1
+            fi
+        fi
     fi
 fi
+check_status_with_continue "Trap initialization"
 
-print_step "Compiling Trap..."
-# Use bun binary directly
-if [ -f "$HOME/.bun/bin/bun" ]; then
-    $HOME/.bun/bin/bun install || echo -e "${YELLOW}Bun install had issues but continuing...${NC}"
+print_step "Installing Node dependencies and compiling Trap..."
+# Use bun or find it
+if command -v bun &> /dev/null; then
+    bun install || echo -e "${YELLOW}Warning: bun install had issues but continuing...${NC}"
+elif [ -f "$HOME/.bun/bin/bun" ]; then
+    $HOME/.bun/bin/bun install || echo -e "${YELLOW}Warning: bun install had issues but continuing...${NC}"
 else
-    # Try to find bun
+    # Search for bun binary
     BUN_PATH=$(find $HOME -name "bun" 2>/dev/null | head -n 1)
     if [ -n "$BUN_PATH" ]; then
-        $BUN_PATH install || echo -e "${YELLOW}Bun install had issues but continuing...${NC}"
+        $BUN_PATH install || echo -e "${YELLOW}Warning: bun install had issues but continuing...${NC}"
     else
-        echo -e "${YELLOW}Warning: bun binary not found. Trying default path...${NC}"
-        ~/.bun/bin/bun install 2>/dev/null || echo -e "${YELLOW}Failed to run bun install, continuing anyway...${NC}"
+        echo -e "${YELLOW}Warning: bun binary not found. Reinstalling...${NC}"
+        export BUN_INSTALL="$HOME/.bun"
+        export PATH="$BUN_INSTALL/bin:$PATH"
+        curl -fsSL https://bun.sh/install | bash
+        source_profile_files
+        $HOME/.bun/bin/bun install || echo -e "${YELLOW}Warning: bun install had issues but continuing...${NC}"
     fi
 fi
 
-# Use forge binary directly
-if [ -f "$HOME/.foundry/bin/forge" ]; then
-    $HOME/.foundry/bin/forge build || echo -e "${YELLOW}Forge build had issues but continuing...${NC}"
+print_step "Building Trap contract..."
+# Use forge or find it
+if command -v forge &> /dev/null; then
+    forge build || echo -e "${YELLOW}Warning: forge build had issues but continuing...${NC}"
+elif [ -f "$HOME/.foundry/bin/forge" ]; then
+    $HOME/.foundry/bin/forge build || echo -e "${YELLOW}Warning: forge build had issues but continuing...${NC}"
 else
-    # Try to find forge again
+    # Search for forge binary again
     FORGE_PATH=$(find $HOME -name "forge" 2>/dev/null | head -n 1)
     if [ -n "$FORGE_PATH" ]; then
-        $FORGE_PATH build || echo -e "${YELLOW}Forge build had issues but continuing...${NC}"
+        $FORGE_PATH build || echo -e "${YELLOW}Warning: forge build had issues but continuing...${NC}"
     else
-        echo -e "${RED}Error: forge binary not found.${NC}"
-        # Try to continue anyway
-        print_step "Will continue despite forge build issues..."
+        echo -e "${RED}Warning: forge binary still not found. Skipping build step...${NC}"
     fi
 fi
 print_success "Trap compilation completed (ignore warnings)"
@@ -361,6 +408,24 @@ if [ $? -ne 0 ]; then
         echo -e "${YELLOW}Continuing despite reported error...${NC}"
     fi
 fi
+
+# Try to dry-run to ensure deployment worked
+print_step "Testing trap with dry run..."
+{
+    # Try to find drosera binary
+    if command -v drosera &> /dev/null; then
+        DROSERA_PRIVATE_KEY=$PRIVATE_KEY drosera dryrun || echo -e "${YELLOW}Warning: Dryrun had issues but continuing...${NC}"
+    else
+        DROSERA_PATH=$(find $HOME -name "drosera" 2>/dev/null | head -n 1 || echo "/usr/local/bin/drosera")
+        if [ -x "$DROSERA_PATH" ]; then
+            DROSERA_PRIVATE_KEY=$PRIVATE_KEY $DROSERA_PATH dryrun || echo -e "${YELLOW}Warning: Dryrun had issues but continuing...${NC}"
+        else
+            echo -e "${YELLOW}Warning: drosera binary not found for dryrun. Continuing...${NC}"
+        fi
+    fi
+} || {
+    echo -e "${YELLOW}Warning: Dryrun had issues but continuing...${NC}"
+}
 
 # Look for trap address in drosera.toml
 TRAP_ADDRESS=$(grep -A 2 "Trap deployed" ~/my-drosera-trap/drosera.toml 2>/dev/null | grep "address" | awk -F'"' '{print $2}')
@@ -383,23 +448,36 @@ if [ ! -f drosera.toml ]; then
     echo "name = \"mytrap\"" >> drosera.toml
 fi
 
-# Add whitelist configuration - append without checking if it already exists
-echo "private_trap = true" >> drosera.toml
-echo "whitelist = [\"$WALLET_ADDRESS\"]" >> drosera.toml
+# Check if config already has whitelist entries
+if ! grep -q "private_trap" drosera.toml; then
+    echo "private_trap = true" >> drosera.toml
+fi
+if ! grep -q "whitelist" drosera.toml; then
+    echo "whitelist = [\"$WALLET_ADDRESS\"]" >> drosera.toml
+else
+    # Update existing whitelist line
+    sed -i "s/whitelist = \[.*\]/whitelist = [\"$WALLET_ADDRESS\"]/" drosera.toml
+fi
 print_success "Trap configuration update"
 
 print_step "Applying updated configuration..."
 # Find the drosera binary path again
-DROSERA_PATH=$(find $HOME -name "drosera" 2>/dev/null | head -n 1 || echo "/usr/local/bin/drosera")
-
-if [ -x "$DROSERA_PATH" ]; then
-    DROSERA_PRIVATE_KEY=$PRIVATE_KEY $DROSERA_PATH apply || {
+if command -v drosera &> /dev/null; then
+    DROSERA_PRIVATE_KEY=$PRIVATE_KEY drosera apply || {
         echo -e "${YELLOW}Warning: Configuration apply reported an error, but it might have succeeded on-chain.${NC}"
         echo -e "${YELLOW}Continuing with setup...${NC}"
     }
 else
-    echo -e "${RED}Error: drosera binary not found. Please install Drosera CLI manually.${NC}"
-    echo -e "${YELLOW}Continuing with setup despite this error...${NC}"
+    DROSERA_PATH=$(find $HOME -name "drosera" 2>/dev/null | head -n 1 || echo "/usr/local/bin/drosera")
+    if [ -x "$DROSERA_PATH" ]; then
+        DROSERA_PRIVATE_KEY=$PRIVATE_KEY $DROSERA_PATH apply || {
+            echo -e "${YELLOW}Warning: Configuration apply reported an error, but it might have succeeded on-chain.${NC}"
+            echo -e "${YELLOW}Continuing with setup...${NC}"
+        }
+    else
+        echo -e "${RED}Error: drosera binary not found. Please install Drosera CLI manually.${NC}"
+        echo -e "${YELLOW}Continuing with setup despite this error...${NC}"
+    fi
 fi
 print_success "Configuration updated (ignoring CLI errors)"
 
@@ -408,7 +486,8 @@ cd ~
 curl -LO https://github.com/drosera-network/releases/releases/download/v1.16.2/drosera-operator-v1.16.2-x86_64-unknown-linux-gnu.tar.gz
 tar -xvf drosera-operator-v1.16.2-x86_64-unknown-linux-gnu.tar.gz
 sudo cp drosera-operator /usr/bin
-check_status "Operator CLI installation"
+chmod +x /usr/bin/drosera-operator
+check_status_with_continue "Operator CLI installation"
 
 print_step "Registering Operator..."
 drosera-operator register --eth-rpc-url https://ethereum-holesky-rpc.publicnode.com --eth-private-key $PRIVATE_KEY || {
@@ -440,7 +519,7 @@ ExecStart=$(which drosera-operator) node --db-file-path $HOME/.drosera.db --netw
 [Install]
 WantedBy=multi-user.target
 EOF
-check_status "Systemd service creation"
+check_status_with_continue "Systemd service creation"
 
 print_step "Opening required ports..."
 sudo ufw allow ssh
@@ -448,7 +527,7 @@ sudo ufw allow 22
 sudo ufw allow 31313/tcp
 sudo ufw allow 31314/tcp
 echo "y" | sudo ufw enable
-check_status "Firewall configuration"
+check_status_with_continue "Firewall configuration"
 
 print_step "Starting Drosera node..."
 sudo systemctl daemon-reload
@@ -458,12 +537,20 @@ check_status_with_continue "Node started"
 
 # Get node status
 sleep 5
-NODE_STATUS=$(systemctl is-active drosera)
+NODE_STATUS=$(systemctl is-active drosera 2>/dev/null || echo "inactive")
 if [ "$NODE_STATUS" = "active" ]; then
     print_success "Drosera node is running!"
 else
-    echo -e "${RED}Warning: Node service might not be running properly. Check with 'systemctl status drosera'${NC}"
-    echo -e "${YELLOW}Continuing despite service issues...${NC}"
+    echo -e "${YELLOW}Warning: Node service might not be running properly. Attempting to start again...${NC}"
+    sudo systemctl restart drosera
+    sleep 5
+    NODE_STATUS=$(systemctl is-active drosera 2>/dev/null || echo "inactive")
+    if [ "$NODE_STATUS" = "active" ]; then
+        print_success "Drosera node is now running!"
+    else
+        echo -e "${RED}Warning: Node service still not running properly. Check with 'systemctl status drosera'${NC}"
+        echo -e "${YELLOW}Continuing despite service issues...${NC}"
+    fi
 fi
 
 print_header "SETUP COMPLETE"
