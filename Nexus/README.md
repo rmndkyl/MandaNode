@@ -16,7 +16,7 @@ Setelah selesai instalasi jangan lupa save file `nexus-proof`, karena kemungkina
 
 # One Click Installation
 ```shell
-wget https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Nexus/nexus_install.sh && chmod +x nexus_install.sh && sed -i 's/\r$//' nexus_install.sh && ./nexus_install.sh
+cd $HOME && rm -rf nexus_install.sh && wget -O nexus_install.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/Nexus/nexus_install.sh && chmod +x nexus_install.sh && sed -i 's/\r$//' nexus_install.sh && ./nexus_install.sh
 ```
 
 
