@@ -1,12 +1,10 @@
 #!/bin/bash
 set -e
 
-# Display banner
 echo "Showing Animation.."
 wget -O loader.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/loader.sh && chmod +x loader.sh && sed -i 's/\r$//' loader.sh && ./loader.sh
 wget -O logo.sh https://raw.githubusercontent.com/rmndkyl/MandaNode/main/WM/logo.sh && chmod +x logo.sh && sed -i 's/\r$//' logo.sh && ./logo.sh
-rm -rf loader.sh logo.sh
-sleep 4
+sleep 2
 
 BASE_CONTAINER_NAME="nexus-node"
 IMAGE_NAME="nexus-node:latest"
@@ -57,7 +55,7 @@ RUN apt-get update && apt-get install -y \
     bash \
     && rm -rf /var/lib/apt/lists/*
 
-# Automatically download and install the latest nexus-network
+# Auto-download and install latest nexus-network
 RUN curl -sSL https://cli.nexus.xyz/ | NONINTERACTIVE=1 sh \
     && ln -sf /root/.nexus/bin/nexus-network /usr/local/bin/nexus-network
 
@@ -96,7 +94,7 @@ sleep 3
 if screen -list | grep -q "nexus"; then
     echo "Node started in background."
     echo "Log file: /root/nexus.log"
-    echo "You can use 'docker logs \$CONTAINER_NAME' to view logs"
+    echo "Use 'docker logs \$CONTAINER_NAME' to view logs"
 else
     echo "Node startup failed, please check logs."
     cat /root/nexus.log
@@ -119,14 +117,14 @@ function run_container() {
     local log_file="${LOG_DIR}/nexus-${node_id}.log"
 
     if docker ps -a --format '{{.Names}}' | grep -qw "$container_name"; then
-        echo "Old container $container_name detected, removing..."
+        echo "Old container $container_name detected, removing first..."
         docker rm -f "$container_name"
     fi
 
     # Ensure log directory exists
     mkdir -p "$LOG_DIR"
     
-    # Ensure host log file exists with write permissions
+    # Ensure host log file exists and has write permissions
     if [ ! -f "$log_file" ]; then
         touch "$log_file"
         chmod 644 "$log_file"
@@ -136,7 +134,7 @@ function run_container() {
     echo "Container $container_name started!"
 }
 
-# Stop and uninstall container and image, delete logs
+# Stop and uninstall container, image, and delete logs
 function uninstall_node() {
     local node_id=$1
     local container_name="${BASE_CONTAINER_NAME}-${node_id}"
@@ -146,7 +144,7 @@ function uninstall_node() {
     docker rm -f "$container_name" 2>/dev/null || echo "Container doesn't exist or already stopped"
 
     if [ -f "$log_file" ]; then
-        echo "Removing log file $log_file ..."
+        echo "Deleting log file $log_file ..."
         rm -f "$log_file"
     else
         echo "Log file doesn't exist: $log_file"
@@ -159,7 +157,7 @@ function uninstall_node() {
 function list_nodes() {
     echo "Current node status:"
     echo "------------------------------------------------------------------------------------------------------------------------"
-    printf "%-6s %-20s %-10s %-10s %-10s %-20s %-20s\n" "No." "Node ID" "CPU Usage" "Memory" "Mem Limit" "Status" "Start Time"
+    printf "%-6s %-20s %-10s %-10s %-10s %-20s %-20s\n" "No." "Node ID" "CPU Usage" "Memory" "Mem Limit" "Status" "Created"
     echo "------------------------------------------------------------------------------------------------------------------------"
     
     local all_nodes=($(get_all_nodes))
@@ -209,7 +207,7 @@ function list_nodes() {
     echo "- Memory: Shows container current memory usage"
     echo "- Mem Limit: Shows container memory usage limit"
     echo "- Status: Shows container running status"
-    echo "- Start Time: Shows container creation time"
+    echo "- Created: Shows container creation time"
     read -p "Press any key to return to menu"
 }
 
@@ -232,7 +230,7 @@ function view_node_logs() {
         echo "Please select log viewing mode:"
         echo "1. Raw logs (may contain color codes)"
         echo "2. Clean logs (remove color codes)"
-        read -rp "Please select (1-2): " log_mode
+        read -rp "Please choose (1-2): " log_mode
 
         echo "Viewing logs, press Ctrl+C to exit log view"
         if [ "$log_mode" = "2" ]; then
@@ -249,7 +247,7 @@ function view_node_logs() {
 # Batch start multiple nodes
 function batch_start_nodes() {
     echo "Please enter multiple node-ids, one per line, empty line to finish:"
-    echo "(After entering, press Enter, then Ctrl+D to finish input)"
+    echo "(After finishing input, press Enter, then press Ctrl+D to end input)"
     
     local node_ids=()
     while read -r line; do
@@ -288,7 +286,7 @@ function select_node_to_view() {
         return
     fi
 
-    echo "Please select a node to view:"
+    echo "Please select node to view:"
     echo "0. Return to main menu"
     for i in "${!all_nodes[@]}"; do
         local node_id=${all_nodes[$i]}
@@ -342,7 +340,7 @@ function batch_uninstall_nodes() {
     done
     echo "----------------------------------------"
 
-    echo "Please select nodes to delete (multiple selection, enter numbers separated by spaces):"
+    echo "Please select nodes to delete (multiple selection allowed, enter numbers separated by spaces):"
     echo "0. Return to main menu"
     
     read -rp "Please enter options (0 or numbers separated by spaces): " choices
@@ -354,7 +352,7 @@ function batch_uninstall_nodes() {
     # Convert input options to array
     read -ra selected_choices <<< "$choices"
     
-    # Validate input and perform uninstall
+    # Validate input and execute uninstall
     for choice in "${selected_choices[@]}"; do
         if [ "$choice" -ge 1 ] && [ "$choice" -le ${#all_nodes[@]} ]; then
             local selected_node=${all_nodes[$((choice-1))]}
@@ -380,7 +378,7 @@ function uninstall_all_nodes() {
     fi
 
     echo "Warning: This operation will delete all nodes!"
-    echo "Currently have ${#all_nodes[@]} nodes:"
+    echo "Currently there are ${#all_nodes[@]} nodes:"
     for node_id in "${all_nodes[@]}"; do
         echo "- $node_id"
     done
@@ -398,6 +396,14 @@ function uninstall_all_nodes() {
         uninstall_node "$node_id"
     done
 
+    # Delete /root/nexus_scripts directory
+    if [ -d "/root/nexus_scripts" ]; then
+        echo "Deleting /root/nexus_scripts directory..."
+        rm -rf "/root/nexus_scripts"
+    else
+        echo "/root/nexus_scripts directory doesn't exist"
+    fi
+
     echo "All nodes deleted successfully!"
     read -p "Press any key to return to menu"
 }
@@ -406,7 +412,7 @@ function uninstall_all_nodes() {
 function batch_rotate_nodes() {
     check_pm2
     echo "Please enter multiple node-ids, one per line, empty line to finish:"
-    echo "(After entering, press Enter, then Ctrl+D to finish input)"
+    echo "(After finishing input, press Enter, then press Ctrl+D to end input)"
     
     local node_ids=()
     while read -r line; do
@@ -481,7 +487,7 @@ EOF
         if [ -d "$log_file" ]; then
             rm -rf "$log_file"
         fi
-        # If log file doesn't exist, create it
+        # Create log file if it doesn't exist
         if [ ! -f "$log_file" ]; then
             touch "$log_file"
             chmod 644 "$log_file"
@@ -514,7 +520,7 @@ EOF
         cat >> "$script_dir/rotate.sh" <<EOF
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting group ${group} nodes (${current_group_nodes} nodes)..."
     bash "$script_dir/start_group${group}.sh"
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Waiting 2 hours..."
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Waiting for 2 hours..."
     sleep 7200
 
 EOF
@@ -533,7 +539,7 @@ EOF
     echo "Node rotation started!"
     echo "Total $total_nodes nodes, divided into $num_groups groups"
     echo "Each group starts $nodes_per_round nodes (last group may have fewer), rotating every 2 hours"
-    echo "Use 'pm2 status' to check running status"
+    echo "Use 'pm2 status' to view running status"
     echo "Use 'pm2 logs nexus-rotate' to view rotation logs"
     echo "Use 'pm2 stop nexus-rotate' to stop rotation"
     read -p "Press any key to return to menu"
@@ -542,7 +548,7 @@ EOF
 # Set up scheduled log cleanup task (clean every 2 days, keep only last 2 days of logs)
 function setup_log_cleanup_cron() {
     local cron_job="0 3 */2 * * find $LOG_DIR -type f -name 'nexus-*.log' -mtime +2 -delete"
-    # Check if the same scheduled task already exists
+    # Check if same cron job already exists
     (crontab -l 2>/dev/null | grep -v -F "$cron_job"; echo "$cron_job") | crontab -
     echo "Set up automatic cleanup task to run every 2 days, keeping only last 2 days of logs."
 }
@@ -551,12 +557,12 @@ function setup_log_cleanup_cron() {
 setup_log_cleanup_cron
 while true; do
     clear
-    echo "Script created by the community, free and open source"
-    echo "For issues, please contact the original author"
-    echo "========== Nexus Multi-Node Manager =========="
+    echo "Script written by Hahahaha, Twitter @ferdie_jhovie, free and open source, don't trust paid versions"
+    echo "If you have issues, contact Twitter, this is the only official account"
+    echo "========== Nexus Multi-Node Management =========="
     echo "1. Install and start new node"
-    echo "2. Display all node status"
-    echo "3. Batch stop and uninstall selected nodes"
+    echo "2. Show all node status"
+    echo "3. Batch stop and uninstall specific nodes"
     echo "4. View specific node logs"
     echo "5. Batch node rotation startup"
     echo "6. Delete all nodes"
@@ -600,7 +606,7 @@ while true; do
             exit 0
             ;;
         *)
-            echo "Invalid option, please try again."
+            echo "Invalid option, please re-enter."
             read -p "Press any key to continue"
             ;;
     esac
